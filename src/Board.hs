@@ -1,5 +1,7 @@
 module Board ( createBoard
              , defaultBoardSize
+             , Coord (..)
+             , coordToVecInd
              ) where
 
 import qualified Data.Vector as V
@@ -21,7 +23,7 @@ type BoardSize = Int
 -- | Defines the default board size.
 defaultBoardSize = 19 :: BoardSize
 
--- Represents the board. Contains the BoardSize and a Vector representing all points.
+-- Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize
                    (V.Vector Stone)
   deriving Eq
@@ -36,3 +38,13 @@ instance Show Board where
 createBoard :: BoardSize -> Board
 createBoard size = Board size
                          (V.replicate (size^2) Free)
+
+-- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
+-- Coordinates are integers in the interval [0, boardsize).
+data Coord = Coord Int Int
+  deriving (Show , Eq)
+
+coordToVecInd :: BoardSize -> Coord -> Int
+coordToVecInd n (Coord x y)
+  | (max x y) < (n^2) = x + n * y
+  | otherwise = undefined
