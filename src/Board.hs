@@ -1,7 +1,10 @@
 module Board ( createBoard
              , defaultBoardSize
+             , Stone (..)
              , Coord (..)
              , coordToVecInd
+             , getStone
+             , putStone
              ) where
 
 import qualified Data.Vector as V
@@ -44,7 +47,20 @@ createBoard size = Board size
 data Coord = Coord Int Int
   deriving (Show , Eq)
 
+-- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y)
   | (max x y) < (n^2) = x + n * y
   | otherwise = undefined
+
+-- | Return the stone on the given coordinate of the board.
+getStone :: Coord -> Board -> Stone
+getStone coord (Board size vec) = vec V.! (coordToVecInd size coord)
+
+-- | Place a stone on a given coordinate of the board. Return the new board.
+putStone :: Coord -> Stone -> Board -> Board
+putStone coord stone (Board size vec)
+  | oldStone == Free = Board size newVec
+  | otherwise = undefined
+  where oldStone = getStone coord (Board size vec)
+        newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
