@@ -27,12 +27,6 @@ instance Show Stone where
   show (Territory White) = "w"
   show (Territory Black) = "b"
 
--- | Represents the number of rows (or columns) on a square board.
-type BoardSize = Int
-
--- | Defines the default board size.
-defaultBoardSize = 19 :: BoardSize
-
 -- Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize (V.Vector Stone)
   deriving Eq
@@ -42,6 +36,12 @@ instance Show Board where
     where showRow = (++ "\n") . concat . V.map show
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector Stone]
           slice n = V.slice n size vec
+
+-- | Represents the number of rows (or columns) on a square board.
+type BoardSize = Int
+
+-- | Defines the default board size.
+defaultBoardSize = 19 :: BoardSize
 
 -- | Create an empty board.
 createBoard :: BoardSize -> Board
