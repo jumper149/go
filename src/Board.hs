@@ -27,8 +27,7 @@ type BoardSize = Int
 defaultBoardSize = 19 :: BoardSize
 
 -- Represents a square board. Contains the BoardSize and a Vector with all points.
-data Board = Board BoardSize
-                   (V.Vector Stone)
+data Board = Board BoardSize (V.Vector Stone)
   deriving Eq
 
 instance Show Board where
@@ -39,8 +38,7 @@ instance Show Board where
 
 -- | Create an empty board.
 createBoard :: BoardSize -> Board
-createBoard size = Board size
-                         (V.replicate (size^2) Free)
+createBoard size = Board size (V.replicate (size^2) Free)
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
@@ -50,12 +48,12 @@ data Coord = Coord Int Int
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y)
-  | (max x y) < (n^2) = x + n * y
+  | max x y < n^2 = x + n * y
   | otherwise = undefined
 
 -- | Return the stone on the given coordinate of the board.
 getStone :: Coord -> Board -> Stone
-getStone coord (Board size vec) = vec V.! (coordToVecInd size coord)
+getStone coord (Board size vec) = vec V.! coordToVecInd size coord
 
 -- | Place a stone on a given coordinate of the board. Return the new board.
 putStone :: Coord -> Stone -> Board -> Board
