@@ -9,16 +9,23 @@ module Board ( createBoard
 
 import qualified Data.Vector as V
 
+-- | Represents the players.
+data Player = White
+            | Black
+  deriving Eq
+
 -- | Represents the state of a point on the board.
 data Stone = Free
-           | White
-           | Black 
+           | Stone Player
+           | Territory Player
   deriving Eq
 
 instance Show Stone where
-  show Free  = "f"
-  show White = "W"
-  show Black = "B"
+  show Free = "f"
+  show (Stone White) = "W"
+  show (Stone Black) = "B"
+  show (Territory White) = "w"
+  show (Territory Black) = "b"
 
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
@@ -62,3 +69,29 @@ putStone coord stone (Board size vec)
   | otherwise = undefined
   where oldStone = getStone coord (Board size vec)
         newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+
+-- | Check if a coordinate is on the board.
+coordOnBoard :: BoardSize -> Coord -> Bool
+coordOnBoard size (Coord x y)
+  | x < 0 = False
+  | y < 0 = False
+  | x > size = False
+  | y > size = False
+  | otherwise = True
+
+-- | Return the neighboring coordinates on the board (next to or diagonally next to).
+neighborCoords :: BoardSize -> Coord -> [Coord]
+neighborCoords size (Coord x y) = filter (coordOnBoard size) unsafeNeighbors
+  where unsafeNeighbors = [ Coord (x-1) (y-1)
+                          , Coord (x-1) y
+                          , Coord (x-1) (y+1)
+                          , Coord x     (y+1)
+                          , Coord (x+1) (y+1)
+                          , Coord (x+1) y
+                          , Coord (x+1) (y-1)
+                          , Coord x     (y-1)
+                          ]
+
+-- | Update the territory created by a newly placed stone. Return the new board.
+--updateTerritory :: Coord -> Board -> Board
+--updateTerritory coord (Board size vec)
