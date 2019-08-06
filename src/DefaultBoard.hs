@@ -1,11 +1,4 @@
-module Board ( createBoard
-             , defaultBoardSize
-             , Stone (..)
-             , Coord (..)
-             , coordToVecInd
-             , getStone
-             , putStone
-             ) where
+module DefaultBoard where
 
 import qualified Data.Vector as V
 
