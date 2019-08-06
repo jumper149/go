@@ -1,6 +1,10 @@
 {-# LANGUAGE FunctionalDependencies #-}
 
-module DefaultBoard where
+module DefaultBoard ( Board (..)
+                    , Coord (..)
+                    , Stone (..)
+                    , Player (..)
+                    ) where
 
 import qualified Board as B
 
@@ -36,6 +40,8 @@ instance B.Stone Stone Player where
 data Coord = Coord Int Int
   deriving (Show , Eq)
 
+instance B.Coord Coord
+
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y)
@@ -52,6 +58,8 @@ instance Show Board where
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector Stone]
           slice n = V.slice n size vec
 
+instance B.Board Board
+
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
 
@@ -61,18 +69,6 @@ defaultBoardSize = 19 :: BoardSize
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> Board
 emptyFromSize size = Board size (V.replicate (size^2) Free)
-
--- | Return the stone on the given coordinate of the board.
-getStone :: Coord -> Board -> Stone
-getStone coord (Board size vec) = vec V.! coordToVecInd size coord
-
--- | Place a stone on a given coordinate of the board. Return the new board.
-putStone :: Coord -> Stone -> Board -> Board
-putStone coord stone (Board size vec)
-  | oldStone == Free = Board size newVec
-  | otherwise = undefined
-  where oldStone = getStone coord (Board size vec)
-        newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
 -- | Check if a coordinate is on the board.
 coordOnBoard :: BoardSize -> Coord -> Bool
@@ -84,8 +80,8 @@ coordOnBoard size (Coord x y)
   | otherwise = True
 
 -- | Return the neighboring coordinates on the board (next to or diagonally next to).
-neighborCoords :: BoardSize -> Coord -> [Coord]
-neighborCoords size (Coord x y) = filter (coordOnBoard size) unsafeNeighbors
+neighborCoords :: Board -> Coord -> [Coord]
+neighborCoords (Board size _) (Coord x y) = filter (coordOnBoard size) unsafeNeighbors
   where unsafeNeighbors = [ Coord (x-1) (y-1)
                           , Coord (x-1) y
                           , Coord (x-1) (y+1)
@@ -95,6 +91,24 @@ neighborCoords size (Coord x y) = filter (coordOnBoard size) unsafeNeighbors
                           , Coord (x+1) (y-1)
                           , Coord x     (y-1)
                           ]
+
+-- | Return the stone on the given coordinate of the board.
+getStone :: Board -> Coord -> Stone
+getStone (Board size vec) coord = vec V.! coordToVecInd size coord
+
+-- | Place a stone on a given coordinate of the board. Return the new board.
+putStone :: Board -> Coord -> Stone -> Board
+putStone (Board size vec) coord stone
+  | oldStone == Free = Board size newVec
+  | otherwise = undefined
+  where oldStone = getStone (Board size vec) coord
+        newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+
+instance B.Gear Board Coord Stone Player where
+  empty = emptyFromSize defaultBoardSize
+  neighborCoords = neighborCoords
+  getStone = getStone
+  putStone = putStone
 
 -- | Update the territory created by a newly placed stone. Return the new board.
 --updateTerritory :: Coord -> Board -> Board
