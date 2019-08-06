@@ -1,9 +1,9 @@
 {-# LANGUAGE FunctionalDependencies #-}
 
-module DefaultBoard ( Board (..)
-                    , Coord (..)
+module DefaultBoard ( Player (..)
                     , Stone (..)
-                    , Player (..)
+                    , Coord (..)
+                    , Board (..)
                     ) where
 
 import qualified Board as B
