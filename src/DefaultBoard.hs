@@ -31,6 +31,17 @@ instance B.Stone Stone Player where
   stone = Stone
   territory = Territory
 
+-- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
+-- Coordinates are integers in the interval [0, boardsize).
+data Coord = Coord Int Int
+  deriving (Show , Eq)
+
+-- | Transform coordinate to index to access the array of points on the board.
+coordToVecInd :: BoardSize -> Coord -> Int
+coordToVecInd n (Coord x y)
+  | max x y < n^2 = x + n * y
+  | otherwise = undefined
+
 -- Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize (V.Vector Stone)
   deriving Eq
@@ -48,19 +59,8 @@ type BoardSize = Int
 defaultBoardSize = 19 :: BoardSize
 
 -- | Create an empty board.
-createBoard :: BoardSize -> Board
-createBoard size = Board size (V.replicate (size^2) Free)
-
--- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
--- Coordinates are integers in the interval [0, boardsize).
-data Coord = Coord Int Int
-  deriving (Show , Eq)
-
--- | Transform coordinate to index to access the array of points on the board.
-coordToVecInd :: BoardSize -> Coord -> Int
-coordToVecInd n (Coord x y)
-  | max x y < n^2 = x + n * y
-  | otherwise = undefined
+emptyFromSize :: BoardSize -> Board
+emptyFromSize size = Board size (V.replicate (size^2) Free)
 
 -- | Return the stone on the given coordinate of the board.
 getStone :: Coord -> Board -> Stone
