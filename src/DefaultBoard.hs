@@ -48,7 +48,7 @@ coordToVecInd n (Coord x y)
   | max x y < n^2 = x + n * y
   | otherwise = undefined
 
--- Represents a square board. Contains the BoardSize and a Vector with all points.
+-- | Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize (V.Vector Stone)
   deriving Eq
 
