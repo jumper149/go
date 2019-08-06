@@ -1,11 +1,17 @@
+{-# LANGUAGE FunctionalDependencies #-}
+
 module DefaultBoard where
+
+import qualified Board as B
 
 import qualified Data.Vector as V
 
 -- | Represents the players.
-data Player = White
-            | Black
-  deriving Eq
+data Player = Black
+            | White
+  deriving (Eq, Enum, Bounded)
+
+instance B.Player Player
 
 -- | Represents the state of a point on the board.
 data Stone = Free
@@ -15,10 +21,15 @@ data Stone = Free
 
 instance Show Stone where
   show Free = "f"
-  show (Stone White) = "W"
   show (Stone Black) = "B"
-  show (Territory White) = "w"
+  show (Stone White) = "W"
   show (Territory Black) = "b"
+  show (Territory White) = "w"
+
+instance B.Stone Stone Player where
+  free = Free
+  stone = Stone
+  territory = Territory
 
 -- Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize (V.Vector Stone)
