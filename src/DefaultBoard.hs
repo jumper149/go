@@ -26,6 +26,7 @@ data Stone = Free
 
 instance Show Stone where
   show Free = "f"
+  show OffBoard = ""
   show (Stone Black) = "B"
   show (Stone White) = "W"
   show (Territory Black) = "b"
@@ -33,6 +34,7 @@ instance Show Stone where
 
 instance B.Stone Stone Player where
   free = Free
+  off = OffBoard
   stone = Stone
   territory = Territory
 
@@ -134,6 +136,7 @@ putStone (Board size vec) coord stone
 instance B.Gear Board Coord Stone Player where
   empty = emptyFromSize defaultBoardSize
   neighborCoords = neighborCoords
+  libertyCoords = orthogonalNeighborCoords
   getStone = getStone
   putStone = putStone
 
