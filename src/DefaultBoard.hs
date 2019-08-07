@@ -25,8 +25,6 @@ data Coord = Coord Int Int
            | Border Border
   deriving (Eq, Show)
 
-instance B.Coord Coord
-
 data Border = LeftB
             | TopB
             | RightB
@@ -52,8 +50,10 @@ instance Show Board where
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
           slice n = V.slice n size vec
 
-instance B.Board Board where
+instance B.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
+  neighborCoords = neighborCoords
+  libertyCoords = orthogonalNeighborCoords
 
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
@@ -115,8 +115,6 @@ putStone (Board size vec) coord stone
         newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
 instance B.Gear Board Coord Player where
-  neighborCoords = neighborCoords
-  libertyCoords = orthogonalNeighborCoords
   getStone = getStone
   putStone = putStone
 
