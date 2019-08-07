@@ -9,31 +9,33 @@ module Board ( Player (..)
 
 --import Data.List (nub)
 
-class (Eq p, Enum p, Bounded p) => Player p
+class (Eq p, Enum p) => Player p where
+  char :: p -> Char
 
-class (Eq s, Player p) => Stone s p | s -> p where
-  free :: s
-  off :: s
-  stone :: p -> s
-  stones :: [s]
-  stones = map stone [ minBound .. ]
-  territory :: p -> s
-  territories :: [s]
-  territories = map territory [ minBound .. ]
+data Stone p = Free
+             | Off
+             | Stone p
+  deriving Eq
+
+instance Player p => Show (Stone p) where
+  show Free = " "
+  show Off = undefined
+  show (Stone p) = [ char p ]
+
+stones :: Player p => [Stone p]
+stones = map Stone [ toEnum 0 .. ]
 
 class Eq c => Coord c
 
-class Eq b => Board b
-
-class (Board b, Coord c, Stone s p) => Gear b c s p | b -> c s where
-
+class Eq b => Board b where
   empty :: b
 
+class (Board b, Coord c, Player p) => Gear b c p | b -> c p where
   neighborCoords :: b -> c -> [c]
   libertyCoords :: b -> c -> [c]
 
-  getStone :: b -> c -> s
-  putStone :: b -> c -> s -> b
+  getStone :: b -> c -> Stone p
+  putStone :: b -> c -> Stone p -> b
 
 --  hasLiberty :: b -> c -> [(c,s)] -> Bool
 --  hasLiberty board coord [] = True

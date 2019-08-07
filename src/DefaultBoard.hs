@@ -1,7 +1,6 @@
 {-# LANGUAGE FunctionalDependencies #-}
 
 module DefaultBoard ( Player (..)
-                    , Stone (..)
                     , Coord (..)
                     , Board (..)
                     ) where
@@ -15,28 +14,9 @@ data Player = Black
             | White
   deriving (Eq, Enum, Bounded)
 
-instance B.Player Player
-
--- | Represents the state of a point on the board.
-data Stone = Free
-           | Stone Player
-           | Territory Player
-           | OffBoard
-  deriving Eq
-
-instance Show Stone where
-  show Free = "f"
-  show OffBoard = ""
-  show (Stone Black) = "B"
-  show (Stone White) = "W"
-  show (Territory Black) = "b"
-  show (Territory White) = "w"
-
-instance B.Stone Stone Player where
-  free = Free
-  off = OffBoard
-  stone = Stone
-  territory = Territory
+instance B.Player Player where
+  char Black = 'B'
+  char White = 'W'
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
@@ -63,16 +43,17 @@ coordToVecInd n (Coord x y) = x + n * y
 coordToVecInd _ (Border _) = -1
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
-data Board = Board BoardSize (V.Vector Stone)
+data Board = Board BoardSize (V.Vector (B.Stone Player))
   deriving Eq
 
 instance Show Board where
   show (Board size vec) = ("\n" ++) $ concat $ map showRow rows
     where showRow = (++ "\n") . concat . V.map show
-          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector Stone]
+          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
           slice n = V.slice n size vec
 
-instance B.Board Board
+instance B.Board Board where
+  empty = emptyFromSize defaultBoardSize
 
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
@@ -82,7 +63,7 @@ defaultBoardSize = 19 :: BoardSize
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> Board
-emptyFromSize size = Board size (V.replicate (size^2) Free)
+emptyFromSize size = Board size (V.replicate (size^2) B.Free)
 
 -- | Check if a coordinate is on the board and use Border/Corner constructors if necessary.
 fixCoord :: BoardSize -> Coord -> Coord
@@ -121,20 +102,19 @@ orthogonalNeighborCoords (Board size _) (Coord x y) = map (fixCoord size) unsafe
                           ]
 
 -- | Return the stone on the given coordinate of the board.
-getStone :: Board -> Coord -> Stone
+getStone :: Board -> Coord -> B.Stone Player
 getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
-getStone (Board size vec) (Border _) = OffBoard
+getStone (Board size vec) (Border _) = B.Off
 
 -- | Place a stone on a given coordinate of the board. Return the new board.
-putStone :: Board -> Coord -> Stone -> Board
+putStone :: Board -> Coord -> B.Stone Player -> Board
 putStone (Board size vec) coord stone
-  | oldStone == Free = Board size newVec
+  | oldStone == B.Free = Board size newVec
   | otherwise = undefined
   where oldStone = getStone (Board size vec) coord
         newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance B.Gear Board Coord Stone Player where
-  empty = emptyFromSize defaultBoardSize
+instance B.Gear Board Coord Player where
   neighborCoords = neighborCoords
   libertyCoords = orthogonalNeighborCoords
   getStone = getStone
