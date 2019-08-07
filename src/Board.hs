@@ -1,4 +1,5 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Board ( Player (..)
              , Stone (..)
@@ -30,7 +31,7 @@ class Eq c => Coord c
 class Eq b => Board b where
   empty :: b
 
-class (Board b, Coord c, Player p) => Gear b c p | b -> c p where
+class (Board b, Coord c, Player p) => Gear b c p where
   neighborCoords :: b -> c -> [c]
   libertyCoords :: b -> c -> [c]
 
