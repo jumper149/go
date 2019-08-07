@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module DefaultBoard ( Player (..)
                     , Coord (..)
@@ -47,7 +47,7 @@ data Board = Board BoardSize (V.Vector (B.Stone Player))
   deriving Eq
 
 instance Show Board where
-  show (Board size vec) = ("\n" ++) $ concat $ map showRow rows
+  show (Board size vec) = ("\n" ++) $ concatMap showRow rows
     where showRow = (++ "\n") . concat . V.map show
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
           slice n = V.slice n size vec
