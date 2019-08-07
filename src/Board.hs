@@ -23,8 +23,8 @@ instance Player p => Show (Stone p) where
   show Off = undefined
   show (Stone p) = [ char p ]
 
-stones :: Player p => [Stone p]
-stones = map Stone [ toEnum 0 .. ]
+--stones :: Player p => [Stone p]
+--stones = map Stone [ toEnum 0 .. ]
 
 class (Eq b, Eq c) => Board b c where
   empty :: b
@@ -41,6 +41,13 @@ class (Board b c, Player p) => Gear b c p where
           potentialLiberties = zip potentialLibertyCoords potentialLibertyStones :: [(c,Stone p)]
           potentialLibertyStones = map (getStone board) potentialLibertyCoords :: [Stone p]
           potentialLibertyCoords = nub $ libertyCoords board coord :: [c]
---          isChain :: (c,s) -> Bool
---          isChain (c , s) = chainStone == s
---          chainStone = getStone board coord :: s
+
+          isEnemy :: (c,Stone p) -> Bool
+          isEnemy (coord , Stone stone) = chainStone /= Stone stone
+          isEnemy (coord , Off) = True
+          isEnemy _ = False
+
+          isChain :: (c,Stone p) -> Bool
+          isChain (coord , stone) = chainStone == stone
+
+          chainStone = getStone board coord :: Stone p
