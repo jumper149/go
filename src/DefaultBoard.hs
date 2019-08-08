@@ -12,7 +12,7 @@ import qualified Data.Vector as V
 -- | Represents the players.
 data Player = Black
             | White
-  deriving (Eq, Enum, Bounded)
+  deriving (Eq, Enum, Ord)
 
 instance B.Player Player where
   char Black = 'B'
@@ -52,7 +52,8 @@ instance Show Board where
 
 instance B.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
-  neighborCoords = neighborCoords
+  coords (Board size _) = [ (Coord x y) | x <- range , y <- range ]
+    where range = [ 0 .. (size - 1) ]
   libertyCoords = orthogonalNeighborCoords
 
 -- | Represents the number of rows (or columns) on a square board.
@@ -78,19 +79,6 @@ fixCoord size (Coord x y)
   | y == -1 = Border BottomB
   | x >= 0 && x < size && y >= 0 && y < size = Coord x y
   | otherwise = undefined
-
--- | Return the neighboring coordinates on the board (next to or diagonally next to).
-neighborCoords :: Board -> Coord -> [Coord]
-neighborCoords (Board size _) (Coord x y) = map (fixCoord size) unsafeNeighbors
-  where unsafeNeighbors = [ Coord (x-1) (y-1)
-                          , Coord (x-1) y
-                          , Coord (x-1) (y+1)
-                          , Coord x     (y+1)
-                          , Coord (x+1) (y+1)
-                          , Coord (x+1) y
-                          , Coord (x+1) (y-1)
-                          , Coord x     (y-1)
-                          ]
 
 -- | Return the neighboring coordinates on the board (orthogonally next to).
 orthogonalNeighborCoords :: Board -> Coord -> [Coord]
