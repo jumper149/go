@@ -23,7 +23,7 @@ instance B.Player Player where
 -- Borders are also represented as Coordinates to cover edge cases.
 data Coord = Coord Int Int
            | Border Border
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 data Border = LeftB
             | TopB
@@ -33,7 +33,7 @@ data Border = LeftB
             | TopLeftC
             | TopRightC
             | BottomRightC
-  deriving (Eq, Show)
+  deriving (Eq, Ord, Show)
 
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int

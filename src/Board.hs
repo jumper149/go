@@ -26,7 +26,7 @@ instance Player p => Show (Stone p) where
 --stones :: Player p => [Stone p]
 --stones = map Stone [ toEnum 0 .. ]
 
-class (Eq b, Eq c) => Board b c where
+class (Eq b, Eq c, Ord c) => Board b c where
   empty :: b
   neighborCoords :: b -> c -> [c]
   libertyCoords :: b -> c -> [c]
