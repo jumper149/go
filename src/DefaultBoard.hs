@@ -52,7 +52,7 @@ instance Show Board where
 
 instance B.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
-  coords (Board size _) = [ (Coord x y) | x <- range , y <- range ]
+  coords (Board size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
   libertyCoords = orthogonalNeighborCoords
 
