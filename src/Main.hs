@@ -1,7 +1,10 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+
 module Main where
 
-import Board
-import DefaultBoard
+import qualified Board as B
+import qualified DefaultBoard as D
 
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = D.startGame

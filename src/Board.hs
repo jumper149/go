@@ -1,4 +1,5 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -36,12 +37,12 @@ data Chain p c = Chain (Stone p) (S.Set c)
                | NoChain
   deriving (Eq, Ord)
 
-class (Eq b, Eq c, Ord c) => Board b c where
+class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   empty :: b
   coords :: b -> [c]
   libertyCoords :: b -> c -> [c]
 
-class (Board b c, Player p) => Gear b c p where
+class (Board b c, Player p) => Gear b c p | b -> c where
   getStone :: b -> c -> Stone p
   putStone :: b -> c -> Stone p -> b
 

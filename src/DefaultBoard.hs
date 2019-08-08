@@ -3,6 +3,7 @@
 module DefaultBoard ( Player (..)
                     , Coord (..)
                     , Board (..)
+                    , startGame
                     ) where
 
 import qualified Board as B
@@ -12,7 +13,7 @@ import qualified Data.Vector as V
 -- | Represents the players.
 data Player = Black
             | White
-  deriving (Eq, Enum, Ord)
+  deriving (Eq, Enum, Ord, Show)
 
 instance B.Player Player where
   char Black = 'B'
@@ -60,7 +61,7 @@ instance B.Board Board Coord where
 type BoardSize = Int
 
 -- | Defines the default board size.
-defaultBoardSize = 19 :: BoardSize
+defaultBoardSize = 4 :: BoardSize
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> Board
@@ -106,6 +107,22 @@ instance B.Gear Board Coord Player where
   getStone = getStone
   putStone = putStone
 
--- | Update the territory created by a newly placed stone. Return the new board.
---updateTerritory :: Coord -> Board -> Board
---updateTerritory coord (Board size vec)
+showGame :: Board -> Player -> String
+showGame (Board size vec) player = numbers ++ "\n" ++ bStr ++ pStr
+  where bStr = concat $ map (++ "\n") $ zipWith (:) alphabet $ (lines . show) (Board size vec)
+        pStr = show player
+        numbers = concatMap show [ 1 .. size ]
+        alphabet = map (toEnum :: BoardSize -> Char) [ 0 .. (size - 1) ]
+
+runGame :: Board -> Player -> IO ()
+runGame board player = do putStr $ showGame board player
+                          x <- fmap ((+ (-97)) . fromEnum) (readLn :: IO Char)
+                          y <- (readLn :: IO Int)
+                          let coord = Coord x y
+                              newBoard = putStone board coord (B.Stone player)
+                          runGame newBoard (succ player)
+
+startGame :: IO ()
+startGame = runGame board player
+  where board = B.empty :: Board
+        player = toEnum 0 :: Player
