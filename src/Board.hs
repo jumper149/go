@@ -8,6 +8,7 @@ module Board ( Player (..)
              , Gear (..)
              ) where
 
+import qualified Data.Set as S
 import Data.List (nub)
 
 class (Eq p, Enum p) => Player p where
@@ -26,6 +27,9 @@ instance Player p => Show (Stone p) where
 --stones :: Player p => [Stone p]
 --stones = map Stone [ toEnum 0 .. ]
 
+data Chain p c = Chain (Stone p) (S.Set p)
+               | NoChain
+
 class (Eq b, Eq c, Ord c) => Board b c where
   empty :: b
   neighborCoords :: b -> c -> [c]
@@ -34,6 +38,17 @@ class (Eq b, Eq c, Ord c) => Board b c where
 class (Board b c, Player p) => Gear b c p where
   getStone :: b -> c -> Stone p
   putStone :: b -> c -> Stone p -> b
+
+  accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
+  accChain board (Stone p) coord acc = S.empty
+
+  chain :: b -> c -> Chain p c
+  chain board coord
+    | coords == S.empty = NoChain
+    where coords = accChain board stone coord S.empty :: S.Set c
+          stone = getStone board coord :: Stone p
+
+  chains :: b -> S.Set (Chain p c)
 
   hasLiberty :: b -> c -> [(c,Stone p)] -> Bool
   hasLiberty board coord [] = True
