@@ -64,10 +64,10 @@ instance B.Board Board Coord where
     where wrds = words str
           x = head wrds :: String
           y = head $ tail wrds :: String
-          xInt = (read x) - 1 :: Int
+          xInt = read x - 1 :: Int
           yInt = fromEnum (head y) - 97
           charsInRange :: Int -> Int -> String -> Bool
-          charsInRange lo hi str = foldr (&&) True bools
+          charsInRange lo hi str = and bools
             where nums = map fromEnum str
                   bools = map (\ x -> x >= lo && x <= hi) nums
 
@@ -119,7 +119,7 @@ putStone (Board size vec) coord stone
 
 showGame :: Board -> Player -> String
 showGame (Board size vec) player = numbers ++ bStr ++ pStr
-  where bStr = concat $ map (++ "\n") $ zipWith (:) alphabet $ (lines . show) (Board size vec)
+  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
         pStr = show player ++ "\n"
         numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
         alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
