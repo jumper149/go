@@ -7,4 +7,4 @@ import qualified Board as B
 import qualified DefaultBoard as D
 
 main :: IO ()
-main = D.startGame
+main = (B.startGame :: IO (D.Board,D.Player)) >> return ()

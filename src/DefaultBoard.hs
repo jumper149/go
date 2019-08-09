@@ -59,7 +59,7 @@ instance B.Board Board Coord where
                                         && charsInRange 48 57 x
                                         && charsInRange 97 122 y
                                         && length y == 1
-                                        then Just (Coord 0 0)
+                                        then Just (Coord xInt yInt)
                                         else Nothing
     where wrds = words str
           x = head wrds :: String
@@ -117,13 +117,14 @@ putStone (Board size vec) coord stone
   where oldStone = getStone (Board size vec) coord
         newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance B.Game Board Coord Player where
-  getStone = getStone
-  putStone = putStone
-
 showGame :: Board -> Player -> String
 showGame (Board size vec) player = numbers ++ bStr ++ pStr
   where bStr = concat $ map (++ "\n") $ zipWith (:) alphabet $ (lines . show) (Board size vec)
         pStr = show player ++ "\n"
         numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
         alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
+
+instance B.Game Board Coord Player where
+  getStone = getStone
+  putStone = putStone
+  showGame = showGame

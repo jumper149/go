@@ -8,9 +8,8 @@ module Board ( Player (..)
              , Board (..)
              , Game ( getStone
                     , putStone
-                    , chain
-                    , chains
-                    , hasLiberty
+                    , showGame
+                    , startGame
                     )
              ) where
 
@@ -71,14 +70,14 @@ class (Board b c, Player p) => Game b c p | b -> c where
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
     where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) coords
 
-  startGame :: IO b
+  startGame :: IO (b,p)
   startGame = runGame board player
     where board = empty :: b
           player = minBound :: p
 
   showGame :: b -> p -> String
 
-  runGame :: b -> p -> IO b
+  runGame :: b -> p -> IO (b,p)
   runGame board player = do putStr $ showGame board player
                             coord <- readIOSafe $ readCoordOnBoard board
                             let newBoard = putStone board coord (Stone player)
