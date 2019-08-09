@@ -15,7 +15,6 @@ module Board ( Player (..)
 
 import qualified Data.Set as S
 import Data.List (nub)
-import Data.Maybe (isJust, fromJust)
 
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   char :: p -> Char
@@ -86,7 +85,4 @@ class (Board b c, Player p) => Game b c p | b -> c where
                                             else succ player
                             runGame newBoard newPlayer
     where readIOSafe :: (String -> Maybe c) -> IO c
-          readIOSafe reader = do x <- reader <$> readLn
-                                 if isJust x
-                                 then return $ fromJust x
-                                 else readIOSafe reader
+          readIOSafe reader = reader <$> readLn >>= maybe (readIOSafe reader) return
