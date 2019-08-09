@@ -55,6 +55,21 @@ instance B.Board Board Coord where
   coords (Board size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
   libertyCoords = orthogonalNeighborCoords
+  readCoordOnBoard (Board size _) str = if length wrds == 2
+                                        && charsInRange 48 57 x
+                                        && charsInRange 97 122 y
+                                        && length y == 1
+                                        then Just (Coord 0 0)
+                                        else Nothing
+    where wrds = words str
+          x = head wrds :: String
+          y = head $ tail wrds :: String
+          xInt = (read x) - 1 :: Int
+          yInt = fromEnum (head y) - 97
+          charsInRange :: Int -> Int -> String -> Bool
+          charsInRange lo hi str = foldr (&&) True bools
+            where nums = map fromEnum str
+                  bools = map (\ x -> x >= lo && x <= hi) nums
 
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
@@ -112,14 +127,3 @@ showGame (Board size vec) player = numbers ++ bStr ++ pStr
         pStr = show player ++ "\n"
         numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
         alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
-
-runGame :: Board -> Player -> IO ()
-runGame board player = do putStr $ showGame board player
-                          x <- fmap (+ (-1)) (readLn :: IO Int)
-                          y <- fmap ((+ (-97)) . fromEnum) (readLn :: IO Char)
-                          let coord = Coord x y
-                              newBoard = putStone board coord (B.Stone player)
-                              newPlayer = if player == maxBound
-                                          then minBound
-                                          else succ player
-                          runGame newBoard newPlayer
