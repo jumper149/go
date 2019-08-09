@@ -3,7 +3,6 @@
 module DefaultBoard ( Player (..)
                     , Coord (..)
                     , Board (..)
-                    , startGame
                     ) where
 
 import qualified Board as B
@@ -124,8 +123,3 @@ runGame board player = do putStr $ showGame board player
                                           then minBound
                                           else succ player
                           runGame newBoard newPlayer
-
-startGame :: IO ()
-startGame = runGame board player
-  where board = B.empty :: Board
-        player = toEnum 0 :: Player
