@@ -17,7 +17,7 @@ module Board ( Player (..)
 import qualified Data.Set as S
 import Data.List (nub)
 
-class (Eq p, Enum p, Ord p) => Player p where
+class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   char :: p -> Char
 
 data Stone p = Free

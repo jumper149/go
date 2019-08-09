@@ -13,7 +13,7 @@ import qualified Data.Vector as V
 -- | Represents the players.
 data Player = Black
             | White
-  deriving (Eq, Enum, Ord, Show)
+  deriving (Eq, Enum, Bounded, Ord, Show)
 
 instance B.Player Player where
   char Black = 'B'
@@ -46,7 +46,7 @@ data Board = Board BoardSize (V.Vector (B.Stone Player))
   deriving Eq
 
 instance Show Board where
-  show (Board size vec) = ("\n" ++) $ concatMap showRow rows
+  show (Board size vec) = concatMap showRow rows
     where showRow = (++ "\n") . concat . V.map show
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
           slice n = V.slice n size vec
@@ -108,19 +108,22 @@ instance B.Gear Board Coord Player where
   putStone = putStone
 
 showGame :: Board -> Player -> String
-showGame (Board size vec) player = numbers ++ "\n" ++ bStr ++ pStr
+showGame (Board size vec) player = numbers ++ bStr ++ pStr
   where bStr = concat $ map (++ "\n") $ zipWith (:) alphabet $ (lines . show) (Board size vec)
-        pStr = show player
-        numbers = concatMap show [ 1 .. size ]
-        alphabet = map (toEnum :: BoardSize -> Char) [ 0 .. (size - 1) ]
+        pStr = show player ++ "\n"
+        numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+        alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
 
 runGame :: Board -> Player -> IO ()
 runGame board player = do putStr $ showGame board player
-                          x <- fmap ((+ (-97)) . fromEnum) (readLn :: IO Char)
-                          y <- (readLn :: IO Int)
+                          x <- fmap (+ (-1)) (readLn :: IO Int)
+                          y <- fmap ((+ (-97)) . fromEnum) (readLn :: IO Char)
                           let coord = Coord x y
                               newBoard = putStone board coord (B.Stone player)
-                          runGame newBoard (succ player)
+                              newPlayer = if player == maxBound
+                                          then minBound
+                                          else succ player
+                          runGame newBoard newPlayer
 
 startGame :: IO ()
 startGame = runGame board player
