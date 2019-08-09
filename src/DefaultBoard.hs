@@ -103,7 +103,7 @@ putStone (Board size vec) coord stone
   where oldStone = getStone (Board size vec) coord
         newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance B.Gear Board Coord Player where
+instance B.Game Board Coord Player where
   getStone = getStone
   putStone = putStone
 

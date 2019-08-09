@@ -6,7 +6,7 @@
 module Board ( Player (..)
              , Stone (..)
              , Board (..)
-             , Gear ( getStone
+             , Game ( getStone
                     , putStone
                     , chain
                     , chains
@@ -42,7 +42,7 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   coords :: b -> [c]
   libertyCoords :: b -> c -> [c]
 
-class (Board b c, Player p) => Gear b c p | b -> c where
+class (Board b c, Player p) => Game b c p | b -> c where
   getStone :: b -> c -> Stone p
   putStone :: b -> c -> Stone p -> b
 
