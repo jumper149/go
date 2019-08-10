@@ -18,7 +18,8 @@ cabal-version:       >=1.10
 
 executable go
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Board
+                       DefaultBoard
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , containers
