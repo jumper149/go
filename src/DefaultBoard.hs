@@ -3,6 +3,7 @@
 module DefaultBoard ( Player (..)
                     , Coord (..)
                     , Board (..)
+                    , emptyFromSize
                     ) where
 
 import qualified Board as B

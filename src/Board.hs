@@ -6,11 +6,8 @@
 module Board ( Player (..)
              , Stone (..)
              , Board (..)
-             , Game ( getStone
-                    , putStone
-                    , showGame
-                    , startGame
-                    )
+             , Chain (..)
+             , Game (..)
              ) where
 
 import qualified Data.Set as S
