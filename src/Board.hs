@@ -70,7 +70,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
           appendPrevs [] acc = acc
           appendPrevs ((Chain (Stone x) y):cs) acc
             | x < player = appendPrevs cs (acc ++ [ (Chain (Stone x) y) ])
-            | otherwise = cs ++ acc
+            | otherwise = ((Chain (Stone x) y) : cs) ++ acc
 
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
