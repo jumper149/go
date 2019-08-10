@@ -77,7 +77,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
 
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
-    where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) coords
+    where bools = S.map (((== (Free :: Stone p)) . (getStone board :: c -> Stone p))) coords
 
   removeChain :: b -> Chain p c -> b
   removeChain board (Chain _ coords) = S.foldr putFree board coords
@@ -85,8 +85,12 @@ class (Board b c, Player p) => Game b c p | b -> c where
           putFree coord board = putStone board coord (Free :: Stone p)
 
   updateBoard :: b -> p -> b
-  updateBoard board player = foldl removeChain board srtedChs
+  updateBoard board player = foldl removeNoLiberty board srtedChs
     where srtedChs = sortedChains board player
+          removeNoLiberty :: b -> Chain p c -> b
+          removeNoLiberty board chain = if hasLiberty board chain
+                                        then board
+                                        else removeChain board chain
 
   startGame :: IO (b,p)
   startGame = runGame board player

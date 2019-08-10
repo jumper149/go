@@ -111,11 +111,8 @@ getStone (Board size vec) (Border _) = B.Off
 
 -- | Place a stone on a given coordinate of the board. Return the new board.
 putStone :: Board -> Coord -> B.Stone Player -> Board
-putStone (Board size vec) coord stone
-  | oldStone == B.Free = Board size newVec
-  | otherwise = undefined
-  where oldStone = getStone (Board size vec) coord
-        newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+putStone (Board size vec) coord stone = Board size newVec
+  where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
 -- | Turn board and player into an aesthetically good looking String.
 showGame :: Board -> Player -> String
