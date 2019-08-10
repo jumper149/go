@@ -14,10 +14,14 @@ module Board ( Player (..)
              ) where
 
 import qualified Data.Set as S
-import Data.List (nub)
+import Data.List (nub, sortOn)
 
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   char :: p -> Char
+  nextPlayer :: p -> p
+  nextPlayer player = if player == maxBound
+                      then minBound
+                      else succ player
 
 data Stone p = Free
              | Off
@@ -28,9 +32,6 @@ instance Player p => Show (Stone p) where
   show Free = " "
   show Off = undefined
   show (Stone p) = [ char p ]
-
---stones :: Player p => [Stone p]
---stones = map Stone [ toEnum 0 .. ]
 
 data Chain p c = Chain (Stone p) (S.Set c)
                | NoChain
@@ -65,9 +66,27 @@ class (Board b c, Player p) => Game b c p | b -> c where
   chains :: b -> S.Set (Chain p c)
   chains board = S.filter (/= NoChain) $ S.map (chain board) $ S.fromList (coords board)
 
+  sortedChains :: b -> p -> [Chain p c]
+  sortedChains board player = appendPrevs sorted []
+    where sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList $ chains board
+          appendPrevs :: [Chain p c] -> [Chain p c] -> [Chain p c]
+          appendPrevs [] acc = acc
+          appendPrevs ((Chain (Stone x) y):cs) acc
+            | x < player = appendPrevs cs (acc ++ [ (Chain (Stone x) y) ])
+            | otherwise = cs ++ acc
+
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
     where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) coords
+
+  removeChain :: b -> Chain p c -> b
+  removeChain board (Chain _ coords) = S.foldr putFree board coords
+    where putFree :: c -> b -> b
+          putFree coord board = putStone board coord (Free :: Stone p)
+
+  updateBoard :: b -> p -> b
+  updateBoard board player = foldl removeChain board srtedChs
+    where srtedChs = sortedChains board player
 
   startGame :: IO (b,p)
   startGame = runGame board player
@@ -79,10 +98,8 @@ class (Board b c, Player p) => Game b c p | b -> c where
   runGame :: b -> p -> IO (b,p)
   runGame board player = do putStr $ showGame board player
                             coord <- readIOSafe $ readCoordOnBoard board
-                            let newBoard = putStone board coord (Stone player)
-                                newPlayer = if player == maxBound
-                                            then minBound
-                                            else succ player
+                            let newBoard = updateBoard (putStone board coord (Stone player)) player
+                                newPlayer = nextPlayer player
                             runGame newBoard newPlayer
     where readIOSafe :: (String -> Maybe c) -> IO c
           readIOSafe reader = reader <$> readLn >>= maybe (readIOSafe reader) return
