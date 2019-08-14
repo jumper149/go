@@ -32,6 +32,16 @@ coordToVecInd n (Coord x y) = x + n * y
 data Board = Board BoardSize (V.Vector (B.Stone Player))
   deriving Eq
 
+-- | Represents the number of rows (or columns) on a square board.
+type BoardSize = Int
+
+-- | Defines the default board size.
+defaultBoardSize = 4 :: BoardSize
+
+-- | Create an empty board.
+emptyFromSize :: BoardSize -> Board
+emptyFromSize size = Board size (V.replicate (size^2) B.Free)
+
 instance Show Board where
   show (Board size vec) = concatMap showRow rows
     where showRow = (++ "\n") . concat . V.map B.showStone
@@ -42,7 +52,15 @@ instance B.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
   coords (Board size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
-  unsafeLibertyCoords = unsafeLibertyCoords
+
+  -- | Return the neighboring coordinates on the board (orthogonally next to).
+  -- Invalid coordinates will be ignored by the class Board if the method coords is properly implemented.
+  unsafeLibertyCoords (Board size _) (Coord x y) = [ Coord (x-1) y
+                                                   , Coord x     (y+1)
+                                                   , Coord (x+1) y
+                                                   , Coord x     (y-1)
+                                                   ]
+
   readCoordOnBoard (Board size _) str = if length wrds == 2
                                         && charsInRange 48 57 x
                                         && charsInRange 97 122 y
@@ -59,43 +77,18 @@ instance B.Board Board Coord where
             where nums = map fromEnum str
                   bools = map (\ x -> x >= lo && x <= hi) nums
 
--- | Represents the number of rows (or columns) on a square board.
-type BoardSize = Int
-
--- | Defines the default board size.
-defaultBoardSize = 4 :: BoardSize
-
--- | Create an empty board.
-emptyFromSize :: BoardSize -> Board
-emptyFromSize size = Board size (V.replicate (size^2) B.Free)
-
--- | Return the neighboring coordinates on the board (orthogonally next to).
--- Invalid coordinates will be ignored by the class Board if the method coords is properly implemented.
-unsafeLibertyCoords :: Board -> Coord -> [Coord]
-unsafeLibertyCoords (Board size _) (Coord x y) = [ Coord (x-1) y
-                                                 , Coord x     (y+1)
-                                                 , Coord (x+1) y
-                                                 , Coord x     (y-1)
-                                                 ]
-
--- | Return the stone on the given coordinate of the board.
-getStone :: Board -> Coord -> B.Stone Player
-getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
-
--- | Place a stone on a given coordinate of the board. Return the new board.
-putStone :: Board -> Coord -> B.Stone Player -> Board
-putStone (Board size vec) coord stone = Board size newVec
-  where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
-
--- | Turn board and player into an aesthetically good looking String.
-showGame :: Board -> Player -> String
-showGame (Board size vec) player = numbers ++ bStr ++ pStr
-  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
-        pStr = show player ++ "\n"
-        numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
-        alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
-
 instance B.Game Board Coord Player where
-  getStone = getStone
-  putStone = putStone
-  showGame = showGame
+
+  -- | Return the stone on the given coordinate of the board.
+  getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
+
+  -- | Place a stone on a given coordinate of the board. Return the new board.
+  putStone (Board size vec) coord stone = Board size newVec
+    where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+
+  -- | Turn board and player into an aesthetically good looking String.
+  showGame (Board size vec) player = numbers ++ bStr ++ pStr
+    where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
+          pStr = show player ++ "\n"
+          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
