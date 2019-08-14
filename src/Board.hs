@@ -44,19 +44,17 @@ class (Board b c, Player p) => Game b c p | b -> c where
   putStone :: b -> c -> Stone p -> b
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
-  accChain board (Stone p) coord acc = S.singleton coord `S.union` newSames `S.union` recChain
-    where newAcc = acc `S.union` S.singleton coord `S.union` newSames :: S.Set c
-          newSames = S.fromList $ filter ((== Stone p) . getStone board) $ libertyCoords board coord :: S.Set c
+  accChain board stone coord acc = newAcc `S.union` recChain
+    where sames = S.fromList $ filter ((== stone) . getStone board) $ libertyCoords board coord :: S.Set c
+          newAcc = acc `S.union` sames :: S.Set c
           rec :: c -> S.Set c
-          rec x = accChain board (Stone p) x newAcc
-          recChain = S.unions $ S.map rec (newSames S.\\ acc) :: S.Set c
-  accChain _ _ _ _ = S.empty
+          rec x = accChain board stone x newAcc
+          recChain = S.unions $ S.map rec (sames S.\\ acc) :: S.Set c
 
+  -- currently returns free chains too
   chain :: b -> c -> Chain p c
-  chain board coord
-    | coords == S.empty = NoChain
-    | otherwise = Chain stone coords
-    where coords = accChain board stone coord S.empty :: S.Set c
+  chain board coord = Chain stone coords
+    where coords = accChain board stone coord (S.singleton coord) :: S.Set c
           stone = getStone board coord :: Stone p
 
   chains :: b -> S.Set (Chain p c)
