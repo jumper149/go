@@ -11,24 +11,21 @@ module Board ( Player (..)
              ) where
 
 import qualified Data.Set as S
-import Data.List (nub, sortOn)
+import Data.List (sortOn)
 
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   char :: p -> Char
-  nextPlayer :: p -> p
-  nextPlayer player = if player == maxBound
-                      then minBound
-                      else succ player
+  next :: p -> p
+  next player = if player == maxBound
+                then minBound
+                else succ player
+  showStone :: Player p => Stone p -> String
+  showStone Free = " "
+  showStone (Stone p) = [ char p ]
 
 data Stone p = Free
-             | Off
              | Stone p
   deriving (Eq, Ord)
-
-instance Player p => Show (Stone p) where
-  show Free = " "
-  show Off = undefined
-  show (Stone p) = [ char p ]
 
 data Chain p c = Chain (Stone p) (S.Set c)
                | NoChain
@@ -102,7 +99,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
   runGame board player = do putStr $ showGame board player
                             coord <- readIOSafe $ readCoordOnBoard board
                             let newBoard = updateBoard (putStone board coord (Stone player)) player
-                                newPlayer = nextPlayer player
+                                newPlayer = next player
                             runGame newBoard newPlayer
     where readIOSafe :: (String -> Maybe c) -> IO c
           readIOSafe reader = reader <$> readLn >>= maybe (readIOSafe reader) return

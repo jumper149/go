@@ -34,7 +34,7 @@ data Board = Board BoardSize (V.Vector (B.Stone Player))
 
 instance Show Board where
   show (Board size vec) = concatMap showRow rows
-    where showRow = (++ "\n") . concat . V.map show
+    where showRow = (++ "\n") . concat . V.map B.showStone
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
           slice n = V.slice n size vec
 
