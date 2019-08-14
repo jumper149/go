@@ -21,25 +21,12 @@ instance B.Player Player where
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
--- Borders are also represented as Coordinates to cover edge cases.
 data Coord = Coord Int Int
-           | Border Border
-  deriving (Eq, Ord, Show)
-
-data Border = LeftB
-            | TopB
-            | RightB
-            | BottomB
-            | BottomLeftC
-            | TopLeftC
-            | TopRightC
-            | BottomRightC
   deriving (Eq, Ord, Show)
 
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y) = x + n * y
-coordToVecInd _ (Border _) = -1
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
 data Board = Board BoardSize (V.Vector (B.Stone Player))
@@ -55,7 +42,7 @@ instance B.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
   coords (Board size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
-  libertyCoords = orthogonalNeighborCoords
+  unsafeLibertyCoords = unsafeLibertyCoords
   readCoordOnBoard (Board size _) str = if length wrds == 2
                                         && charsInRange 48 57 x
                                         && charsInRange 97 122 y
@@ -82,33 +69,18 @@ defaultBoardSize = 4 :: BoardSize
 emptyFromSize :: BoardSize -> Board
 emptyFromSize size = Board size (V.replicate (size^2) B.Free)
 
--- | Check if a coordinate is on the board and use Border/Corner constructors if necessary.
-fixCoord :: BoardSize -> Coord -> Coord
-fixCoord size (Coord x y)
-  | x == -1 && y == -1 = Border BottomLeftC
-  | x == -1 && y == size = Border TopLeftC
-  | x == size && y == size = Border TopLeftC
-  | x == size && y == -1 = Border BottomRightC
-  | x == -1 = Border LeftB
-  | y == size = Border TopB
-  | x == size = Border RightB
-  | y == -1 = Border BottomB
-  | x >= 0 && x < size && y >= 0 && y < size = Coord x y
-  | otherwise = undefined
-
 -- | Return the neighboring coordinates on the board (orthogonally next to).
-orthogonalNeighborCoords :: Board -> Coord -> [Coord]
-orthogonalNeighborCoords (Board size _) (Coord x y) = map (fixCoord size) unsafeNeighbors
-  where unsafeNeighbors = [ Coord (x-1) y
-                          , Coord x     (y+1)
-                          , Coord (x+1) y
-                          , Coord x     (y-1)
-                          ]
+-- Invalid coordinates will be ignored by the class Board if the method coords is properly implemented.
+unsafeLibertyCoords :: Board -> Coord -> [Coord]
+unsafeLibertyCoords (Board size _) (Coord x y) = [ Coord (x-1) y
+                                                 , Coord x     (y+1)
+                                                 , Coord (x+1) y
+                                                 , Coord x     (y-1)
+                                                 ]
 
 -- | Return the stone on the given coordinate of the board.
 getStone :: Board -> Coord -> B.Stone Player
 getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
-getStone (Board size vec) (Border _) = B.Off
 
 -- | Place a stone on a given coordinate of the board. Return the new board.
 putStone :: Board -> Coord -> B.Stone Player -> Board

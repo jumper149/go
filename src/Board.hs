@@ -37,7 +37,9 @@ data Chain p c = Chain (Stone p) (S.Set c)
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   empty :: b
   coords :: b -> [c]
+  unsafeLibertyCoords :: b -> c -> [c]
   libertyCoords :: b -> c -> [c]
+  libertyCoords board coord = filter ((flip elem) (coords board)) $ unsafeLibertyCoords board coord
   readCoordOnBoard :: b -> String -> Maybe c
 
 class (Board b c, Player p) => Game b c p | b -> c where
