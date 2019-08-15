@@ -13,6 +13,17 @@ module Board ( Player (..)
 import qualified Data.Set as S
 import Data.List (sortOn)
 
+data Action c = Pass
+              | Place c
+  deriving (Eq)
+
+data Stone p = Free
+             | Stone p
+  deriving (Eq, Ord)
+
+data Chain p c = Chain (Stone p) (S.Set c)
+  deriving (Eq, Ord)
+
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   char :: p -> Char
   next :: p -> p
@@ -23,13 +34,6 @@ class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   showStone Free = " "
   showStone (Stone p) = [ char p ]
 
-data Stone p = Free
-             | Stone p
-  deriving (Eq, Ord)
-
-data Chain p c = Chain (Stone p) (S.Set c)
-  deriving (Eq, Ord)
-
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   empty :: b
   coords :: b -> [c]
@@ -37,6 +41,10 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   libertyCoords :: b -> c -> S.Set c
   libertyCoords board coord = S.fromList $ filter ((flip elem) (coords board)) $ unsafeLibertyCoords board coord
   readCoordOnBoard :: b -> String -> Maybe c
+  readAction :: b -> String -> Maybe (Action c)
+  readAction board str
+    | str == "pass" = Just Pass
+    | otherwise = fmap Place $ readCoordOnBoard board str
 
 class (Board b c, Player p) => Game b c p | b -> c where
   getStone :: b -> c -> Stone p
@@ -97,9 +105,12 @@ class (Board b c, Player p) => Game b c p | b -> c where
 
   runGame :: b -> p -> IO (b,p)
   runGame board player = do putStr $ showGame board player
-                            coord <- readIOSafe $ readCoordOnBoard board
-                            let newBoard = updateBoard (putStone board coord (Stone player)) player
+                            action <- readIOSafe $ readAction board
+                            let newBoard = act board player action
                                 newPlayer = next player
                             runGame newBoard newPlayer
-    where readIOSafe :: (String -> Maybe c) -> IO c
+    where readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
           readIOSafe reader = reader <$> readLn >>= maybe (readIOSafe reader) return
+          act :: b -> p -> Action c -> b
+          act board player Pass = board
+          act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
