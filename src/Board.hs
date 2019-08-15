@@ -3,11 +3,20 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Board ( Player (..)
+module Board ( Player ( char
+                      , showStone
+                      )
              , Stone (..)
-             , Board (..)
-             , Chain (..)
-             , Game (..)
+             , Board ( empty
+                     , coords
+                     , unsafeLibertyCoords
+                     , readCoordOnBoard
+                     )
+             , Game ( getStone
+                    , putStone
+                    , startGame
+                    , showGame
+                    )
              ) where
 
 import qualified Data.Set as S
