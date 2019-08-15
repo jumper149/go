@@ -43,17 +43,18 @@ class (Board b c, Player p) => Game b c p | b -> c where
   putStone :: b -> c -> Stone p -> b
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
-  accChain board stone coord acc = newAcc `S.union` recChain
-    where sames = S.fromList $ filter ((== stone) . getStone board) $ libertyCoords board coord :: S.Set c
+  accChain board stone coord acc = sames `S.union` recChain
+    where sames = S.filter ((== stone) . getStone board) $ libertyCoords board coord :: S.Set c
           newAcc = acc `S.union` sames :: S.Set c
+          nextCoords = sames S.\\ acc :: S.Set c
           rec :: c -> S.Set c
           rec x = accChain board stone x newAcc
-          recChain = S.unions $ S.map rec (sames S.\\ acc) :: S.Set c
+          recChain = S.unions $ S.map rec nextCoords :: S.Set c
 
-  -- currently returns free chains too
   chain :: b -> c -> Chain p c
   chain board coord = Chain stone coords
-    where coords = accChain board stone coord (S.singleton coord) :: S.Set c
+    where coords = singletonCoord `S.union` accChain board stone coord singletonCoord :: S.Set c
+          singletonCoord = S.singleton coord
           stone = getStone board coord :: Stone p
 
   chains :: b -> S.Set (Chain p c)
@@ -61,7 +62,8 @@ class (Board b c, Player p) => Game b c p | b -> c where
 
   sortedChains :: b -> p -> [Chain p c]
   sortedChains board player = appendPrevs sorted []
-    where sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList $ chains board
+    where withoutFrees = S.filter (\ (Chain stone _) -> stone /= Free) $ chains board
+          sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList $ withoutFrees
           appendPrevs :: [Chain p c] -> [Chain p c] -> [Chain p c]
           appendPrevs [] acc = acc
           appendPrevs ((Chain (Stone x) y):cs) acc
