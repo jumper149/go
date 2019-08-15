@@ -28,15 +28,14 @@ data Stone p = Free
   deriving (Eq, Ord)
 
 data Chain p c = Chain (Stone p) (S.Set c)
-               | NoChain
   deriving (Eq, Ord)
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   empty :: b
   coords :: b -> [c]
   unsafeLibertyCoords :: b -> c -> [c]
-  libertyCoords :: b -> c -> [c]
-  libertyCoords board coord = filter ((flip elem) (coords board)) $ unsafeLibertyCoords board coord
+  libertyCoords :: b -> c -> S.Set c
+  libertyCoords board coord = S.fromList $ filter ((flip elem) (coords board)) $ unsafeLibertyCoords board coord
   readCoordOnBoard :: b -> String -> Maybe c
 
 class (Board b c, Player p) => Game b c p | b -> c where
@@ -58,7 +57,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
           stone = getStone board coord :: Stone p
 
   chains :: b -> S.Set (Chain p c)
-  chains board = S.filter (/= NoChain) $ S.map (chain board) $ S.fromList (coords board)
+  chains board = S.map (chain board) $ S.fromList (coords board)
 
   sortedChains :: b -> p -> [Chain p c]
   sortedChains board player = appendPrevs sorted []
