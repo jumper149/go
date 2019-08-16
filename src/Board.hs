@@ -138,7 +138,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
                                 newPlayer = next player
                             runGame newBoard newPlayer
     where readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
-          readIOSafe reader = reader <$> readLn >>= maybe (readIOSafe reader) return
+          readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
           act :: b -> p -> Action c -> b
           act board player Pass = board
           act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
