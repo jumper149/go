@@ -9,7 +9,7 @@ module Board ( Player ( char
              , Stone (..)
              , Board ( empty
                      , coords
-                     , unsafeLibertyCoords
+                     , libertyCoords
                      , readCoordOnBoard
                      )
              , Game ( getStone
@@ -22,34 +22,51 @@ module Board ( Player ( char
 import qualified Data.Set as S
 import Data.List (sortOn)
 
+-- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
   deriving (Eq)
 
+-- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
              | Stone p
   deriving (Eq, Ord)
 
+-- | Stones placed on coordinates can form chains which are represented by this data type.
 data Chain p c = Chain (Stone p) (S.Set c)
   deriving (Eq, Ord)
 
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
+
+  -- | Represent a player with a preferably unique character.
   char :: p -> Char
+
+  -- | Return the next player.
   next :: p -> p
   next player = if player == maxBound
                 then minBound
                 else succ player
+
+  -- | Show a stone preferably as a single character string.
   showStone :: Player p => Stone p -> String
   showStone Free = " "
   showStone (Stone p) = [ char p ]
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
+
+  -- | Return an empty board.
   empty :: b
+
+  -- | Return a list of all coords covering the board.
   coords :: b -> [c]
-  unsafeLibertyCoords :: b -> c -> [c]
-  libertyCoords :: b -> c -> S.Set c
-  libertyCoords board coord = S.fromList $ filter ((flip elem) (coords board)) $ unsafeLibertyCoords board coord
+
+  -- | Return a list of all adjacent coordinates.
+  libertyCoords :: b -> c -> [c]
+
+  -- | Decide what and if a string represents a coordinate.
   readCoordOnBoard :: b -> String -> Maybe c
+
+  -- | Decide what and if a string represents an action.
   readAction :: b -> String -> Maybe (Action c)
   readAction board str
     | str == "pass" = Just Pass
@@ -61,7 +78,8 @@ class (Board b c, Player p) => Game b c p | b -> c where
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
   accChain board stone coord acc = sames `S.union` recChain
-    where sames = S.filter ((== stone) . getStone board) $ libertyCoords board coord :: S.Set c
+    where libs = S.fromList $ libertyCoords board coord :: S.Set c
+          sames = S.filter ((== stone) . getStone board) libs :: S.Set c
           newAcc = acc `S.union` sames :: S.Set c
           nextCoords = sames S.\\ acc :: S.Set c
           rec :: c -> S.Set c
@@ -90,7 +108,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
     where bools = S.map (((== (Free :: Stone p)) . (getStone board :: c -> Stone p))) libs
-          libs = S.unions $ S.map (libertyCoords board) coords
+          libs = S.unions $ S.map (S.fromList . libertyCoords board) coords
 
   removeChain :: b -> Chain p c -> b
   removeChain board (Chain _ coords) = S.foldr putFree board coords
@@ -112,6 +130,7 @@ class (Board b c, Player p) => Game b c p | b -> c where
 
   showGame :: b -> p -> String
 
+  -- | Make one step in the game and also start the next step.
   runGame :: b -> p -> IO (b,p)
   runGame board player = do putStr $ showGame board player
                             action <- readIOSafe $ readAction board
