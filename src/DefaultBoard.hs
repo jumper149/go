@@ -1,21 +1,21 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module DefaultBoard ( Player (..)
+module DefaultBoard ( PlayerBW (..)
                     , Coord (..)
-                    , Board (..)
+                    , BoardSquare (..)
                     , emptyFromSize
                     ) where
 
-import qualified Game as G
+import Game
 
 import qualified Data.Vector as V
 
 -- | Represents the players.
-data Player = Black
-            | White
+data PlayerBW = Black
+              | White
   deriving (Eq, Enum, Bounded, Ord, Show)
 
-instance G.Player Player where
+instance Player PlayerBW where
   char Black = 'B'
   char White = 'W'
 
@@ -29,7 +29,7 @@ coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y) = x + n * y
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
-data Board = Board BoardSize (V.Vector (G.Stone Player))
+data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
   deriving Eq
 
 -- | Represents the number of rows (or columns) on a square board.
@@ -39,28 +39,28 @@ type BoardSize = Int
 defaultBoardSize = 4 :: BoardSize
 
 -- | Create an empty board.
-emptyFromSize :: BoardSize -> Board
-emptyFromSize size = Board size (V.replicate (size^2) G.Free)
+emptyFromSize :: BoardSize -> BoardSquare
+emptyFromSize size = BSquare size (V.replicate (size^2) Free)
 
-instance Show Board where
-  show (Board size vec) = concatMap showRow rows
-    where showRow = (++ "\n") . concat . V.map G.showStone
-          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (G.Stone Player)]
+instance Show BoardSquare where
+  show (BSquare size vec) = concatMap showRow rows
+    where showRow = (++ "\n") . concat . V.map showStone
+          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
           slice n = V.slice n size vec
 
-instance G.Board Board Coord where
+instance Board BoardSquare Coord where
   empty = emptyFromSize defaultBoardSize
-  coords (Board size _) = [ Coord x y | x <- range , y <- range ]
+  coords (BSquare size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
 
-  libertyCoords board (Coord x y) = filter (flip elem $ G.coords board) unsafeLibertyCoords
+  libertyCoords board (Coord x y) = filter (flip elem $ coords board) unsafeLibertyCoords
     where unsafeLibertyCoords = [ Coord (x-1) y
                                 , Coord x     (y+1)
                                 , Coord (x+1) y
                                 , Coord x     (y-1)
                                 ]
 
-  readCoordOnBoard (Board size _) str = if length wrds == 2
+  readCoordOnBoard (BSquare size _) str = if length wrds == 2
                                         && charsInRange 48 57 x
                                         && charsInRange 97 122 y
                                         && length y == 1
@@ -76,15 +76,15 @@ instance G.Board Board Coord where
             where nums = map fromEnum str
                   bools = map (\ x -> x >= lo && x <= hi) nums
 
-instance G.Game Board Coord Player where
+instance Game BoardSquare Coord PlayerBW where
 
-  getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
+  getStone (BSquare size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
 
-  putStone (Board size vec) coord stone = Board size newVec
+  putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-showGame (Board size vec) player = numbers ++ bStr ++ pStr
-  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
+showGame (BSquare size vec) player = numbers ++ bStr ++ pStr
+  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
         pStr = show player ++ "\n"
         numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
         alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
