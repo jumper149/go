@@ -6,6 +6,8 @@ module Main where
 import qualified Board as B
 import qualified DefaultBoard as D
 
+import Control.Monad ( void
+                     )
+
 main :: IO ()
-main = (B.startGame :: IO (D.Board,D.Player))
-       >> return ()
+main = void (B.startGame :: IO (D.Board,D.Player))

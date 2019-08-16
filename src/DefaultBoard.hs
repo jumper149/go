@@ -55,7 +55,7 @@ instance B.Board Board Coord where
 
   -- | Return the neighboring coordinates on the board (orthogonally next to).
   -- Invalid coordinates will be ignored by the class Board if the method coords is properly implemented.
-  libertyCoords board (Coord x y) = filter ((flip elem) (B.coords board)) unsafeLibertyCoords
+  libertyCoords board (Coord x y) = filter (flip elem $ B.coords board) unsafeLibertyCoords
     where unsafeLibertyCoords = [ Coord (x-1) y
                                 , Coord x     (y+1)
                                 , Coord (x+1) y

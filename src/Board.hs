@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -70,10 +69,14 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   readAction :: b -> String -> Maybe (Action c)
   readAction board str
     | str == "pass" = Just Pass
-    | otherwise = fmap Place $ readCoordOnBoard board str
+    | otherwise = Place <$> readCoordOnBoard board str
 
 class (Board b c, Player p) => Game b c p | b -> c where
+
+  -- | Returns the stone.
   getStone :: b -> c -> Stone p
+
+  -- | Places a stone on a coordinate and returns the board.
   putStone :: b -> c -> Stone p -> b
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
@@ -82,9 +85,10 @@ class (Board b c, Player p) => Game b c p | b -> c where
           sames = S.filter ((== stone) . getStone board) libs :: S.Set c
           newAcc = acc `S.union` sames :: S.Set c
           nextCoords = sames S.\\ acc :: S.Set c
+          recChain = S.unions $ S.map rec nextCoords :: S.Set c
+
           rec :: c -> S.Set c
           rec x = accChain board stone x newAcc
-          recChain = S.unions $ S.map rec nextCoords :: S.Set c
 
   chain :: b -> c -> Chain p c
   chain board coord = Chain stone coords
@@ -98,12 +102,12 @@ class (Board b c, Player p) => Game b c p | b -> c where
   sortedChains :: b -> p -> [Chain p c]
   sortedChains board player = appendPrevs sorted []
     where withoutFrees = S.filter (\ (Chain stone _) -> stone /= Free) $ chains board
-          sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList $ withoutFrees
+          sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList withoutFrees
           appendPrevs :: [Chain p c] -> [Chain p c] -> [Chain p c]
           appendPrevs [] acc = acc
-          appendPrevs ((Chain (Stone x) y):cs) acc
-            | x < player = appendPrevs cs (acc ++ [ (Chain (Stone x) y) ])
-            | otherwise = ((Chain (Stone x) y) : cs) ++ acc
+          appendPrevs (Chain (Stone x) y : cs) acc
+            | x < player = appendPrevs cs (acc ++ [ Chain (Stone x) y ])
+            | otherwise = (Chain (Stone x) y : cs) ++ acc
 
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
