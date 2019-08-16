@@ -83,8 +83,8 @@ instance G.Game Board Coord Player where
   putStone (Board size vec) coord stone = Board size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-  showGame (Board size vec) player = numbers ++ bStr ++ pStr
-    where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
-          pStr = show player ++ "\n"
-          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
-          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
+showGame (Board size vec) player = numbers ++ bStr ++ pStr
+  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
+        pStr = show player ++ "\n"
+        numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+        alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]

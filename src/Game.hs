@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Game ( Player ( char
+                     , next
                      , showStone
                      )
             , Stone (..)
@@ -12,18 +13,13 @@ module Game ( Player ( char
                     )
             , Game ( getStone
                    , putStone
-                   , startGame
+                   , updateBoard
                    , showGame
                    )
             ) where
 
 import qualified Data.Set as S
 import Data.List (sortOn)
-
--- | A player can execute the actions represented by this data type.
-data Action c = Pass
-              | Place c
-  deriving (Eq)
 
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
@@ -63,12 +59,6 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
   -- | Decide what and if a string represents a coordinate.
   readCoordOnBoard :: b -> String -> Maybe c
-
-  -- | Decide what and if a string represents an action.
-  readAction :: b -> String -> Maybe (Action c)
-  readAction board str
-    | str == "pass" = Just Pass
-    | otherwise = Place <$> readCoordOnBoard board str
 
 class (Board b c, Player p) => Game b c p | b -> c where
 
@@ -126,22 +116,4 @@ class (Board b c, Player p) => Game b c p | b -> c where
                                         then board
                                         else removeChain board chain
 
-  startGame :: IO (b,p)
-  startGame = runGame board player
-    where board = empty :: b
-          player = minBound :: p
-
   showGame :: b -> p -> String
-
-  -- | Make one step in the game and also start the next step.
-  runGame :: b -> p -> IO (b,p)
-  runGame board player = do putStr $ showGame board player
-                            action <- readIOSafe $ readAction board
-                            let newBoard = act board player action
-                                newPlayer = next player
-                            runGame newBoard newPlayer
-    where readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
-          readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
-          act :: b -> p -> Action c -> b
-          act board player Pass = board
-          act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
