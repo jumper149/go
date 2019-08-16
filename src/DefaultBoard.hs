@@ -83,7 +83,6 @@ instance G.Game Board Coord Player where
   putStone (Board size vec) coord stone = Board size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-  -- | Turn board and player into an aesthetically good looking String.
   showGame (Board size vec) player = numbers ++ bStr ++ pStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (Board size vec)
           pStr = show player ++ "\n"
