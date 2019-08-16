@@ -1,11 +1,11 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Game ( Player ( char
+module Game ( Stone (..)
+            , Player ( char
                      , next
                      , showStone
                      )
-            , Stone (..)
             , Board ( empty
                     , coords
                     , libertyCoords
@@ -59,7 +59,7 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   -- | Decide what and if a string represents a coordinate.
   readCoordOnBoard :: b -> String -> Maybe c
 
-class (Board b c, Player p) => Game b c p | b -> c where
+class (Board b c, Player p) => Game b c p | b -> c p where
 
   -- | Returns the stone.
   getStone :: b -> c -> Stone p

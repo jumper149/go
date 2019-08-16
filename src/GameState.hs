@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module GameState ( State (..)
@@ -14,13 +14,14 @@ data Action c = Pass
   deriving (Eq)
 
 -- | Decide what and if a string represents an action.
-readAction :: Board b c => b -> String -> Maybe (Action c)
+readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
 readAction board str
   | str == "pass" = Just Pass
   | otherwise = Place <$> readCoordOnBoard board str
 
-data GameState b c p = GState
-                     | Ended
+-- board player oldBoard numberOfPasses
+data GameState b p = GState b p b Int
+                   | Ended b p
 
 startGame :: forall b c p. Game b c p => IO (b,p)
 startGame = runGame board player
@@ -42,4 +43,4 @@ runGame board player = do -- putStr $ display board player
 
 class Game b c p => State b c p where
 
-  display :: b -> p -> String
+  display :: b -> String

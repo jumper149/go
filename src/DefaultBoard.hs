@@ -86,8 +86,7 @@ instance Game BoardSquare Coord PlayerBW where
 
 instance State BoardSquare Coord PlayerBW where
 
-  display (BSquare size vec) player = numbers ++ bStr ++ pStr
+  display (BSquare size vec) = numbers ++ bStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
-          pStr = show player ++ "\n"
           numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
           alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
