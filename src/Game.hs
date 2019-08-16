@@ -14,7 +14,6 @@ module Game ( Player ( char
             , Game ( getStone
                    , putStone
                    , updateBoard
-                   , showGame
                    )
             ) where
 
@@ -115,5 +114,3 @@ class (Board b c, Player p) => Game b c p | b -> c where
           removeNoLiberty board chain = if hasLiberty board chain
                                         then board
                                         else removeChain board chain
-
-  showGame :: b -> p -> String

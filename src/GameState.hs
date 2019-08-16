@@ -1,7 +1,8 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module GameState ( GameState (..)
+module GameState ( State (..)
+                 , GameState (..)
                  , startGame
                  ) where
 
@@ -18,8 +19,8 @@ readAction board str
   | str == "pass" = Just Pass
   | otherwise = Place <$> readCoordOnBoard board str
 
-data GameState = GState
-               | Ended
+data GameState b c p = GState
+                     | Ended
 
 startGame :: forall b c p. Game b c p => IO (b,p)
 startGame = runGame board player
@@ -28,7 +29,7 @@ startGame = runGame board player
 
 -- | Make one step in the game and also start the next step.
 runGame :: forall b c p. Game b c p => b -> p -> IO (b,p)
-runGame board player = do putStr $ showGame board player
+runGame board player = do -- putStr $ display board player
                           action <- readIOSafe $ readAction board
                           let newBoard = act board player action
                               newPlayer = next player
@@ -39,6 +40,6 @@ runGame board player = do putStr $ showGame board player
         act board player Pass = board
         act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
 
-class Game b c p => DisplayState b c p where
+class Game b c p => State b c p where
 
-  --showGame :: b -> p -> String
+  display :: b -> p -> String

@@ -7,6 +7,7 @@ module DefaultBoard ( PlayerBW (..)
                     ) where
 
 import Game
+import GameState
 
 import qualified Data.Vector as V
 
@@ -83,8 +84,10 @@ instance Game BoardSquare Coord PlayerBW where
   putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-showGame (BSquare size vec) player = numbers ++ bStr ++ pStr
-  where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
-        pStr = show player ++ "\n"
-        numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
-        alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
+instance State BoardSquare Coord PlayerBW where
+
+  display (BSquare size vec) player = numbers ++ bStr ++ pStr
+    where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
+          pStr = show player ++ "\n"
+          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
