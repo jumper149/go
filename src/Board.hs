@@ -47,7 +47,7 @@ class (Eq p, Enum p, Bounded p, Ord p) => Player p where
                 else succ player
 
   -- | Show a stone preferably as a single character string.
-  showStone :: Player p => Stone p -> String
+  showStone :: Stone p -> String
   showStone Free = " "
   showStone (Stone p) = [ char p ]
 
