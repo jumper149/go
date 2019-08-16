@@ -6,7 +6,7 @@ module DefaultBoard ( Player (..)
                     , emptyFromSize
                     ) where
 
-import qualified Board as B
+import qualified Game as G
 
 import qualified Data.Vector as V
 
@@ -15,7 +15,7 @@ data Player = Black
             | White
   deriving (Eq, Enum, Bounded, Ord, Show)
 
-instance B.Player Player where
+instance G.Player Player where
   char Black = 'B'
   char White = 'W'
 
@@ -29,7 +29,7 @@ coordToVecInd :: BoardSize -> Coord -> Int
 coordToVecInd n (Coord x y) = x + n * y
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
-data Board = Board BoardSize (V.Vector (B.Stone Player))
+data Board = Board BoardSize (V.Vector (G.Stone Player))
   deriving Eq
 
 -- | Represents the number of rows (or columns) on a square board.
@@ -40,22 +40,20 @@ defaultBoardSize = 4 :: BoardSize
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> Board
-emptyFromSize size = Board size (V.replicate (size^2) B.Free)
+emptyFromSize size = Board size (V.replicate (size^2) G.Free)
 
 instance Show Board where
   show (Board size vec) = concatMap showRow rows
-    where showRow = (++ "\n") . concat . V.map B.showStone
-          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (B.Stone Player)]
+    where showRow = (++ "\n") . concat . V.map G.showStone
+          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (G.Stone Player)]
           slice n = V.slice n size vec
 
-instance B.Board Board Coord where
+instance G.Board Board Coord where
   empty = emptyFromSize defaultBoardSize
   coords (Board size _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
 
-  -- | Return the neighboring coordinates on the board (orthogonally next to).
-  -- Invalid coordinates will be ignored by the class Board if the method coords is properly implemented.
-  libertyCoords board (Coord x y) = filter (flip elem $ B.coords board) unsafeLibertyCoords
+  libertyCoords board (Coord x y) = filter (flip elem $ G.coords board) unsafeLibertyCoords
     where unsafeLibertyCoords = [ Coord (x-1) y
                                 , Coord x     (y+1)
                                 , Coord (x+1) y
@@ -78,12 +76,10 @@ instance B.Board Board Coord where
             where nums = map fromEnum str
                   bools = map (\ x -> x >= lo && x <= hi) nums
 
-instance B.Game Board Coord Player where
+instance G.Game Board Coord Player where
 
-  -- | Return the stone on the given coordinate of the board.
   getStone (Board size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
 
-  -- | Place a stone on a given coordinate of the board. Return the new board.
   putStone (Board size vec) coord stone = Board size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 

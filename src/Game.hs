@@ -1,21 +1,21 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Board ( Player ( char
-                      , showStone
-                      )
-             , Stone (..)
-             , Board ( empty
-                     , coords
-                     , libertyCoords
-                     , readCoordOnBoard
+module Game ( Player ( char
+                     , showStone
                      )
-             , Game ( getStone
-                    , putStone
-                    , startGame
-                    , showGame
+            , Stone (..)
+            , Board ( empty
+                    , coords
+                    , libertyCoords
+                    , readCoordOnBoard
                     )
-             ) where
+            , Game ( getStone
+                   , putStone
+                   , startGame
+                   , showGame
+                   )
+            ) where
 
 import qualified Data.Set as S
 import Data.List (sortOn)
