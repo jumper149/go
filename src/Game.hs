@@ -8,6 +8,7 @@ module Game ( Game ( getStone
             , Board (..)
             , Player (..)
             , next
+            , countPlayers
             , Stone (..)
             , showStone
             ) where
@@ -39,6 +40,10 @@ next :: forall p. Player p => p -> p
 next player = if player == maxBound
               then minBound
               else succ player
+
+-- | Count the number of players.
+countPlayers :: forall p. Player p => p -> Int
+countPlayers _ = length ([ minBound .. maxBound ] :: [p])
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
