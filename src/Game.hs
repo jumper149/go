@@ -98,7 +98,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
 
   hasLiberty :: b -> Chain p c -> Bool
   hasLiberty board (Chain stone coords) = S.foldr (||) False bools
-    where bools = S.map (((== (Free :: Stone p)) . (getStone board :: c -> Stone p))) libs
+    where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) libs
           libs = S.unions $ S.map (S.fromList . libertyCoords board) coords
 
   removeChain :: b -> Chain p c -> b
