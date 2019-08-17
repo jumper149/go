@@ -53,5 +53,5 @@ stepGame (GState board player oldBoard passes) =
 endGame :: forall b c p. State b c p => GameState b p -> IO (b,p)
 endGame (GEnded board player) = putStr "end" >> return (board , player)
 
-readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
+readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
