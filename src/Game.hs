@@ -1,20 +1,15 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Game ( Stone (..)
-            , Player ( char
-                     , next
-                     , showStone
-                     )
-            , Board ( empty
-                    , coords
-                    , libertyCoords
-                    , readCoordOnBoard
-                    )
-            , Game ( getStone
+module Game ( Game ( getStone
                    , putStone
                    , updateBoard
                    )
+            , Board (..)
+            , Player (..)
+            , next
+            , Stone (..)
+            , showStone
             ) where
 
 import qualified Data.Set as S
@@ -25,6 +20,11 @@ data Stone p = Free
              | Stone p
   deriving (Eq, Ord)
 
+-- | Show a stone preferably as a single character string.
+showStone :: forall p. Player p => Stone p -> String
+showStone Free = " "
+showStone (Stone p) = [ char p ]
+
 -- | Stones placed on coordinates can form chains which are represented by this data type.
 data Chain p c = Chain (Stone p) (S.Set c)
   deriving (Eq, Ord)
@@ -34,16 +34,11 @@ class (Eq p, Enum p, Bounded p, Ord p) => Player p where
   -- | Represent a player with a preferably unique character.
   char :: p -> Char
 
-  -- | Return the next player.
-  next :: p -> p
-  next player = if player == maxBound
-                then minBound
-                else succ player
-
-  -- | Show a stone preferably as a single character string.
-  showStone :: Stone p -> String
-  showStone Free = " "
-  showStone (Stone p) = [ char p ]
+-- | Return the next player.
+next :: forall p. Player p => p -> p
+next player = if player == maxBound
+              then minBound
+              else succ player
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
@@ -106,6 +101,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
     where putFree :: c -> b -> b
           putFree coord board = putStone board coord (Free :: Stone p)
 
+  -- | Remove chains without liberties. Give player as an argument to solve atari. Return board.
   updateBoard :: b -> p -> b
   updateBoard board player = foldl removeNoLiberty board chs
     where chs = chains board player
