@@ -13,6 +13,10 @@ data Action c = Pass
               | Place c
   deriving (Eq)
 
+act :: forall b c p. Game b c p => b -> p -> Action c -> b
+act board player Pass = board
+act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
+
 -- | Decide what and if a string represents an action.
 readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
 readAction board str
@@ -20,8 +24,9 @@ readAction board str
   | otherwise = Place <$> readCoordOnBoard board str
 
 -- board player oldBoard numberOfPasses
-data GameState b p = GState b p b Int
-                   | Ended b p
+data GameState b p = GStarted b p
+                   | GState b p b Int
+                   | GEnded b p
 
 startGame :: forall b c p. Game b c p => IO (b,p)
 startGame = runGame board player
@@ -35,12 +40,16 @@ runGame board player = do -- putStr $ display board player
                           let newBoard = act board player action
                               newPlayer = next player
                           runGame newBoard newPlayer
-  where readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
-        readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
-        act :: b -> p -> Action c -> b
-        act board player Pass = board
-        act board player (Place coord) = updateBoard (putStone board coord (Stone player)) player
+
+endGame :: forall b c p. State b c p => GameState b p -> IO ()
+endGame (GEnded board player) = putStr "end"
+
+stepGame :: forall b c p. State b c p => GameState b p -> IO (GameState b p)
+stepGame (GStarted board player) = return (GStarted board player)
 
 class Game b c p => State b c p where
 
   display :: b -> String
+
+readIOSafe :: (String -> Maybe (Action c)) -> IO (Action c)
+readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
