@@ -3,7 +3,7 @@
 
 module GameState ( State (..)
                  , GameState (..)
-                 , startGame
+                 , startTerm
                  ) where
 
 import Rules
@@ -33,23 +33,23 @@ class Game b c p => State b c p where
 
   display :: b -> String
 
-startGame :: forall b c p. State b c p => IO (b,p)
-startGame = stepGame $ GState board player board 0
+startTerm :: forall b c p. State b c p => IO (b,p)
+startTerm = stepTerm $ GState board player board 0
   where board = empty :: b
         player = minBound :: p
 
-stepGame :: forall b c p. State b c p => GameState b p -> IO (b,p)
-stepGame (GState board player oldBoard passes) =
+stepTerm :: forall b c p. State b c p => GameState b p -> IO (b,p)
+stepTerm (GState board player oldBoard passes) =
   do putStr $ display board
      action <- readIOSafe $ readAction board
      let (newBoard , newPasses) = act (board , passes) player action
          newPlayer = next player
      if newPasses < countPlayers player
      then if newBoard /= oldBoard
-             then stepGame (GState newBoard newPlayer board newPasses)
-             else stepGame (GState board player oldBoard passes)
-     else stepGame (GEnded newBoard newPlayer)
-stepGame (GEnded board player) = putStr "end" >> return (board , player)
+             then stepTerm (GState newBoard newPlayer board newPasses)
+             else stepTerm (GState board player oldBoard passes)
+     else stepTerm (GEnded newBoard newPlayer)
+stepTerm (GEnded board player) = putStr "end" >> return (board , player)
 
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
