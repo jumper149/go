@@ -1,9 +1,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module GameState ( State (..)
+module GameState ( State ( display
+                         , startTerm
+                         )
                  , GameState (..)
-                 , startTerm
                  ) where
 
 import Rules
@@ -33,23 +34,23 @@ class Game b c p => State b c p where
 
   display :: b -> String
 
-startTerm :: forall b c p. State b c p => IO (b,p)
-startTerm = stepTerm $ GState board player board 0
-  where board = empty :: b
-        player = minBound :: p
+  stepTerm :: GameState b p -> IO (b,p)
+  stepTerm (GState board player oldBoard passes) =
+    do putStr $ display board
+       action <- readIOSafe $ readAction board
+       let (newBoard , newPasses) = act (board , passes) player action
+           newPlayer = next player
+       if newPasses < countPlayers player
+       then if newBoard /= oldBoard
+               then stepTerm (GState newBoard newPlayer board newPasses)
+               else stepTerm (GState board player oldBoard passes)
+       else stepTerm (GEnded newBoard newPlayer)
+  stepTerm (GEnded board player) = putStr "end" >> return (board , player)
 
-stepTerm :: forall b c p. State b c p => GameState b p -> IO (b,p)
-stepTerm (GState board player oldBoard passes) =
-  do putStr $ display board
-     action <- readIOSafe $ readAction board
-     let (newBoard , newPasses) = act (board , passes) player action
-         newPlayer = next player
-     if newPasses < countPlayers player
-     then if newBoard /= oldBoard
-             then stepTerm (GState newBoard newPlayer board newPasses)
-             else stepTerm (GState board player oldBoard passes)
-     else stepTerm (GEnded newBoard newPlayer)
-stepTerm (GEnded board player) = putStr "end" >> return (board , player)
+  startTerm :: IO (b,p)
+  startTerm = stepTerm $ GState board player board 0
+    where board = empty :: b
+          player = minBound :: p
 
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
