@@ -88,7 +88,7 @@ instance Game BoardSquare Coord PlayerBW where
   putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance State BoardSquare Coord PlayerBW where
+instance StateTerm BoardSquare Coord PlayerBW where
 
   display (BSquare size vec) = numbers ++ bStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)

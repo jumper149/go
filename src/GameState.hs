@@ -1,9 +1,9 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module GameState ( State ( display
-                         , startTerm
-                         )
+module GameState ( StateTerm ( display
+                             , startTerm
+                             )
                  , GameState (..)
                  ) where
 
@@ -30,7 +30,7 @@ readAction board str
 data GameState b p = GState b p b Int
                    | GEnded b p
 
-class Game b c p => State b c p where
+class Game b c p => StateTerm b c p where
 
   display :: b -> String
 
