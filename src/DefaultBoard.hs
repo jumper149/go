@@ -6,7 +6,7 @@ module DefaultBoard ( PlayerBW (..)
                     , emptyFromSize
                     ) where
 
-import Game
+import Rules
 import GameState
 
 import qualified Data.Vector as V
@@ -37,11 +37,12 @@ data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
 type BoardSize = Int
 
 -- | Defines the default board size.
-defaultBoardSize = 4 :: BoardSize
+defaultBoardSize :: BoardSize
+defaultBoardSize = 4
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> BoardSquare
-emptyFromSize size = BSquare size (V.replicate (size^2) Free)
+emptyFromSize size = BSquare size (V.replicate (size * size) Free)
 
 instance Show BoardSquare where
   show (BSquare size vec) = concatMap showRow rows
@@ -61,21 +62,24 @@ instance Board BoardSquare Coord where
                                 , Coord x     (y-1)
                                 ]
 
-  readCoordOnBoard (BSquare size _) str = if length wrds == 2
-                                        && charsInRange 48 57 x
-                                        && charsInRange 97 122 y
-                                        && length y == 1
-                                        then Just (Coord xInt yInt)
-                                        else Nothing
+  readCoordOnBoard board str = if length wrds == 2
+                               && charsInRange 48 57 x
+                               && charsInRange 97 122 y
+                               && length y == 1
+                               then let coord = Coord xInt yInt
+                                    in if coord `elem` coords board
+                                       then Just coord
+                                       else Nothing
+                               else Nothing
     where wrds = words str
           x = head wrds :: String
           y = head $ tail wrds :: String
           xInt = read x - 1 :: Int
           yInt = fromEnum (head y) - 97
           charsInRange :: Int -> Int -> String -> Bool
-          charsInRange lo hi str = and bools
-            where nums = map fromEnum str
-                  bools = map (\ x -> x >= lo && x <= hi) nums
+          charsInRange lo hi st = and bools
+            where nums = map fromEnum st
+                  bools = map (\ i -> i >= lo && i <= hi) nums
 
 instance Game BoardSquare Coord PlayerBW where
 

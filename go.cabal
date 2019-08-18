@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable go
   main-is:             Main.hs
-  other-modules:       Game
+  other-modules:       Rules
                        GameState
                        DefaultBoard
   -- other-extensions:

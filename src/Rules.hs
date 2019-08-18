@@ -1,17 +1,17 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Game ( Game ( getStone
-                   , putStone
-                   , updateBoard
-                   )
-            , Board (..)
-            , Player (..)
-            , next
-            , countPlayers
-            , Stone (..)
-            , showStone
-            ) where
+module Rules ( Game ( getStone
+                    , putStone
+                    , updateBoard
+                    )
+             , Board (..)
+             , Player (..)
+             , next
+             , countPlayers
+             , Stone (..)
+             , showStone
+             ) where
 
 import qualified Data.Set as S
 import Data.List (sortOn)

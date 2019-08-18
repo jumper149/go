@@ -3,7 +3,6 @@
 
 module Main where
 
-import Game
 import GameState
 import qualified DefaultBoard as D
 

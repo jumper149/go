@@ -6,7 +6,7 @@ module GameState ( State (..)
                  , startGame
                  ) where
 
-import Game
+import Rules
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
@@ -15,7 +15,7 @@ data Action c = Pass
 
 -- | Apply action to board and number of passes.
 act :: forall b c p. Game b c p => (b,Int) -> p -> Action c -> (b,Int)
-act (board , passes) player Pass = (board , passes + 1)
+act (board , passes) _ Pass = (board , passes + 1)
 act (board , _) player (Place coord) = (newBoard , 0)
   where newBoard = updateBoard (putStone board coord (Stone player)) player
 
@@ -48,10 +48,8 @@ stepGame (GState board player oldBoard passes) =
      then if newBoard /= oldBoard
              then stepGame (GState newBoard newPlayer board newPasses)
              else stepGame (GState board player oldBoard passes)
-     else endGame (GEnded newBoard newPlayer)
-
-endGame :: forall b c p. State b c p => GameState b p -> IO (b,p)
-endGame (GEnded board player) = putStr "end" >> return (board , player)
+     else stepGame (GEnded newBoard newPlayer)
+stepGame (GEnded board player) = putStr "end" >> return (board , player)
 
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
