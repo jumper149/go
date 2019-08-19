@@ -32,11 +32,11 @@ data GameState b p = GState b p b Int
 
 class Game b c p => StateTerm b c p where
 
-  display :: b -> String
+  display :: b -> p -> String
 
   stepTerm :: GameState b p -> IO (b,p)
   stepTerm (GState board player oldBoard passes) =
-    do putStr $ display board
+    do putStr $ display board player
        action <- readIOSafe $ readAction board
        let (newBoard , newPasses) = act (board , passes) player action
            newPlayer = next player
