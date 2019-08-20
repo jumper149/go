@@ -45,7 +45,7 @@ class Game b c p => StateTerm b c p where
                then stepTerm (GState newBoard newPlayer board newPasses)
                else stepTerm (GState board player oldBoard passes)
        else stepTerm (GEnded newBoard newPlayer)
-  stepTerm (GEnded board player) = putStr "end" >> return (board , player)
+  stepTerm (GEnded board player) = putStr "end\n" >> return (board , player)
 
   startTerm :: IO (b,p)
   startTerm = stepTerm $ GState board player board 0
