@@ -16,7 +16,7 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   stepTerm :: GameState b p -> IO (b,p)
   stepTerm (GState board player oldBoard passes) =
     do putStr $ show board
-       putStr $ show player
+       putStr $ show player ++ "\n"
        action <- readIOSafe $ readAction board
        endState <- step stepTerm (GState board player oldBoard passes) action
        endTerm endState
