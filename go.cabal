@@ -20,8 +20,8 @@ executable go
   main-is:             Main.hs
   other-modules:       Rules
                        GameState
-                       DefaultBoard
                        Frontend.Term.Term
+                       Board.Default
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , containers

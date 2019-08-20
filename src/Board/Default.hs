@@ -1,10 +1,10 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-module DefaultBoard ( PlayerBW (..)
-                    , CoordXY (..)
-                    , BoardSquare (..)
-                    , emptyFromSize
-                    ) where
+module Board.Default ( PlayerBW (..)
+                     , CoordXY (..)
+                     , BoardSquare (..)
+                     , emptyFromSize
+                     ) where
 
 import Rules
 import Frontend.Term.Term

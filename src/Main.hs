@@ -4,7 +4,7 @@
 module Main where
 
 import Frontend.Term.Term
-import qualified DefaultBoard as D
+import qualified Board.Default as D
 
 import Control.Monad ( void
                      )
