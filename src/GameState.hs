@@ -26,7 +26,12 @@ readAction board str
   | str == "pass" = Just Pass
   | otherwise = Place <$> readCoordOnBoard board str
 
-step :: (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> GameState b p -> Action c -> m (GameState b p)
+start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> m (GameState b p)
+start stepper = stepper (GState board player board 0)
+  where board = empty :: b
+        player = minBound :: p
+
+step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> GameState b p -> Action c -> m (GameState b p)
 step stepper (GState board player oldBoard passes) action =
   if newPasses < countPlayers player
   then if newBoard /= oldBoard
@@ -45,17 +50,15 @@ class Game b c p => StateTerm b c p where
 
   display :: b -> p -> String
 
+  startTerm :: IO (GameState b p)
+  startTerm = start stepTerm :: IO (GameState b p)
+
   stepTerm :: GameState b p -> IO (GameState b p)
   stepTerm (GState board player oldBoard passes) =
     do putStr $ display board player
        action <- readIOSafe $ readAction board
        step stepTerm (GState board player oldBoard passes) action
   stepTerm (GEnded board player) = putStr "end\n" >> step stepTerm (GEnded board player) undefined
-
-  startTerm :: IO (GameState b p)
-  startTerm = stepTerm $ GState board player board 0
-    where board = empty :: b
-          player = minBound :: p
 
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
