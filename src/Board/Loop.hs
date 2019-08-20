@@ -2,8 +2,7 @@
 
 module Board.Loop ( PlayerBW (..)
                   , CoordXY (..)
-                  , BoardSquare (..)
-                  , emptyFromSize
+                  , BoardLoop (..)
                   ) where
 
 import Rules
@@ -18,14 +17,14 @@ instance Board BoardLoop CoordXY where
   coords (BLoop board) = coords board
   readCoordOnBoard (BLoop board) str = readCoordOnBoard board str
 
-  libertyCoords (BLoop (BSquare size _)) (XY x y) = map wrap unsafeLibertyCoords
+  libertyCoords (BLoop (BSquare size vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare size vec))) $ map wrap unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y
                                 , XY x     (y+1)
                                 , XY (x+1) y
                                 , XY x     (y-1)
                                 ]
           wrap :: CoordXY -> CoordXY
-          wrap (XY a b) = XY (a `mod` size) (b `mod` size)
+          wrap (XY a b) = XY (a `mod` size) b
 
 instance Game BoardLoop CoordXY PlayerBW where
   getStone (BLoop board) coord = getStone board coord
