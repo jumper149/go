@@ -30,7 +30,7 @@ start stepper = stepper (GState board player board 0)
 step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (b,p)) -> GameState b p -> Action c -> m (b,p)
 step stepper (GState board player oldBoard passes) action =
   if newPasses < countPlayers player
-  then if wasFree || newBoard /= oldBoard
+  then if wasFree && newBoard /= oldBoard
           then stepper (GState newBoard newPlayer board newPasses)
           else stepper (GState board player oldBoard passes)
   else return (newBoard , newPlayer)
