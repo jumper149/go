@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 module DefaultBoard ( PlayerBW (..)
-                    , Coord (..)
+                    , CoordXY (..)
                     , BoardSquare (..)
                     , emptyFromSize
                     ) where
@@ -22,12 +22,12 @@ instance Player PlayerBW where
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
-data Coord = Coord Int Int
+data CoordXY = XY Int Int
   deriving (Eq, Ord, Show)
 
 -- | Transform coordinate to index to access the array of points on the board.
-coordToVecInd :: BoardSize -> Coord -> Int
-coordToVecInd n (Coord x y) = x + n * y
+coordToVecInd :: BoardSize -> CoordXY -> Int
+coordToVecInd n (XY x y) = x + n * y
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
 data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
@@ -50,23 +50,23 @@ instance Show BoardSquare where
           rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
           slice n = V.slice n size vec
 
-instance Board BoardSquare Coord where
+instance Board BoardSquare CoordXY where
   empty = emptyFromSize defaultBoardSize
-  coords (BSquare size _) = [ Coord x y | x <- range , y <- range ]
+  coords (BSquare size _) = [ XY x y | x <- range , y <- range ]
     where range = [ 0 .. (size - 1) ]
 
-  libertyCoords board (Coord x y) = filter (flip elem $ coords board) unsafeLibertyCoords
-    where unsafeLibertyCoords = [ Coord (x-1) y
-                                , Coord x     (y+1)
-                                , Coord (x+1) y
-                                , Coord x     (y-1)
+  libertyCoords board (XY x y) = filter (flip elem $ coords board) unsafeLibertyCoords
+    where unsafeLibertyCoords = [ XY (x-1) y
+                                , XY x     (y+1)
+                                , XY (x+1) y
+                                , XY x     (y-1)
                                 ]
 
   readCoordOnBoard board str = if length wrds == 2
                                && charsInRange 48 57 x
                                && charsInRange 97 122 y
                                && length y == 1
-                               then let coord = Coord xInt yInt
+                               then let coord = XY xInt yInt
                                     in if coord `elem` coords board
                                        then Just coord
                                        else Nothing
@@ -81,14 +81,14 @@ instance Board BoardSquare Coord where
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance Game BoardSquare Coord PlayerBW where
+instance Game BoardSquare CoordXY PlayerBW where
 
-  getStone (BSquare size vec) (Coord x y) = vec V.! coordToVecInd size (Coord x y)
+  getStone (BSquare size vec) (XY x y) = vec V.! coordToVecInd size (XY x y)
 
   putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance StateTerm BoardSquare Coord PlayerBW where
+instance StateTerm BoardSquare CoordXY PlayerBW where
 
   display (BSquare size vec) player = numbers ++ bStr ++ pStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
