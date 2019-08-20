@@ -45,10 +45,16 @@ emptyFromSize :: BoardSize -> BoardSquare
 emptyFromSize size = BSquare size (V.replicate (size * size) Free)
 
 instance Show BoardSquare where
-  show (BSquare size vec) = concatMap showRow rows
-    where showRow = (++ "\n") . concat . V.map showStone
-          rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
-          slice n = V.slice n size vec
+  show (BSquare size vec) = numbers ++ bStr
+    where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare size vec)
+          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
+
+showRaw :: BoardSquare -> String
+showRaw (BSquare size vec) = concatMap showRow rows
+  where showRow = (++ "\n") . concat . V.map showStone
+        rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
+        slice n = V.slice n size vec
 
 instance Board BoardSquare CoordXY where
   empty = emptyFromSize defaultBoardSize
@@ -88,10 +94,4 @@ instance Game BoardSquare CoordXY PlayerBW where
   putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance TermGame BoardSquare CoordXY PlayerBW where
-
-  display (BSquare size vec) player = numbers ++ bStr ++ pStr
-    where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)
-          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
-          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
-          pStr = show player ++ "\n"
+instance TermGame BoardSquare CoordXY PlayerBW

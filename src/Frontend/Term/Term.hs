@@ -1,30 +1,29 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Frontend.Term.Term ( TermGame ( display
-                                     , startTerm
+module Frontend.Term.Term ( TermGame ( startTerm
                                      )
                           ) where
 
 import Rules
 import GameState
 
-class Game b c p => TermGame b c p where
-
-  display :: b -> p -> String
+class (Game b c p, Show b, Show p) => TermGame b c p where
 
   startTerm :: IO (b,p)
   startTerm = start stepTerm :: IO (b,p)
 
   stepTerm :: GameState b p -> IO (b,p)
   stepTerm (GState board player oldBoard passes) =
-    do putStr $ display board player
+    do putStr $ show board
+       putStr $ show player
        action <- readIOSafe $ readAction board
        endState <- step stepTerm (GState board player oldBoard passes) action
        endTerm endState
 
   endTerm :: (b,p) -> IO (b,p)
-  endTerm (board , player) = putStr (display board player) >> return (board , player)
+  endTerm (board , player) = putStr str >> return (board , player)
+    where str = show player ++ " wins\n"
 
 -- | Decide what and if a string represents an action.
 readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
