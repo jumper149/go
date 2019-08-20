@@ -22,6 +22,7 @@ executable go
                        GameState
                        Frontend.Term.Term
                        Board.Default
+                       Board.Loop
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , containers

@@ -8,6 +8,7 @@ module Board.Loop ( PlayerBW (..)
 
 import Rules
 import Board.Default
+import Frontend.Term.Term
 
 data BoardLoop = BLoop BoardSquare
   deriving (Eq, Show)
@@ -25,3 +26,9 @@ instance Board BoardLoop CoordXY where
                                 ]
           wrap :: CoordXY -> CoordXY
           wrap (XY a b) = XY (a `mod` size) (b `mod` size)
+
+instance Game BoardLoop CoordXY PlayerBW where
+  getStone (BLoop board) coord = getStone board coord
+  putStone (BLoop board) coord stone = BLoop $ putStone board coord stone
+
+instance TermGame BoardLoop CoordXY PlayerBW
