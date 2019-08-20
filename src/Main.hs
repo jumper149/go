@@ -10,4 +10,4 @@ import Control.Monad ( void
                      )
 
 main :: IO ()
-main = void (startTerm :: IO (GameState D.BoardSquare D.PlayerBW))
+main = void (startTerm :: IO (D.BoardSquare , D.PlayerBW))

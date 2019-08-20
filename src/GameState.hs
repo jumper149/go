@@ -26,39 +26,40 @@ readAction board str
   | str == "pass" = Just Pass
   | otherwise = Place <$> readCoordOnBoard board str
 
-start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> m (GameState b p)
+start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (b,p)) -> m (b,p)
 start stepper = stepper (GState board player board 0)
   where board = empty :: b
         player = minBound :: p
 
-step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> GameState b p -> Action c -> m (GameState b p)
+step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (b,p)) -> GameState b p -> Action c -> m (b,p)
 step stepper (GState board player oldBoard passes) action =
   if newPasses < countPlayers player
   then if newBoard /= oldBoard
           then stepper (GState newBoard newPlayer board newPasses)
           else stepper (GState board player oldBoard passes)
-  else stepper (GEnded newBoard newPlayer)
+  else return (newBoard , newPlayer)
   where (newBoard , newPasses) = act (board , passes) player action
         newPlayer = next player
-step _ endState _ = return endState
 
 -- board player oldBoard numberOfPasses
 data GameState b p = GState b p b Int
-                   | GEnded b p
 
 class Game b c p => StateTerm b c p where
 
   display :: b -> p -> String
 
-  startTerm :: IO (GameState b p)
-  startTerm = start stepTerm :: IO (GameState b p)
+  startTerm :: IO (b,p)
+  startTerm = start stepTerm :: IO (b,p)
 
-  stepTerm :: GameState b p -> IO (GameState b p)
+  stepTerm :: GameState b p -> IO (b,p)
   stepTerm (GState board player oldBoard passes) =
     do putStr $ display board player
        action <- readIOSafe $ readAction board
-       step stepTerm (GState board player oldBoard passes) action
-  stepTerm (GEnded board player) = putStr "end\n" >> step stepTerm (GEnded board player) undefined
+       endState <- step stepTerm (GState board player oldBoard passes) action
+       endTerm endState
+
+  endTerm :: (b,p) -> IO (b,p)
+  endTerm (board , player) = putStr (display board player) >> return (board , player)
 
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
