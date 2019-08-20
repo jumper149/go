@@ -7,7 +7,7 @@ module DefaultBoard ( PlayerBW (..)
                     ) where
 
 import Rules
-import GameState
+import Frontend.Term.Term
 
 import qualified Data.Vector as V
 
@@ -88,7 +88,7 @@ instance Game BoardSquare CoordXY PlayerBW where
   putStone (BSquare size vec) coord stone = BSquare size newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
-instance StateTerm BoardSquare CoordXY PlayerBW where
+instance TermGame BoardSquare CoordXY PlayerBW where
 
   display (BSquare size vec) player = numbers ++ bStr ++ pStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . show) (BSquare size vec)

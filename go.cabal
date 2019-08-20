@@ -21,6 +21,7 @@ executable go
   other-modules:       Rules
                        GameState
                        DefaultBoard
+                       Frontend.Term.Term
   -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , containers

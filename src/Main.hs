@@ -3,7 +3,7 @@
 
 module Main where
 
-import GameState
+import Frontend.Term.Term
 import qualified DefaultBoard as D
 
 import Control.Monad ( void
