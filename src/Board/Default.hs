@@ -36,7 +36,7 @@ type BoardSize = Int
 
 -- | Defines the default board size.
 defaultBoardSize :: BoardSize
-defaultBoardSize = 19
+defaultBoardSize = 5
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> BoardSquare
