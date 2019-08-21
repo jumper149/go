@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Board.Loop ( PlayerBW (..)
                   , CoordXY (..)
                   , BoardLoop (..)

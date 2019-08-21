@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Board.Default ( PlayerBW (..)
                      , CoordXY (..)
                      , BoardSquare (..)

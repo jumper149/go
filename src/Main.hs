@@ -1,4 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Main where
@@ -12,3 +11,4 @@ import Control.Monad ( void
 
 main :: IO ()
 main = void (startTerm :: IO (D.BoardSquare , D.PlayerBW))
+    >> void (startTerm :: IO (L.BoardLoop , L.PlayerBW))

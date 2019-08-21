@@ -2,3 +2,4 @@
 :load src/Main
 :set -Wall
 :set -Werror
+:set -XMultiParamTypeClasses
