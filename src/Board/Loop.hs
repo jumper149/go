@@ -8,7 +8,10 @@ import Board.Default
 import Frontend.Term.Term
 
 data BoardLoop = BLoop BoardSquare
-  deriving (Eq, Show)
+  deriving Eq
+
+instance Show BoardLoop where
+  show (BLoop board) = show board
 
 instance Board BoardLoop CoordXY where
   empty = BLoop (empty :: BoardSquare)
