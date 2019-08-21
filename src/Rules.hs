@@ -72,7 +72,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
           singletonCoord = S.singleton coord :: S.Set c
 
   chains :: b -> p -> [Chain p c]
-  chains board player = appendPrevs sorted []
+  chains board player = reverse $ appendPrevs sorted []
     where sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList withoutFrees
           withoutFrees = S.filter (\ (Chain stone _) -> stone /= Free) allChains
           allChains = S.map (chain board) $ S.fromList (coords board)
