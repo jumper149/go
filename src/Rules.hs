@@ -79,9 +79,9 @@ class (Board b c, Player p) => Game b c p | b -> c p where
           rec x = accChain board stone x newAcc
 
   chain :: b -> c -> Chain p c
-  chain board coord = Chain stone coords
+  chain board coord = Chain stone crds
     where stone = getStone board coord :: Stone p
-          coords = singletonCoord `S.union` accChain board stone coord singletonCoord :: S.Set c
+          crds = singletonCoord `S.union` accChain board stone coord singletonCoord :: S.Set c
           singletonCoord = S.singleton coord :: S.Set c
 
   chains :: b -> p -> [Chain p c]
@@ -95,16 +95,17 @@ class (Board b c, Player p) => Game b c p | b -> c p where
           appendPrevs (Chain (Stone x) y : cs) acc
             | x < player = appendPrevs cs (acc ++ [ Chain (Stone x) y ])
             | otherwise = (Chain (Stone x) y : cs) ++ acc
+          appendPrevs (Chain Free _ : _) _ = undefined
 
   hasLiberty :: b -> Chain p c -> Bool
-  hasLiberty board (Chain stone coords) = S.foldr (||) False bools
+  hasLiberty board (Chain _ crds) = S.foldr (||) False bools
     where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) libs
-          libs = S.unions $ S.map (S.fromList . libertyCoords board) coords
+          libs = S.unions $ S.map (S.fromList . libertyCoords board) crds
 
   removeChain :: b -> Chain p c -> b
-  removeChain board (Chain _ coords) = S.foldr putFree board coords
+  removeChain board (Chain _ crds) = S.foldr putFree board crds
     where putFree :: c -> b -> b
-          putFree coord board = putStone board coord (Free :: Stone p)
+          putFree crd brd = putStone brd crd (Free :: Stone p)
 
   -- | Remove chains without liberties. Give player as an argument to solve atari. Return board.
   updateBoard :: b -> p -> b
@@ -112,6 +113,11 @@ class (Board b c, Player p) => Game b c p | b -> c p where
     where chs = chains board player
 
           removeNoLiberty :: b -> Chain p c -> b
-          removeNoLiberty board chain = if hasLiberty board chain
-                                        then board
-                                        else removeChain board chain
+          removeNoLiberty brd chn = if hasLiberty brd chn
+                                    then board
+                                    else removeChain brd chn
+
+--countStones :: forall b c p. Game b c p => b -> p -> Int
+--countStones board player = length $ filter hasPlayerStone $ coords board
+--  where hasPlayerStone :: c -> Bool
+--        hasPlayerStone coord = getStone board coord == Stone player
