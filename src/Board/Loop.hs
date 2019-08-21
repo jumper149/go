@@ -7,7 +7,7 @@ import Rules
 import Board.Default
 import Frontend.Term.Term
 
-data BoardLoop = BLoop BoardSquare
+newtype BoardLoop = BLoop BoardSquare
   deriving Eq
 
 instance Show BoardLoop where
