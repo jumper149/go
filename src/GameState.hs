@@ -34,13 +34,16 @@ data Status = StatOK
 actOnGame :: forall b c p. Game b c p => GameState b p -> Action c -> (GameState b p , Status)
 actOnGame state action =
   if newPasses < countPlayers (currPlayer state)
-  then if wasFree && newBoard /= prevBoard state
+  then if wasFree && newBoard /= prevBoard state && isNotLostInstantly
           then (newState , StatOK)
           else (state { messageOnPrev = "redo" }, StatOK)
   else (newState { messageOnPrev = "ended" } , StatEnd)
   where wasFree = case action of
                     Place coord -> getStone (currBoard state) coord == Free
                     Pass -> True
+        isNotLostInstantly = case action of
+                               Place coord -> getStone newBoard coord == Stone (currPlayer state)
+                               Pass -> True
         (newBoard , newPasses) = act (currBoard state , countPasses state) (currPlayer state) action
         newState = state { currBoard = newBoard
                          , currPlayer = next (currPlayer state)
