@@ -9,9 +9,9 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   startTerm :: IO (b,p)
   startTerm = start stepTerm endTerm :: IO (b,p)
 
-  stepTerm :: String -> GameState b p -> IO (Action c)
-  stepTerm message state =
-    do putStrLn message
+  stepTerm :: GameState b p -> IO (Action c)
+  stepTerm state =
+    do putStrLn $ messageOnPrev state
        putStr . show $ currBoard state
        print $ currPlayer state
        readIOSafe . readAction $ currBoard state

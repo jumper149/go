@@ -51,7 +51,7 @@ actOnGame state action =
                          }
 
 -- | Set up the game for the function executing each turn.
-start :: forall b c p m. (Game b c p, Monad m) => (String -> GameState b p -> m (Action c)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
+start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
 start stepper ender = step stepper startState StatOK >>= end >>= ender
   where startState = GState { currBoard = empty :: b
                             , currPlayer = minBound :: p
@@ -62,9 +62,9 @@ start stepper ender = step stepper startState StatOK >>= end >>= ender
                             }
 
 -- | Execute one turn by calling a function that reads an action.
-step :: forall b c p m. (Game b c p, Monad m) => (String -> GameState b p -> m (Action c)) -> GameState b p -> Status -> m (GameState b p)
+step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> GameState b p -> Status -> m (GameState b p)
 step stepper state StatOK =
-  do action <- stepper (messageOnPrev state) state
+  do action <- stepper state
      let (newState , newStatus) = actOnGame state action
      step stepper newState newStatus
 step _ state StatEnd = return state
