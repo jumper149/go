@@ -36,16 +36,20 @@ type BoardSize = Int
 
 -- | Defines the default board size.
 defaultBoardSize :: BoardSize
-defaultBoardSize = 4
+defaultBoardSize = 19
 
 -- | Create an empty board.
 emptyFromSize :: BoardSize -> BoardSquare
-emptyFromSize size = BSquare size (V.replicate (size * size) Free)
+emptyFromSize size
+  | size > 0 && size <= 26 = BSquare size (V.replicate (size * size) Free)
+  | otherwise = undefined
 
 instance Show BoardSquare where
-  show (BSquare size vec) = numbers ++ bStr
+  show (BSquare size vec) = decNumbers ++ numbers ++ bStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare size vec)
-          numbers = " " ++ concatMap show [ 1 .. size ] ++ "\n"
+          numbers = " " ++ concatMap (show  . (`mod` 10)) [ 1 .. size ] ++ "\n"
+          decNumbers = if size >= 10 then decNumbersRaw else ""
+          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. size `div` 10 ] ++ "\n"
           alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
 
 showRaw :: BoardSquare -> String
