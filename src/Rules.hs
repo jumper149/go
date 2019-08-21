@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, ScopedTypeVariables #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Rules ( Game ( getStone
                     , putStone

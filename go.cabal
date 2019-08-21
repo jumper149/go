@@ -28,5 +28,6 @@ executable go
                      , containers
                      , vector
   default-extensions:  MultiParamTypeClasses
+                     , ScopedTypeVariables
   hs-source-dirs:      src
   default-language:    Haskell2010

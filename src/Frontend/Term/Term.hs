@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module Frontend.Term.Term ( TermGame ( startTerm
                                      )
                           ) where

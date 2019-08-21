@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 module GameState ( GameState (..)
                  , EndScreen (..)
                  , start

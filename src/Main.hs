@@ -1,5 +1,3 @@
-{-# LANGUAGE AllowAmbiguousTypes #-}
-
 module Main where
 
 import Frontend.Term.Term
