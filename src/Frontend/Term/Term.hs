@@ -10,11 +10,11 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   startTerm = start stepTerm endTerm :: IO (b,p)
 
   stepTerm :: String -> GameState b p -> IO (Action c)
-  stepTerm message (GState board player _ _) =
+  stepTerm message state =
     do putStrLn message
-       putStr $ show board
-       print player
-       readIOSafe $ readAction board
+       putStr . show $ currBoard state
+       print $ currPlayer state
+       readIOSafe . readAction $ currBoard state
 
   endTerm :: EndScreen b p -> IO (b,p)
   endTerm endScr = putStrLn str >> return (brd , wnnr)
