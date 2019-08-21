@@ -10,15 +10,15 @@ import System.Environment ( getArgs
 import Control.Monad ( void
                      )
 
-data Interfaces = Term
-  deriving Read
+data Interface = Term
+  deriving (Read, Enum)
 
-data Boards = Default
-            | Loop
-  deriving Read
+data Board = Default
+           | Loop
+  deriving (Read, Enum)
 
-data Options = Options { optInterface :: Interfaces
-                       , optBoard :: Boards
+data Options = Options { optInterface :: Interface
+                       , optBoard :: Board
                        }
 
 defaultOptions :: Options
@@ -29,17 +29,17 @@ defaultOptions = Options { optInterface = Term
 options :: [OptDescr (Options -> IO Options)]
 options = [ Option ['i'] ["interface"]
               (ReqArg
-                (\ arg opt -> return opt { optInterface = read arg :: Interfaces })
+                (\ arg opt -> return opt { optInterface = read arg :: Interface })
                 "Interface")
               "Interface"
           , Option ['b'] ["board"]
               (ReqArg
-                (\ arg opt -> return opt { optBoard = read arg :: Boards })
+                (\ arg opt -> return opt { optBoard = read arg :: Board })
                 "Board")
               "Board"
           ]
 
-choose :: (Interfaces,Boards) -> IO ()
+choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (startTerm :: IO (D.BoardSquare , D.PlayerBW))
 choose (Term , Loop) = void (startTerm :: IO (L.BoardLoop , L.PlayerBW))
 
