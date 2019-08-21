@@ -7,22 +7,26 @@ module Frontend.Term.Term ( TermGame ( startTerm
 import Rules
 import GameState
 
+import Data.List ( sortOn
+                 )
+
 class (Game b c p, Show b, Show p) => TermGame b c p where
 
   startTerm :: IO (b,p)
-  startTerm = start stepTerm :: IO (b,p)
+  startTerm = start stepTerm endTerm :: IO (b,p)
 
-  stepTerm :: GameState b p -> IO (b,p)
+  stepTerm :: GameState b p -> IO (GameState b p)
   stepTerm (GState board player oldBoard passes) =
     do putStr $ show board
        putStr $ show player ++ "\n"
        action <- readIOSafe $ readAction board
-       endState <- step stepTerm (GState board player oldBoard passes) action
-       endTerm endState
+       step stepTerm (GState board player oldBoard passes) action
 
-  endTerm :: (b,p) -> IO (b,p)
-  endTerm (board , player) = putStr str >> return (board , player)
-    where str = show player ++ " wins\n"
+  endTerm :: EndScreen b p -> IO (b,p)
+  endTerm endScr = putStr str >> return (brd , winner)
+    where str = show winner ++ " wins\n"
+          brd = board endScr
+          winner = fst . last $ sortOn snd $ points endScr
 
 -- | Decide what and if a string represents an action.
 readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
