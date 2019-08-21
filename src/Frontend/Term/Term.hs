@@ -15,13 +15,13 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   stepTerm :: GameState b p -> IO (Action c)
   stepTerm (GState board player _ _) =
     do putStr $ show board
-       putStr $ show player ++ "\n"
+       putStrLn $ show player
        action <- readIOSafe $ readAction board
        return action
 
   endTerm :: EndScreen b p -> IO (b,p)
-  endTerm endScr = putStr str >> return (brd , wnnr)
-    where str = show wnnr ++ " wins\n"
+  endTerm endScr = putStrLn str >> return (brd , wnnr)
+    where str = show wnnr ++ " wins"
           brd = lastBoard endScr
           wnnr = winner endScr
 
