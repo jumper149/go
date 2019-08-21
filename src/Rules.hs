@@ -115,8 +115,3 @@ class (Board b c, Player p) => Game b c p | b -> c p where
           removeNoLiberty brd chn = if hasLiberty brd chn
                                     then brd
                                     else removeChain brd chn
-
---countStones :: forall b c p. Game b c p => b -> p -> Int
---countStones board player = length $ filter hasPlayerStone $ coords board
---  where hasPlayerStone :: c -> Bool
---        hasPlayerStone coord = getStone board coord == Stone player

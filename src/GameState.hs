@@ -73,6 +73,11 @@ end :: forall b c p m. (Game b c p, Monad m) => GameState b p -> m (EndScreen b 
 end (GState brd plr _ _) = return $ EndScreen { lastBoard = brd
                                               , winner = plr
                                               , points = []
-                                              , stonesOnBoard = []
+                                              , stonesOnBoard = map (\ x -> (x , countStones brd x)) ([ minBound .. maxBound ] :: [p])
                                               , turns = 0
                                               }
+
+countStones :: forall b c p. Game b c p => b -> p -> Int
+countStones board player = length $ filter hasPlayerStone $ coords board
+  where hasPlayerStone :: c -> Bool
+        hasPlayerStone coord = getStone board coord == Stone player
