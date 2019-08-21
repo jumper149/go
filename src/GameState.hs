@@ -3,8 +3,6 @@
 module GameState ( GameState (..)
                  , EndScreen (..)
                  , start
-                 , step
-                 , end
                  , Action (..)
                  ) where
 
@@ -29,6 +27,7 @@ data Status = StatOK
             | StatMsg String
             | StatEnd
 
+-- Safely apply an action to the state of a game.
 actOnGame :: forall b c p. Game b c p => GameState b p -> Action c -> (GameState b p , Status)
 actOnGame (GState board player oldBoard passes) action =
   if newPasses < countPlayers player
@@ -49,7 +48,7 @@ start stepper ender = step stepper startState StatOK >>= end >>= ender
         board = empty :: b
         player = minBound :: p
 
--- | Execute one turn. This function recursively calls itself until the game is over.
+-- | Execute one turn by calling a function that reads an action.
 step :: forall b c p m. (Game b c p, Monad m) => (String -> GameState b p -> m (Action c)) -> GameState b p -> Status -> m (GameState b p)
 step stepper state StatOK =
   do action <- stepper "" state
@@ -61,6 +60,7 @@ step stepper state (StatMsg message) =
      step stepper newState newStatus
 step _ state StatEnd = return state
 
+-- | Holds informaion for the endscreen.
 data EndScreen b p = EndScreen { lastBoard :: b
                                , winner :: p
                                , points :: [(p,Int)]
@@ -68,6 +68,7 @@ data EndScreen b p = EndScreen { lastBoard :: b
                                , turns :: Int
                                }
 
+-- | End the game by returning an the information for an endscreen.
 end :: forall b c p m. (Game b c p, Monad m) => GameState b p -> m (EndScreen b p)
 end (GState brd plr _ _) = return $ EndScreen { lastBoard = brd
                                               , winner = plr
