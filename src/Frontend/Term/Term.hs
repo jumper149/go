@@ -1,5 +1,4 @@
-module Frontend.Term.Term ( TermGame ( startTerm
-                                     )
+module Frontend.Term.Term ( TermGame (..)
                           ) where
 
 import Rules
