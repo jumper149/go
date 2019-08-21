@@ -114,7 +114,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
 
           removeNoLiberty :: b -> Chain p c -> b
           removeNoLiberty brd chn = if hasLiberty brd chn
-                                    then board
+                                    then brd
                                     else removeChain brd chn
 
 --countStones :: forall b c p. Game b c p => b -> p -> Int
