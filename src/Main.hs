@@ -9,31 +9,34 @@ import System.Environment ( getArgs
                           )
 import Data.List ( intercalate
                  )
+import Data.Maybe ( fromMaybe
+                  )
 import Text.Read ( readMaybe
                  )
 import Control.Monad ( void
                      )
 
 data Interface = Term
+               | Snap
   deriving (Read, Show, Enum)
 
 errInterface :: Interface
-errInterface = error $ "choose interface from: " ++ intercalate ", " interfaces
+errInterface = error $ "Choose interface from: " ++ intercalate ", " interfaces
   where interfaces = map show ([ toEnum 0 .. ] :: [Interface])
 
 readInterface :: String -> Interface
-readInterface string = maybe errInterface id $ readMaybe string
+readInterface string = fromMaybe errInterface $ readMaybe string
 
 data Board = Default
            | Loop
   deriving (Read, Show, Enum)
 
 errBoard :: Board
-errBoard = error $ "choose board from: " ++ intercalate ", " boards
+errBoard = error $ "Choose board from: " ++ intercalate ", " boards
   where boards = map show ([ toEnum 0 .. ] :: [Board])
 
 readBoard :: String -> Board
-readBoard string = maybe errBoard id $ readMaybe string
+readBoard string = fromMaybe errBoard $ readMaybe string
 
 data Options = Options { optInterface :: Interface
                        , optBoard :: Board
@@ -60,6 +63,7 @@ options = [ Option ['i'] ["interface"]
 choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (startTerm :: IO (D.BoardSquare , D.PlayerBW))
 choose (Term , Loop) = void (startTerm :: IO (L.BoardLoop , L.PlayerBW))
+choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()
 main = do args <- getArgs
