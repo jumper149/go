@@ -44,20 +44,22 @@ actOnGame (GState board player oldBoard passes) action =
 
 -- | Set up the game for the function executing each turn.
 start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
-start stepper ender = stepper startState >>= step stepper startState >>= end >>= ender
+start stepper ender = step stepper startState StatOK >>= end >>= ender
   where startState = (GState board player board 0)
         board = empty :: b
         player = minBound :: p
 
 -- | Execute one turn. This function recursively calls itself until the game is over.
-step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> GameState b p -> Action c -> m (GameState b p)
-step stepper state action =
-  do let (newState , status) = actOnGame state action
-     newAction <- stepper state
-     case status of
-       StatOK -> step stepper newState newAction
-       StatRedo -> step stepper newState newAction
-       StatEnd -> return newState
+step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> GameState b p -> Status -> m (GameState b p)
+step stepper state StatOK =
+  do action <- stepper state
+     let (newState , newStatus) = actOnGame state action
+     step stepper newState newStatus
+step stepper state StatRedo =
+  do action <- stepper state
+     let (newState , newStatus) = actOnGame state action
+     step stepper newState newStatus
+step _ state StatEnd = return state
 
 data EndScreen b p = EndScreen { lastBoard :: b
                                , winner :: p
