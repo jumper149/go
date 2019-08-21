@@ -46,6 +46,7 @@ actOnGame state action =
                          , currPlayer = next (currPlayer state)
                          , prevBoard = currBoard state
                          , countPasses = newPasses
+                         , countRounds = countRounds state + 1
                          , messageOnPrev = ""
                          }
 
@@ -82,7 +83,7 @@ end state = return $ EndScreen { lastBoard = currBoard state
                                , winner = currPlayer state
                                , points = []
                                , stonesOnBoard = map (\ x -> (x , countStones (currBoard state) x)) ([ minBound .. maxBound ] :: [p])
-                               , turns = 0
+                               , turns = countRounds state
                                }
 
 -- | Return the next player.
