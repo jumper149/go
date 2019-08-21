@@ -25,25 +25,39 @@ act (board , _) player (Place coord) = (newBoard , 0)
 -- number of consecutive passes.
 data GameState b p = GState b p b Int
 
--- | Set up the game for the function executing each turn.
-start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
-start stepper ender = stepper (GState board player board 0) >>= end >>= ender
-  where board = empty :: b
-        player = minBound :: p
+data Status = StatOK
+            | StatRedo
+            | StatEnd
 
--- | Execute one turn. This function recursively calls itself until the game is over.
-step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> GameState b p -> Action c -> m (GameState b p)
-step stepper (GState board player oldBoard passes) action =
+actOnGame :: forall b c p. Game b c p => GameState b p -> Action c -> (GameState b p , Status)
+actOnGame (GState board player oldBoard passes) action =
   if newPasses < countPlayers player
   then if wasFree && newBoard /= oldBoard
-          then stepper (GState newBoard newPlayer board newPasses)
-          else stepper (GState board player oldBoard passes)
-  else return (GState newBoard newPlayer undefined newPasses)
+          then (GState newBoard newPlayer board newPasses , StatOK)
+          else (GState board player oldBoard passes , StatRedo)
+  else (GState newBoard newPlayer undefined newPasses , StatEnd)
   where wasFree = case action of
                     Place coord -> getStone board coord == Free
                     Pass -> True
         (newBoard , newPasses) = act (board , passes) player action
         newPlayer = next player
+
+-- | Set up the game for the function executing each turn.
+start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
+start stepper ender = stepper startState >>= step stepper startState >>= end >>= ender
+  where startState = (GState board player board 0)
+        board = empty :: b
+        player = minBound :: p
+
+-- | Execute one turn. This function recursively calls itself until the game is over.
+step :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> GameState b p -> Action c -> m (GameState b p)
+step stepper state action =
+  do let (newState , status) = actOnGame state action
+     newAction <- stepper state
+     case status of
+       StatOK -> step stepper newState newAction
+       StatRedo -> step stepper newState newAction
+       StatEnd -> return newState
 
 data EndScreen b p = EndScreen { lastBoard :: b
                                , winner :: p

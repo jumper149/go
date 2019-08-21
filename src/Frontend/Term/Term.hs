@@ -12,12 +12,12 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   startTerm :: IO (b,p)
   startTerm = start stepTerm endTerm :: IO (b,p)
 
-  stepTerm :: GameState b p -> IO (GameState b p)
-  stepTerm (GState board player oldBoard passes) =
+  stepTerm :: GameState b p -> IO (Action c)
+  stepTerm (GState board player _ _) =
     do putStr $ show board
        putStr $ show player ++ "\n"
        action <- readIOSafe $ readAction board
-       step stepTerm (GState board player oldBoard passes) action
+       return action
 
   endTerm :: EndScreen b p -> IO (b,p)
   endTerm endScr = putStr str >> return (brd , wnnr)
