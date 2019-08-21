@@ -45,15 +45,17 @@ step stepper (GState board player oldBoard passes) action =
         (newBoard , newPasses) = act (board , passes) player action
         newPlayer = next player
 
-data EndScreen b p = EndScreen { board :: b
+data EndScreen b p = EndScreen { lastBoard :: b
+                               , winner :: p
                                , points :: [(p,Int)]
                                , stonesOnBoard :: [(p,Int)]
                                , turns :: Int
                                }
 
 end :: forall b c p m. (Game b c p, Monad m) => (GameState b p) -> m (EndScreen b p)
-end (GState brd _ _ _) = return $ EndScreen { board = brd
-                                            , points = []
-                                            , stonesOnBoard = []
-                                            , turns = 0
-                                            }
+end (GState brd plr _ _) = return $ EndScreen { lastBoard = brd
+                                              , winner = plr
+                                              , points = []
+                                              , stonesOnBoard = []
+                                              , turns = 0
+                                              }
