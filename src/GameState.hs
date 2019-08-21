@@ -21,6 +21,10 @@ act (board , passes) _ Pass = (board , passes + 1)
 act (board , _) player (Place coord) = (newBoard , 0)
   where newBoard = updateBoard (putStone board coord (Stone player)) player
 
+-- | This data type contains the current board, the current player, the previous board and the
+-- number of consecutive passes.
+data GameState b p = GState b p b Int
+
 -- | Set up the game for the function executing each turn.
 start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (GameState b p)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
 start stepper ender = stepper (GState board player board 0) >>= end >>= ender
@@ -40,10 +44,6 @@ step stepper (GState board player oldBoard passes) action =
                     Pass -> True
         (newBoard , newPasses) = act (board , passes) player action
         newPlayer = next player
-
--- | This data type contains the current board, the current player, the previous board and the
--- number of consecutive passes.
-data GameState b p = GState b p b Int
 
 data EndScreen b p = EndScreen { board :: b
                                , points :: [(p,Int)]
