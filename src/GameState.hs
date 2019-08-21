@@ -45,7 +45,7 @@ actOnGame (GState board player oldBoard passes) action =
 -- | Set up the game for the function executing each turn.
 start :: forall b c p m. (Game b c p, Monad m) => (GameState b p -> m (Action c)) -> (EndScreen b p -> m (b,p)) -> m (b,p)
 start stepper ender = step stepper startState StatOK >>= end >>= ender
-  where startState = (GState board player board 0)
+  where startState = GState board player board 0
         board = empty :: b
         player = minBound :: p
 
@@ -68,7 +68,7 @@ data EndScreen b p = EndScreen { lastBoard :: b
                                , turns :: Int
                                }
 
-end :: forall b c p m. (Game b c p, Monad m) => (GameState b p) -> m (EndScreen b p)
+end :: forall b c p m. (Game b c p, Monad m) => GameState b p -> m (EndScreen b p)
 end (GState brd plr _ _) = return $ EndScreen { lastBoard = brd
                                               , winner = plr
                                               , points = []
