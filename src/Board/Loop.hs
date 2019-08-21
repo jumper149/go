@@ -13,7 +13,7 @@ data BoardLoop = BLoop BoardSquare
 instance Board BoardLoop CoordXY where
   empty = BLoop (empty :: BoardSquare)
   coords (BLoop board) = coords board
-  readCoordOnBoard (BLoop board) str = readCoordOnBoard board str
+  readCoordOnBoard (BLoop board) = readCoordOnBoard board
 
   libertyCoords (BLoop (BSquare size vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare size vec))) $ map wrap unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y
@@ -25,7 +25,7 @@ instance Board BoardLoop CoordXY where
           wrap (XY a b) = XY (a `mod` size) b
 
 instance Game BoardLoop CoordXY PlayerBW where
-  getStone (BLoop board) coord = getStone board coord
+  getStone (BLoop board) = getStone board
   putStone (BLoop board) coord stone = BLoop $ putStone board coord stone
 
 instance TermGame BoardLoop CoordXY PlayerBW

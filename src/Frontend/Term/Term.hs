@@ -15,9 +15,8 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   stepTerm :: GameState b p -> IO (Action c)
   stepTerm (GState board player _ _) =
     do putStr $ show board
-       putStrLn $ show player
-       action <- readIOSafe $ readAction board
-       return action
+       print player
+       readIOSafe $ readAction board
 
   endTerm :: EndScreen b p -> IO (b,p)
   endTerm endScr = putStrLn str >> return (brd , wnnr)
