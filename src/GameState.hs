@@ -1,6 +1,6 @@
-module GameState ( GameState (..)
+module GameState ( start
+                 , GameState (..)
                  , EndScreen (..)
-                 , start
                  , Action (..)
                  ) where
 
@@ -75,6 +75,17 @@ end (GState brd plr _ _) = return $ EndScreen { lastBoard = brd
                                               , turns = 0
                                               }
 
+-- | Return the next player.
+next :: forall p. Player p => p -> p
+next player = if player == maxBound
+              then minBound
+              else succ player
+
+-- | Count the number of players.
+countPlayers :: forall p. Player p => p -> Int
+countPlayers _ = length ([ minBound .. maxBound ] :: [p])
+
+-- | Count the number of stones a player has on the board.
 countStones :: forall b c p. Game b c p => b -> p -> Int
 countStones board player = length $ filter hasPlayerStone $ coords board
   where hasPlayerStone :: c -> Bool

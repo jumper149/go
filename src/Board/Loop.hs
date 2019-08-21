@@ -1,11 +1,11 @@
-module Board.Loop ( PlayerBW (..)
+module Board.Loop ( BoardLoop (..)
                   , CoordXY (..)
-                  , BoardLoop (..)
+                  , PlayerBW (..)
                   ) where
 
 import Rules
-import Board.Default
 import Frontend.Term.Term
+import Board.Default
 
 newtype BoardLoop = BLoop BoardSquare
   deriving Eq

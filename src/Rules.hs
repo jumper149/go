@@ -6,8 +6,6 @@ module Rules ( Game ( getStone
                     )
              , Board (..)
              , Player (..)
-             , next
-             , countPlayers
              , Stone (..)
              , showStone
              ) where
@@ -20,7 +18,7 @@ data Stone p = Free
              | Stone p
   deriving (Eq, Ord)
 
--- | Show a stone preferably as a single character string.
+-- | Show a stone as a single character string.
 showStone :: forall p. Player p => Stone p -> String
 showStone Free = " "
 showStone (Stone p) = [ char p ]
@@ -33,16 +31,6 @@ class (Eq p, Enum p, Bounded p, Ord p) => Player p where
 
   -- | Represent a player with a preferably unique character.
   char :: p -> Char
-
--- | Return the next player.
-next :: forall p. Player p => p -> p
-next player = if player == maxBound
-              then minBound
-              else succ player
-
--- | Count the number of players.
-countPlayers :: forall p. Player p => p -> Int
-countPlayers _ = length ([ minBound .. maxBound ] :: [p])
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 

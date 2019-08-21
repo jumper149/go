@@ -1,6 +1,6 @@
-module Board.Default ( PlayerBW (..)
+module Board.Default ( BoardSquare (..)
                      , CoordXY (..)
-                     , BoardSquare (..)
+                     , PlayerBW (..)
                      , emptyFromSize
                      ) where
 
