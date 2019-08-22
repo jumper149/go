@@ -6,18 +6,12 @@ import qualified Board.Default as D
 import qualified Board.Loop as L
 
 import System.Console.GetOpt
-import System.Environment ( getArgs
-                          )
-import Data.List ( intercalate
-                 )
-import Data.Maybe ( fromMaybe
-                  )
-import Text.Read ( readMaybe
-                 )
-import Control.Monad ( void
-                     )
-import Snap.Core ( Snap
-                 )
+import System.Environment (getArgs)
+import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
+import Text.Read (readMaybe)
+import Control.Monad (void)
+import Snap.Core (Snap)
 
 data Interface = Term
                | Snap
