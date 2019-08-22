@@ -21,6 +21,7 @@ executable go
   other-modules:       Rules
                        GameState
                        Frontend.Term.Term
+                       Frontend.Snap.Snap
                        Board.Default
                        Board.Loop
   -- other-extensions:
