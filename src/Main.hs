@@ -64,9 +64,9 @@ choose (Snap , Default) = void (startSnapServer snapRoutes :: IO ())
 choose _ = error "This combination of interface and board is not supported."
 
 snapRoutes :: [(String, Snap ())]
---snapRoutes = [ ("default" , void (startSnap :: Snap (D.BoardSquare , D.PlayerBW)))
+snapRoutes = [ ("default" , void (startSnap :: Snap (D.BoardSquare , D.PlayerBW)))
 --             , ("loop" , void (startSnap :: Snap (L.BoardLoop , L.PlayerBW)))
-snapRoutes = [
+--snapRoutes = [
              ]
 
 main :: IO ()

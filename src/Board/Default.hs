@@ -6,6 +6,7 @@ module Board.Default ( BoardSquare (..)
 
 import Rules
 import Frontend.Term.Term
+import Frontend.Snap.Snap
 
 import qualified Data.Vector as V
 
@@ -97,3 +98,4 @@ instance Game BoardSquare CoordXY PlayerBW where
     where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
 
 instance TermGame BoardSquare CoordXY PlayerBW
+instance SnapGame BoardSquare CoordXY PlayerBW
