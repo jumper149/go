@@ -17,10 +17,8 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
        readIOSafe . readAction $ currBoard state
 
   endTerm :: EndScreen b p -> IO (b,p)
-  endTerm endScr = putStrLn str >> return (brd , wnnr)
-    where str = show wnnr ++ " wins"
-          brd = lastBoard endScr
-          wnnr = winner endScr
+  endTerm endScr = putStrLn str >> return (lastBoard endScr , winner endScr)
+    where str = show (winner endScr) ++ " wins"
 
 -- | Decide what and if a string represents an action.
 readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
