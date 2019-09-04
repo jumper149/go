@@ -67,7 +67,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
   accChains :: b -> [c] -> [Chain p c] -> [Chain p c]
   accChains _     []   acc = acc
   accChains board crds acc = accChains board rest newAcc
-    where newAcc = if or $ map (partOfChain crd) acc
+    where newAcc = if any (partOfChain crd) acc
                    then acc
                    else chain board crd : acc
           crd = head crds
