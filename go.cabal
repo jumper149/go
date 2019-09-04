@@ -18,7 +18,7 @@ cabal-version:       >=1.10
 
 executable go
   main-is:             Main.hs
-  other-modules:       Rules
+  other-modules:       Class
                        GameState
                        Frontend.Term.Term
                        Frontend.Snap.Snap

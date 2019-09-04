@@ -1,6 +1,6 @@
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Rules ( Game ( getStone
+module Class ( Game ( getStone
                     , putStone
                     , updateBoard
                     )

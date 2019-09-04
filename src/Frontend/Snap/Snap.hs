@@ -4,7 +4,7 @@ module Frontend.Snap.Snap ( SnapGame (..)
                           , startSnapServer
                           ) where
 
-import Rules
+import Class
 import GameState
 
 import qualified Data.ByteString as BS

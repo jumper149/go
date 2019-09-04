@@ -3,7 +3,7 @@ module Board.Loop ( BoardLoop (..)
                   , PlayerBW (..)
                   ) where
 
-import Rules
+import Class
 import Frontend.Term.Term
 import Board.Default
 

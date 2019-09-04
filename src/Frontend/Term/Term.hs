@@ -1,7 +1,7 @@
 module Frontend.Term.Term ( TermGame (..)
                           ) where
 
-import Rules
+import Class
 import GameState
 
 class (Game b c p, Show b, Show p) => TermGame b c p where

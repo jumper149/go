@@ -4,7 +4,7 @@ module GameState ( start
                  , Action (..)
                  ) where
 
-import Rules
+import Class
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
