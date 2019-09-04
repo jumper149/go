@@ -7,7 +7,6 @@ module Class ( Game ( getStone
              , Board (..)
              , Player (..)
              , Stone (..)
-             , showStone
              ) where
 
 import qualified Data.Set as S
@@ -17,11 +16,6 @@ import Data.List (sortOn)
 data Stone p = Free
              | Stone p
   deriving (Eq, Ord)
-
--- | Show a stone as a single character string.
-showStone :: forall p. Player p => Stone p -> String
-showStone Free = " "
-showStone (Stone p) = [ char p ]
 
 -- | Stones placed on coordinates can form chains which are represented by this data type.
 data Chain p c = Chain (Stone p) (S.Set c)
