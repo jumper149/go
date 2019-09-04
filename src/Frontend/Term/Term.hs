@@ -24,7 +24,7 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
 readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
 readAction board str
   | str == "pass" = Just Pass
-  | otherwise = Place <$> readCoordOnBoard board str
+  | otherwise = Place <$> readCoord board str
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a

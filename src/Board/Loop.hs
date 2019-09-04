@@ -16,7 +16,7 @@ instance Show BoardLoop where
 instance Board BoardLoop CoordXY where
   empty = BLoop (empty :: BoardSquare)
   coords (BLoop board) = coords board
-  readCoordOnBoard (BLoop board) = readCoordOnBoard board
+  readCoord (BLoop board) = readCoord board
 
   libertyCoords (BLoop (BSquare size vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare size vec))) $ map wrap unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y

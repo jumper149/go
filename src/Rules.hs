@@ -44,7 +44,7 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   libertyCoords :: b -> c -> [c]
 
   -- | Decide if a string represents a coordinate and read it.
-  readCoordOnBoard :: b -> String -> Maybe c
+  readCoord :: b -> String -> Maybe c
 
 class (Board b c, Player p) => Game b c p | b -> c p where
 

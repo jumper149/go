@@ -71,15 +71,15 @@ instance Board BoardSquare CoordXY where
                                 , XY x     (y-1)
                                 ]
 
-  readCoordOnBoard board str = if length wrds == 2
-                               && charsInRange 48 57 x
-                               && charsInRange 97 122 y
-                               && length y == 1
-                               then let coord = XY xInt yInt
-                                    in if coord `elem` coords board
-                                       then Just coord
-                                       else Nothing
-                               else Nothing
+  readCoord board str = if length wrds == 2
+                        && charsInRange 48 57 x
+                        && charsInRange 97 122 y
+                        && length y == 1
+                        then let coord = XY xInt yInt
+                             in if coord `elem` coords board
+                                then Just coord
+                                else Nothing
+                        else Nothing
     where wrds = words str
           x = head wrds :: String
           y = head $ tail wrds :: String
