@@ -21,6 +21,9 @@ data Stone p = Free
 data Chain p c = Chain (Stone p) (S.Set c)
   deriving (Eq, Ord)
 
+partOfChain :: Ord c => c -> Chain p c -> Bool
+partOfChain c (Chain _ cs) = c `S.member` cs
+
 class (Eq p, Enum p, Bounded p, Ord p) => Player p where
 
   -- | Represent a player with a preferably unique character.
@@ -49,7 +52,7 @@ class (Board b c, Player p) => Game b c p | b -> c p where
   putStone :: b -> c -> Stone p -> b
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
-  accChain board stone coord acc = foldr (accChain board stone) newAcc neededSames
+  accChain board stone coord acc = S.foldr (accChain board stone) newAcc neededSames
     where newAcc = acc `S.union` sames :: S.Set c
           neededSames = sames `S.difference` acc :: S.Set c
           sames = S.filter ((== stone) . getStone board) libs :: S.Set c
@@ -61,11 +64,20 @@ class (Board b c, Player p) => Game b c p | b -> c p where
           crds = accChain board stone coord acc :: S.Set c
           acc = S.singleton coord :: S.Set c
 
+  accChains :: b -> [c] -> [Chain p c] -> [Chain p c]
+  accChains _     []   acc = acc
+  accChains board crds acc = accChains board rest newAcc
+    where newAcc = if or $ map (partOfChain crd) acc
+                   then acc
+                   else chain board crd : acc
+          crd = head crds
+          rest = tail crds
+
   chains :: b -> p -> [Chain p c]
   chains board player = reverse $ appendPrevs sorted []
-    where sorted = sortOn (\ (Chain (Stone x) _) -> x) $ S.toList withoutFrees
-          withoutFrees = S.filter (\ (Chain stone _) -> stone /= Free) allChains
-          allChains = S.map (chain board) $ S.fromList (coords board)
+    where sorted = sortOn (\ (Chain (Stone x) _) -> x) withoutFrees
+          withoutFrees = filter (\ (Chain stone _) -> stone /= Free) allChains
+          allChains = accChains board (coords board) []
 
           appendPrevs :: [Chain p c] -> [Chain p c] -> [Chain p c]
           appendPrevs [] acc = acc
