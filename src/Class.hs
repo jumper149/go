@@ -49,21 +49,17 @@ class (Board b c, Player p) => Game b c p | b -> c p where
   putStone :: b -> c -> Stone p -> b
 
   accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
-  accChain board stone coord acc = sames `S.union` recChain
-    where sames = S.filter ((== stone) . getStone board) libs :: S.Set c
+  accChain board stone coord acc = foldr (accChain board stone) newAcc neededSames
+    where newAcc = acc `S.union` sames :: S.Set c
+          neededSames = sames `S.difference` acc :: S.Set c
+          sames = S.filter ((== stone) . getStone board) libs :: S.Set c
           libs = S.fromList $ libertyCoords board coord :: S.Set c
-          recChain = S.unions $ S.map rec nextCoords :: S.Set c
-          nextCoords = sames S.\\ acc :: S.Set c
-          newAcc = acc `S.union` sames :: S.Set c
-
-          rec :: c -> S.Set c
-          rec x = accChain board stone x newAcc
 
   chain :: b -> c -> Chain p c
   chain board coord = Chain stone crds
     where stone = getStone board coord :: Stone p
-          crds = singletonCoord `S.union` accChain board stone coord singletonCoord :: S.Set c
-          singletonCoord = S.singleton coord :: S.Set c
+          crds = accChain board stone coord acc :: S.Set c
+          acc = S.singleton coord :: S.Set c
 
   chains :: b -> p -> [Chain p c]
   chains board player = reverse $ appendPrevs sorted []
