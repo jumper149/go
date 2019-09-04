@@ -7,7 +7,6 @@ module Frontend.Snap.Snap ( SnapGame (..)
 import Class
 import GameState
 
-import qualified Data.ByteString as BS
 import Data.String (fromString)
 import Control.Applicative
 import Snap.Core
