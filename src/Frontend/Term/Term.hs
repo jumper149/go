@@ -1,4 +1,5 @@
 module Frontend.Term.Term ( TermGame (..)
+                          , showStone
                           ) where
 
 import Class
@@ -29,3 +30,8 @@ readAction board str
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
+
+-- | Show a stone as a single character string.
+showStone :: forall p. Player p => Stone p -> String
+showStone Free = " "
+showStone (Stone p) = [ char p ]

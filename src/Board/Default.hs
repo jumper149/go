@@ -59,11 +59,6 @@ showRaw (BSquare size vec) = concatMap showRow rows
         rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
         slice n = V.slice n size vec
 
--- | Show a stone as a single character string.
-showStone :: forall p. Player p => Stone p -> String
-showStone Free = " "
-showStone (Stone p) = [ char p ]
-
 instance Board BoardSquare CoordXY where
   empty = emptyFromSize defaultBoardSize
   coords (BSquare size _) = [ XY x y | x <- range , y <- range ]
