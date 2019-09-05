@@ -8,6 +8,7 @@ import Class
 import GameState
 
 import Data.String (fromString)
+import qualified Data.ByteString as BS
 import Control.Applicative
 import Snap.Core
 import Snap.Http.Server
@@ -27,16 +28,19 @@ placeHandler = do param <- getParam "coord"
 
 class (Game b c p, Show b, Show p) => SnapGame b c p where
 
-  startSnapPre :: Snap (b,p)
-  startSnapPre = do state <- startSnap :: Snap (GameState b p)
-                    return (currBoard state , currPlayer state)
-
-  startSnap :: Snap (GameState b p)
-  startSnap = stepSnap startManually
+  startSnap :: Snap (b,p)
+  startSnap = do state <- stepSnap startManually :: Snap (GameState b p)
+                 return (currBoard state , currPlayer state)
 
   stepSnap :: GameState b p -> Snap (GameState b p)
   stepSnap state = do writeBS . fromString . show $ currBoard state
+                      route [ ("place/:placeparam" , placeHandler) ]
                       return state
+    where useRules :: Snap ()
+          useRules = do param <- getParam "placeparam"
+                        maybe (writeBS "bs")
+                              redirect param
+                        return ()
 
   endSnap :: EndScreen b p -> Snap (b,p)
   endSnap endScr = return (lastBoard endScr , winner endScr)
