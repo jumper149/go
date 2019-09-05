@@ -89,6 +89,23 @@ end state = return $ EndScreen { lastBoard = currBoard state
                                , turns = countRounds state
                                }
 
+startManually :: forall b c p. Game b c p => (GameState b p ,Status)
+startManually = (startState , StatOK)
+  where startState = GState { currBoard = empty :: b
+                            , currPlayer = minBound :: p
+                            , prevBoard = empty :: b
+                            , countPasses = 0
+                            , countRounds = 0
+                            , messageOnPrev = ""
+                            }
+
+stepManually :: forall b c p m. (Game b c p, Monad m) => (GameState b p ,Status) -> Action c -> m (GameState b p ,Status)
+stepManually (state , StatOK) action = return $ actOnGame state action
+stepManually (_ , StatEnd) _ = error "Handle StatEnd in wrapper"
+
+endManually :: forall b c p m. (Game b c p, Monad m) => GameState b p -> m (EndScreen b p)
+endManually = end
+
 -- | Return the next player.
 next :: forall p. Player p => p -> p
 next player = if player == maxBound

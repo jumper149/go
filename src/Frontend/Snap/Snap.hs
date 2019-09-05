@@ -20,10 +20,15 @@ site :: [(String, Snap ())] -> Snap ()
 site routes = ifTop (writeBS "go")
           <|> route (map (\ (x,y) -> (fromString x , y)) routes)
 
+placeHandler :: Snap ()
+placeHandler = do param <- getParam "coord"
+                  maybe (writeBS "lmao")
+                        writeBS param
+
 class (Game b c p, Show b, Show p) => SnapGame b c p where
 
   startSnap :: Snap (b,p)
-  startSnap = start stepSnap endSnap
+  startSnap = ???
 
   stepSnap :: GameState b p -> Snap (Action c)
   stepSnap state = do writeBS . fromString . show $ currBoard state
