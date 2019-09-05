@@ -27,12 +27,16 @@ placeHandler = do param <- getParam "coord"
 
 class (Game b c p, Show b, Show p) => SnapGame b c p where
 
-  startSnap :: Snap (b,p)
-  startSnap = ???
+  startSnapPre :: Snap (b,p)
+  startSnapPre = do state <- startSnap :: Snap (GameState b p)
+                    return (currBoard state , currPlayer state)
 
-  stepSnap :: GameState b p -> Snap (Action c)
+  startSnap :: Snap (GameState b p)
+  startSnap = stepSnap startManually
+
+  stepSnap :: GameState b p -> Snap (GameState b p)
   stepSnap state = do writeBS . fromString . show $ currBoard state
-                      return Pass
+                      return state
 
   endSnap :: EndScreen b p -> Snap (b,p)
   endSnap endScr = return (lastBoard endScr , winner endScr)

@@ -1,7 +1,11 @@
 module GameState ( start
+                 , startManually
+                 , stepManually
+                 , endManually
                  , GameState (..)
                  , EndScreen (..)
                  , Action (..)
+                 , Status (..)
                  ) where
 
 import Class
@@ -89,8 +93,8 @@ end state = return $ EndScreen { lastBoard = currBoard state
                                , turns = countRounds state
                                }
 
-startManually :: forall b c p. Game b c p => (GameState b p ,Status)
-startManually = (startState , StatOK)
+startManually :: forall b c p. Game b c p => GameState b p
+startManually = startState
   where startState = GState { currBoard = empty :: b
                             , currPlayer = minBound :: p
                             , prevBoard = empty :: b

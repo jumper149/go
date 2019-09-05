@@ -12,6 +12,7 @@ import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
 import Control.Monad (void)
 import Snap.Core (Snap)
+import Heist
 
 data Interface = Term
                | Snap
@@ -64,10 +65,13 @@ choose (Snap , Default) = void (startSnapServer snapRoutes :: IO ())
 choose _ = error "This combination of interface and board is not supported."
 
 snapRoutes :: [(String, Snap ())]
-snapRoutes = [ ("default" , void (startSnap :: Snap (D.BoardSquare , D.PlayerBW)))
+snapRoutes = [ ("default" , void (startSnapPre :: Snap (D.BoardSquare , D.PlayerBW)))
 --             , ("loop" , void (startSnap :: Snap (L.BoardLoop , L.PlayerBW)))
 --snapRoutes = [
              ]
+
+heistTemplates :: IO (Either [String] TemplateRepo)
+heistTemplates = loadTemplates "/src/Frontend/Snap/Heist"
 
 main :: IO ()
 main = do args <- getArgs
