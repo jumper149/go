@@ -2,8 +2,8 @@ module Frontend.Term.Term ( TermGame (..)
                           , showStone
                           ) where
 
-import Class
-import GameState
+import Game
+import State
 
 class (Game b c p, Show b, Show p) => TermGame b c p where
 

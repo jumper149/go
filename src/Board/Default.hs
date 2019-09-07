@@ -4,7 +4,7 @@ module Board.Default ( BoardSquare (..)
                      , emptyFromSize
                      ) where
 
-import Class
+import Game
 import Frontend.Term.Term
 import Frontend.Snap.Snap
 

@@ -18,8 +18,8 @@ cabal-version:       >=1.10
 
 executable go
   main-is:             Main.hs
-  other-modules:       Class
-                       GameState
+  other-modules:       Game
+                       State
                        Frontend.Term.Term
                        Frontend.Snap.Snap
                        Board.Default

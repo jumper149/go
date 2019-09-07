@@ -1,14 +1,14 @@
-module GameState ( start
-                 , startManually
-                 , stepManually
-                 , endManually
-                 , GameState (..)
-                 , EndScreen (..)
-                 , Action (..)
-                 , Status (..)
-                 ) where
+module State ( start
+             , startManually
+             , stepManually
+             , endManually
+             , GameState (..)
+             , EndScreen (..)
+             , Action (..)
+             , Status (..)
+             ) where
 
-import Class
+import Game
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass

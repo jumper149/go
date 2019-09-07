@@ -4,11 +4,10 @@ module Frontend.Snap.Snap ( SnapGame (..)
                           , startSnapServer
                           ) where
 
-import Class
-import GameState
+import Game
+import State
 
 import Data.String (fromString)
-import qualified Data.ByteString as BS
 import Control.Applicative
 import Snap.Core
 import Snap.Http.Server
