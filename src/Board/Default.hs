@@ -71,6 +71,14 @@ instance Board BoardSquare CoordXY where
                                 , XY x     (y-1)
                                 ]
 
+instance Game BoardSquare CoordXY PlayerBW where
+
+  getStone (BSquare size vec) (XY x y) = vec V.! coordToVecInd size (XY x y)
+
+  putStone (BSquare size vec) coord stone = BSquare size newVec
+    where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+
+instance TermGame BoardSquare CoordXY PlayerBW where
   readCoord board str = if length wrds == 2
                         && charsInRange 48 57 x
                         && charsInRange 97 122 y
@@ -90,12 +98,4 @@ instance Board BoardSquare CoordXY where
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance Game BoardSquare CoordXY PlayerBW where
-
-  getStone (BSquare size vec) (XY x y) = vec V.! coordToVecInd size (XY x y)
-
-  putStone (BSquare size vec) coord stone = BSquare size newVec
-    where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
-
-instance TermGame BoardSquare CoordXY PlayerBW
 instance SnapGame BoardSquare CoordXY PlayerBW

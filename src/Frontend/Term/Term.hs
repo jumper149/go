@@ -1,4 +1,6 @@
-module Frontend.Term.Term ( TermGame (..)
+module Frontend.Term.Term ( TermGame ( startTerm
+                                     , readCoord
+                                     )
                           , showStone
                           ) where
 
@@ -21,17 +23,20 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   endTerm endScr = putStrLn str >> return (lastBoard endScr , winner endScr)
     where str = show (winner endScr) ++ " wins"
 
--- | Decide what and if a string represents an action.
-readAction :: forall b c. Board b c => b -> String -> Maybe (Action c)
-readAction board str
-  | str == "pass" = Just Pass
-  | otherwise = Place <$> readCoord board str
+  -- | Decide if a string represents a coordinate and read it.
+  readCoord :: b -> String -> Maybe c
+
+  -- | Decide what and if a string represents an action.
+  readAction :: b -> String -> Maybe (Action c)
+  readAction board str
+    | str == "pass" = Just Pass
+    | otherwise = Place <$> readCoord board str
+
+-- | Show a stone as a single character string.
+showStone :: Player p => Stone p -> String
+showStone Free = " "
+showStone (Stone p) = [ char p ]
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a
 readIOSafe reader = reader <$> getLine >>= maybe (readIOSafe reader) return
-
--- | Show a stone as a single character string.
-showStone :: forall p. Player p => Stone p -> String
-showStone Free = " "
-showStone (Stone p) = [ char p ]

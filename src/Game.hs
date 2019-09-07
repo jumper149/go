@@ -40,9 +40,6 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   -- | Return a list of all adjacent coordinates.
   libertyCoords :: b -> c -> [c]
 
-  -- | Decide if a string represents a coordinate and read it.
-  readCoord :: b -> String -> Maybe c
-
 class (Board b c, Player p) => Game b c p | b -> c p where
 
   -- | Returns the stone.
