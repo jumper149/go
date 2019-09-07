@@ -1,7 +1,6 @@
 module Frontend.Term.Term ( TermGame ( startTerm
                                      , readCoord
                                      )
-                          , showStone
                           ) where
 
 import Game
@@ -31,11 +30,6 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   readAction board str
     | str == "pass" = Just Pass
     | otherwise = Place <$> readCoord board str
-
--- | Show a stone as a single character string.
-showStone :: Player p => Stone p -> String
-showStone Free = " "
-showStone (Stone p) = [ char p ]
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a

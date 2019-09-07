@@ -15,9 +15,7 @@ data PlayerBW = Black
               | White
   deriving (Eq, Enum, Bounded, Ord, Show)
 
-instance Player PlayerBW where
-  char Black = 'B'
-  char White = 'W'
+instance Player PlayerBW
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
@@ -58,6 +56,15 @@ showRaw (BSquare size vec) = concatMap showRow rows
   where showRow = (++ "\n") . concat . V.map showStone
         rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
         slice n = V.slice n size vec
+
+-- | Show a stone as a single character string.
+showStone :: Stone PlayerBW -> String
+showStone Free = " "
+showStone (Stone p) = [ char p ]
+
+char :: PlayerBW -> Char
+char Black = 'B'
+char White = 'W'
 
 instance Board BoardSquare CoordXY where
   empty = emptyFromSize defaultBoardSize

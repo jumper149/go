@@ -5,7 +5,7 @@ module Game ( Game ( getStone
                    , updateBoard
                    )
             , Board (..)
-            , Player (..)
+            , Player
             , Stone (..)
             ) where
 
@@ -24,10 +24,7 @@ data Chain p c = Chain (Stone p) (S.Set c)
 partOfChain :: Ord c => c -> Chain p c -> Bool
 partOfChain c (Chain _ cs) = c `S.member` cs
 
-class (Eq p, Enum p, Bounded p, Ord p) => Player p where
-
-  -- | Represent a player with a preferably unique character.
-  char :: p -> Char
+class (Eq p, Enum p, Bounded p, Ord p) => Player p
 
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
