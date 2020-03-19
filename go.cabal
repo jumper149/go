@@ -45,6 +45,7 @@ test-suite test-go
   main-is:             Test.hs
   other-modules:       Test.Board.Default
   build-depends:       base >=4.12 && <4.13
+                     , hspec
                      , QuickCheck
                      , go
   hs-source-dirs:      test
