@@ -16,14 +16,12 @@ build-type:          Simple
 extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
-executable go
-  main-is:             Main.hs
-  other-modules:       Game
+library
+  exposed-modules:     Game
                        State
                        Frontend.Term.Term
                        Board.Default
                        Board.Loop
-  -- other-extensions:
   build-depends:       base >=4.12 && <4.13
                      , containers
                      , vector
@@ -31,5 +29,23 @@ executable go
   default-extensions:  MultiParamTypeClasses
                      , ScopedTypeVariables
   hs-source-dirs:      src
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
+executable go
+  main-is:             Main.hs
+  build-depends:       base >=4.12 && <4.13
+                     , go
+  hs-source-dirs:      app
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
+test-suite test-go
+  type:                exitcode-stdio-1.0
+  main-is:             Test.hs
+  build-depends:       base >=4.12 && <4.13
+                     , QuickCheck
+                     , go
+  hs-source-dirs:      test
   default-language:    Haskell2010
   ghc-options:         -Wall
