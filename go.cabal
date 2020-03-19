@@ -43,6 +43,7 @@ executable go
 test-suite test-go
   type:                exitcode-stdio-1.0
   main-is:             Test.hs
+  other-modules:       Test.Board.Default
   build-depends:       base >=4.12 && <4.13
                      , QuickCheck
                      , go
