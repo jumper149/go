@@ -21,7 +21,6 @@ executable go
   other-modules:       Game
                        State
                        Frontend.Term.Term
-                       Frontend.Snap.Snap
                        Board.Default
                        Board.Loop
   -- other-extensions:
@@ -29,9 +28,6 @@ executable go
                      , containers
                      , vector
                      , bytestring
-                     , snap-core
-                     , snap-server
-                     , heist
   default-extensions:  MultiParamTypeClasses
                      , ScopedTypeVariables
   hs-source-dirs:      src
