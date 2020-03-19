@@ -6,7 +6,6 @@ module Board.Default ( BoardSquare (..)
 
 import Game
 import Frontend.Term.Term
-import Frontend.Snap.Snap
 
 import qualified Data.Vector as V
 
@@ -104,5 +103,3 @@ instance TermGame BoardSquare CoordXY PlayerBW where
           charsInRange lo hi st = and bools
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
-
-instance SnapGame BoardSquare CoordXY PlayerBW
