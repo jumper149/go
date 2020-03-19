@@ -21,14 +21,12 @@ runTests = hspec $ do
       property $ prop_remove emptyBoard
 
 
-
 newtype ArbCoordXY = ArbCoordXY CoordXY
   deriving Show
 
 instance Arbitrary ArbCoordXY where
   arbitrary = elements $ ArbCoordXY <$> coords (empty :: BoardSquare)
   shrink = shrinkNothing
-
 
 
 prop_empty :: BoardSquare -> Bool
