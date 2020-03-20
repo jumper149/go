@@ -1,5 +1,5 @@
 :set -isrc
-:load src/Main
+:load app/Main
 :set -Wall
 :set -XMultiParamTypeClasses
 :set -XScopedTypeVariables
