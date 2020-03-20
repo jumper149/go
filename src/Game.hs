@@ -2,15 +2,14 @@
 
 module Game ( Game ( getStone
                    , putStone
-                   , updateBoard
                    )
+            , updateBoard
             , Board (..)
             , Player
             , Stone (..)
             ) where
 
 import qualified Data.Set as S
-import Data.List (sortOn)
 
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
@@ -21,8 +20,17 @@ data Stone p = Free
 data Chain p c = Chain (Stone p) (S.Set c)
   deriving (Eq, Ord)
 
+-- | Check if a coordinate is part of chain. Does not check if stones are matching.
 partOfChain :: Ord c => c -> Chain p c -> Bool
 partOfChain c (Chain _ cs) = c `S.member` cs
+
+-- | Remove chains of free stones and put them in an ordered list, that is cycled, so that the
+-- chains of the given player are last.
+prepChains :: Player p => p -> S.Set (Chain p c) -> [Chain p c]
+prepChains player = swapJoin . split . removeFrees
+  where removeFrees = S.filter $ \ (Chain stone _) -> stone /= Free
+        split = S.spanAntitone (\ (Chain stone _) -> stone <= Stone player)
+        swapJoin (a,b) = S.toAscList b <> S.toAscList a
 
 class (Eq p, Enum p, Bounded p, Ord p) => Player p
 
@@ -45,57 +53,40 @@ class (Board b c, Player p) => Game b c p | b -> c p where
   -- | Places a stone on a coordinate and returns the board.
   putStone :: b -> c -> Stone p -> b
 
-  accChain :: b -> Stone p -> c -> S.Set c -> S.Set c
-  accChain board stone coord acc = S.foldr (accChain board stone) newAcc neededSames
-    where newAcc = acc `S.union` sames :: S.Set c
-          neededSames = sames `S.difference` acc :: S.Set c
-          sames = S.filter ((== stone) . getStone board) libs :: S.Set c
-          libs = S.fromList $ libertyCoords board coord :: S.Set c
+accChain :: forall b c p. Game b c p => b -> Stone p -> c -> S.Set c -> S.Set c
+accChain board stone coord acc = foldr (accChain board stone) newAcc neededSames
+  where newAcc = acc `S.union` sames
+        neededSames = sames `S.difference` acc
+        sames = S.filter ((== stone) . getStone board) libs
+        libs = S.fromList $ libertyCoords board coord
 
-  chain :: b -> c -> Chain p c
-  chain board coord = Chain stone crds
-    where stone = getStone board coord :: Stone p
-          crds = accChain board stone coord acc :: S.Set c
-          acc = S.singleton coord :: S.Set c
+chain :: forall b c p. Game b c p => b -> c -> Chain p c
+chain board coord = Chain stone crds
+  where stone = getStone board coord
+        crds = accChain board stone coord acc
+        acc = S.singleton coord
 
-  accChains :: b -> [c] -> [Chain p c] -> [Chain p c]
-  accChains _     []   acc = acc
-  accChains board crds acc = accChains board rest newAcc
-    where newAcc = if any (partOfChain crd) acc
-                   then acc
-                   else chain board crd : acc
-          crd = head crds
-          rest = tail crds
+accChains :: forall b c p. Game b c p => b -> S.Set (Chain p c)
+accChains board = foldr addCoord S.empty $ coords board
+  where addCoord crd chns = if any (partOfChain crd) chns
+                               then chns
+                               else chain board crd `S.insert` chns
 
-  chains :: b -> p -> [Chain p c]
-  chains board player = reverse $ appendPrevs sorted []
-    where sorted = sortOn (\ (Chain (Stone x) _) -> x) withoutFrees
-          withoutFrees = filter (\ (Chain stone _) -> stone /= Free) allChains
-          allChains = accChains board (coords board) []
+hasLiberty :: forall b c p. Game b c p => b -> Chain p c -> Bool
+hasLiberty board (Chain _ crds) = or bools
+  where bools = S.map ((== Free) . (getStone board :: c -> Stone p)) libs
+        libs = S.unions $ S.map (S.fromList . libertyCoords board) crds
 
-          appendPrevs :: [Chain p c] -> [Chain p c] -> [Chain p c]
-          appendPrevs [] acc = acc
-          appendPrevs (Chain (Stone x) y : cs) acc
-            | x < player = appendPrevs cs (acc ++ [ Chain (Stone x) y ])
-            | otherwise = (Chain (Stone x) y : cs) ++ acc
-          appendPrevs (Chain Free _ : _) _ = undefined
+removeChain :: forall b c p. Game b c p => b -> Chain p c -> b
+removeChain board (Chain _ crds) = foldl putFree board crds
+  where putFree brd crd = putStone brd crd Free
 
-  hasLiberty :: b -> Chain p c -> Bool
-  hasLiberty board (Chain _ crds) = S.foldr (||) False bools
-    where bools = S.map ((== (Free :: Stone p)) . (getStone board :: c -> Stone p)) libs
-          libs = S.unions $ S.map (S.fromList . libertyCoords board) crds
+removeSurrounded :: forall b c p. Game b c p => b -> Chain p c -> b
+removeSurrounded brd chn = if hasLiberty brd chn
+                              then brd
+                              else removeChain brd chn
 
-  removeChain :: b -> Chain p c -> b
-  removeChain board (Chain _ crds) = S.foldr putFree board crds
-    where putFree :: c -> b -> b
-          putFree crd brd = putStone brd crd (Free :: Stone p)
-
-  -- | Remove chains without liberties. Give player as an argument to solve atari. Return board.
-  updateBoard :: b -> p -> b
-  updateBoard board player = foldl removeNoLiberty board chs
-    where chs = chains board player
-
-          removeNoLiberty :: b -> Chain p c -> b
-          removeNoLiberty brd chn = if hasLiberty brd chn
-                                    then brd
-                                    else removeChain brd chn
+-- | Remove chains without liberties. Give player as an argument to solve atari. Return board.
+updateBoard :: forall b c p. Game b c p => b -> p -> b
+updateBoard board player = foldl removeSurrounded board chains
+  where chains = prepChains player $ accChains board

@@ -18,11 +18,13 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Game
+                       Rules
                        State
                        Frontend.Term.Term
                        Board.Default
                        Board.Loop
   build-depends:       base >=4.12 && <4.13
+                     , mtl
                      , containers
                      , vector
   default-extensions:  MultiParamTypeClasses

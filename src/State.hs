@@ -1,19 +1,35 @@
+{-# LANGUAGE FlexibleContexts, GeneralizedNewtypeDeriving, StandaloneDeriving #-}
+
 module State ( start
-             , startManually
-             , stepManually
-             , endManually
              , GameState (..)
              , EndScreen (..)
              , Action (..)
              , Status (..)
              ) where
 
+import Control.Monad.State
+
 import Game
+
+newtype PlayingT b p m a = PlaylingT (StateT (GameState b p) m a)
+    deriving (Functor, Applicative, Monad)
+
+deriving instance Monad m => MonadState (GameState b p) (PlayingT b p m)
+
+class (Game b c p, MonadState (GameState b p) (PlayingT b p m)) => MonadPlaying b c p m where
+
+    act2 :: p -> Action c -> PlayingT b p m ()
+    act2 _ Pass = return ()
+    act2 player (Place c) = do gs <- get
+                               let b = currBoard gs
+                                   newB = updateBoard (putStone b c (Stone player)) player
+                               put $ gs { currBoard = newB }
+
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
-  deriving (Eq)
+              deriving (Eq)
 
 -- | Apply action to board and handle number of passes. Doesn't check for sanity.
 act :: forall b c p. Game b c p => (b,Int) -> p -> Action c -> (b,Int)
@@ -93,25 +109,8 @@ end state = return $ EndScreen { lastBoard = currBoard state
                                , turns = countRounds state
                                }
 
-startManually :: forall b c p. Game b c p => GameState b p
-startManually = startState
-  where startState = GState { currBoard = empty :: b
-                            , currPlayer = minBound :: p
-                            , prevBoard = empty :: b
-                            , countPasses = 0
-                            , countRounds = 0
-                            , messageOnPrev = ""
-                            }
-
-stepManually :: forall b c p m. (Game b c p, Monad m) => (GameState b p ,Status) -> Action c -> m (GameState b p ,Status)
-stepManually (state , StatOK) action = return $ actOnGame state action
-stepManually (_ , StatEnd) _ = error "Handle StatEnd in wrapper"
-
-endManually :: forall b c p m. (Game b c p, Monad m) => GameState b p -> m (EndScreen b p)
-endManually = end
-
 -- | Return the next player.
-next :: forall p. Player p => p -> p
+next :: Player p => p -> p
 next player = if player == maxBound
               then minBound
               else succ player
