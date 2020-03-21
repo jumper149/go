@@ -1,5 +1,6 @@
 module Main where
 
+import State
 import Frontend.Term.Term
 import qualified Board.Default as D
 import qualified Board.Loop as L
@@ -56,8 +57,8 @@ options = [ Option ['i'] ["interface"]
           ]
 
 choose :: (Interface,Board) -> IO ()
-choose (Term , Default) = void (startTerm :: IO (D.BoardSquare , D.PlayerBW))
-choose (Term , Loop) = void (startTerm :: IO (L.BoardLoop , L.PlayerBW))
+choose (Term , Default) = void (start :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Term , Loop) = undefined --void (startTerm :: IO (L.BoardLoop , L.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()

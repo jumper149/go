@@ -25,6 +25,7 @@ library
                        Board.Loop
   build-depends:       base >=4.12 && <4.13
                      , mtl
+                     , transformers
                      , containers
                      , vector
   default-extensions:  MultiParamTypeClasses

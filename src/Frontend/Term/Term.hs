@@ -1,26 +1,14 @@
-module Frontend.Term.Term ( TermGame ( startTerm
-                                     , readCoord
-                                     )
+{-# LANGUAGE FlexibleInstances #-}
+
+module Frontend.Term.Term ( TermGame (readCoord)
                           ) where
+
+import Control.Monad.Trans
 
 import Game
 import State
 
 class (Game b c p, Show b, Show p) => TermGame b c p where
-
-  startTerm :: IO (b,p)
-  startTerm = start stepTerm endTerm :: IO (b,p)
-
-  stepTerm :: GameState b p -> IO (Action c)
-  stepTerm state =
-    do putStrLn $ messageOnPrev state
-       putStr . show $ currBoard state
-       print $ currPlayer state
-       readIOSafe . readAction $ currBoard state
-
-  endTerm :: EndScreen b p -> IO (b,p)
-  endTerm endScr = putStrLn str >> return (lastBoard endScr , winner endScr)
-    where str = show (winner endScr) ++ " wins"
 
   -- | Decide if a string represents a coordinate and read it.
   readCoord :: b -> String -> Maybe c
@@ -30,6 +18,16 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
   readAction board str
     | str == "pass" = Just Pass
     | otherwise = Place <$> readCoord board str
+
+instance (TermGame b c p) => MonadPlaying b c p IO where
+    draw = do lift . putStr . show =<< access currentBoard
+              lift . print =<< access currentPlayer
+
+    getAction = lift . readIOSafe . readAction =<< access currentBoard
+
+--endTerm :: EndScreen b p -> IO (b,p)
+--endTerm endScr = putStrLn str >> return (lastBoard endScr , winner endScr)
+--  where str = show (winner endScr) ++ " wins"
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a
