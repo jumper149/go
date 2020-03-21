@@ -3,6 +3,7 @@ module Main where
 import Rules
 import State
 import Frontend.Term.Term
+import Frontend.Serv.Serv
 import qualified Board.Default as D
 import qualified Board.Loop as L
 
@@ -14,6 +15,7 @@ import Text.Read (readMaybe)
 import Control.Monad (void)
 
 data Interface = Term
+               | Serv
   deriving (Read, Show, Enum)
 
 errInterface :: Interface
@@ -59,6 +61,7 @@ options = [ Option ['i'] ["interface"]
 choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (start defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose (Term , Loop) = void (start defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
+choose (Serv , Default) = go
 choose _ = error "This combination of interface and board is not supported."
 
 defaultRules :: Rules

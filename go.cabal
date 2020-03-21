@@ -21,6 +21,7 @@ library
                        Rules
                        State
                        Frontend.Term.Term
+                       Frontend.Serv.Serv
                        Board.Default
                        Board.Loop
   build-depends:       base >=4.12 && <4.13
@@ -28,6 +29,12 @@ library
                      , transformers
                      , containers
                      , vector
+
+                     , aeson
+                     , servant-server
+                     , text
+                     , wai
+                     , warp
   default-extensions:  MultiParamTypeClasses
                      , ScopedTypeVariables
   hs-source-dirs:      src

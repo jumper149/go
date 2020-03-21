@@ -4,8 +4,9 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, base, containers, hspec, QuickCheck, stdenv
-      , vector
+  f = { mkDerivation, aeson, base, containers, hspec, mtl
+      , QuickCheck, servant-server, stdenv, text, transformers, vector
+      , wai, warp
       }:
       mkDerivation {
         pname = "go";
@@ -13,7 +14,10 @@ let
         src = ./.;
         isLibrary = true;
         isExecutable = true;
-        libraryHaskellDepends = [ base containers vector ];
+        libraryHaskellDepends = [
+          aeson base containers mtl servant-server text transformers vector
+          wai warp
+        ];
         executableHaskellDepends = [ base ];
         testHaskellDepends = [ base hspec QuickCheck ];
         homepage = "https://github.com/jumper149/go";

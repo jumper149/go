@@ -1,6 +1,6 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving #-}
 
-module State ( PlayingT (..)
+module State ( PlayingT
              , MonadPlaying ( getAction
                             , drawGame
                             , drawEnd
@@ -10,9 +10,13 @@ module State ( PlayingT (..)
              , Action (..)
              , EndScreen (..)
              , start
+             , doTurn
+             , initState
+             , finalizeState
              ) where
 
 import Control.Monad.Except
+import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 
@@ -31,6 +35,15 @@ data GameState b c p = GState { currentBoard :: b
                               , countTurns :: Int
                               }
 
+initState :: Game b c p => GameState b c p
+initState = GState { currentBoard = empty
+                   , currentPlayer = minBound
+                   , lastAction = Pass
+                   , previousBoards = [ empty ]
+                   , consecutivePasses = 0
+                   , countTurns = 0
+                   }
+
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
@@ -46,6 +59,15 @@ data EndScreen b p = EndScreen { lastBoard :: b
                                , stonesOnBoard :: [(p,Int)]
                                , turns :: Int
                                }
+
+-- | Transform the state of a finished game to the endscreen.
+finalizeState :: forall b c p. Game b c p => GameState b c p -> EndScreen b p
+finalizeState gs = EndScreen { lastBoard = currentBoard gs
+                             , winner = currentPlayer gs
+                             , points = []
+                             , stonesOnBoard = map (\ x -> (x , countStones (currentBoard gs) x)) ([ minBound .. maxBound ] :: [p])
+                             , turns = countTurns gs
+                             }
 
 newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (ExceptT Exception (RulesetEnvT m)) a }
     deriving (Functor, Applicative, Monad, MonadState (GameState b c p), MonadError Exception,
@@ -73,8 +95,8 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
               act action
               checkRules
               let handler ExceptRedo = put gs >> turn
-                  handler ExceptEnd = finalize <$> get
-              gets finalize `catchError` handler
+                  handler ExceptEnd = finalizeState <$> get
+              gets finalizeState `catchError` handler
               turn
 
     -- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
@@ -142,22 +164,18 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
 -- TODO no undefined shit
 start :: forall b c p m. MonadPlaying b c p m => Rules -> m (EndScreen b p)
 start rules = fromRight undefined <$> runRulesetEnvT rules (runExceptT (evalStateT (unwrapPlayingT turn) initState))
-  where initState = GState { currentBoard = empty
-                           , currentPlayer = minBound
-                           , lastAction = Pass
-                           , previousBoards = [ empty ]
-                           , consecutivePasses = 0
-                           , countTurns = 0
-                           }
 
--- | Transform the state of a finished game to the endscreen.
-finalize :: forall b c p. Game b c p => GameState b c p -> EndScreen b p
-finalize gs = EndScreen { lastBoard = currentBoard gs
-                        , winner = currentPlayer gs
-                        , points = []
-                        , stonesOnBoard = map (\ x -> (x , countStones (currentBoard gs) x)) ([ minBound .. maxBound ] :: [p])
-                        , turns = countTurns gs
-                        }
+-- TODO HACKY af! needed turn' in doTurn
+instance Game b c p => MonadPlaying b c p Identity where
+    getAction = undefined
+    drawGame = undefined
+    drawEnd = undefined
+
+doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> Either Exception (GameState b c p)
+doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalStateT (unwrapPlayingT $ turn') initState
+  where turn' = do act action
+                   checkRules
+                   get
 
 -- | Return the next player.
 next :: Player p => p -> p
