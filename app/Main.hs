@@ -64,12 +64,6 @@ choose (Term , Loop) = void (start defaultRules :: IO (EndScreen L.BoardLoop L.P
 choose (Serv , Default) = go
 choose _ = error "This combination of interface and board is not supported."
 
-defaultRules :: Rules
-defaultRules = Rules { passing = Allowed
-                     , ko = Ko Forbidden
-                     , suicide = Allowed
-                     }
-
 main :: IO ()
 main = do args <- getArgs
 

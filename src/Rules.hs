@@ -3,6 +3,7 @@
 module Rules ( RulesetEnvT (..)
              , runRulesetEnvT
              , Rules (..)
+             , defaultRules
              , Permission (..)
              , KoRule (..)
              ) where
@@ -25,6 +26,12 @@ data Rules = Rules { passing :: Permission
                    , ko :: KoRule
                    , suicide :: Permission
                    }
+
+defaultRules :: Rules
+defaultRules = Rules { passing = Allowed
+                     , ko = Ko Forbidden
+                     , suicide = Allowed
+                     }
 
 newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
     deriving (Functor, Applicative, Monad, MonadReader Rules)

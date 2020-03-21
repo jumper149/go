@@ -177,18 +177,17 @@ doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalS
                    checkRules
                    get
 
--- | Return the next player.
+-- | Return the next player. Helper function for 'act'.
 next :: Player p => p -> p
 next player = if player == maxBound
               then minBound
               else succ player
 
--- | Count the number of players.
+-- | Count the number of players. Helper function for 'checkPassing'.
 countPlayers :: forall p. Player p => p -> Int
 countPlayers _ = length ([ minBound .. maxBound ] :: [p])
 
--- | Count the number of stones a player has on the board.
+-- | Count the number of stones a player has on the board. Helper function for 'finalizeState'.
 countStones :: forall b c p. Game b c p => b -> p -> Int
 countStones board player = length $ filter hasPlayerStone $ coords board
-  where hasPlayerStone :: c -> Bool
-        hasPlayerStone coord = getStone board coord == Stone player
+  where hasPlayerStone coord = getStone board coord == Stone player
