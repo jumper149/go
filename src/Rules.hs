@@ -5,7 +5,6 @@ module Rules ( RulesetEnvT (..)
              , Rules (..)
              , Permission (..)
              , KoRule (..)
-             , defaultRules
              ) where
 
 import Control.Monad.Reader
@@ -27,16 +26,11 @@ data Rules = Rules { passing :: Permission
                    , suicide :: Permission
                    }
 
-defaultRules = Rules { passing = Allowed
-                     , ko = Ko Forbidden
-                     , suicide = Allowed
-                     }
-
-newtype RulesetEnvT m a = RulesetEnvT (ReaderT Rules m a)
+newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
     deriving (Functor, Applicative, Monad, MonadReader Rules)
 
 instance MonadTrans RulesetEnvT where
     lift = RulesetEnvT . lift
 
 runRulesetEnvT :: Rules -> RulesetEnvT m a -> m a
-runRulesetEnvT rules (RulesetEnvT r) = runReaderT r rules
+runRulesetEnvT rules rulesetEnv = runReaderT (unwrapRulesetEnvT rulesetEnv) rules

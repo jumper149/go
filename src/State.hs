@@ -1,13 +1,13 @@
 {-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, GeneralizedNewtypeDeriving #-}
 
 module State ( PlayingT (..)
-             , MonadPlaying ( draw
-                            , getAction
+             , MonadPlaying ( getAction
+                            , drawGame
+                            , drawEnd
                             , access
                             )
              , GameState (..)
              , Action (..)
-             , Exception (..)
              , EndScreen (..)
              , start
              ) where
@@ -36,8 +36,8 @@ data Action c = Pass
               | Place c
               deriving (Eq)
 
-data Exception = Redo
-               | End
+data Exception = ExceptRedo
+               | ExceptEnd
 
 -- | Holds informaion for the endscreen.
 data EndScreen b p = EndScreen { lastBoard :: b
@@ -47,7 +47,7 @@ data EndScreen b p = EndScreen { lastBoard :: b
                                , turns :: Int
                                }
 
-newtype PlayingT b c p m a = PlayingT (StateT (GameState b c p) (ExceptT Exception (RulesetEnvT m)) a)
+newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (ExceptT Exception (RulesetEnvT m)) a }
     deriving (Functor, Applicative, Monad, MonadState (GameState b c p), MonadError Exception,
               MonadReader Rules)
 
@@ -56,22 +56,24 @@ instance MonadTrans (PlayingT b c p) where
 
 class (Game b c p, Monad m) => MonadPlaying b c p m where
 
-    getAction :: PlayingT b c p m (Action c)
+    getAction :: PlayingT b c p m (Action c) -- TODO what happens if this fails?
 
-    draw :: PlayingT b c p m ()
+    drawGame :: PlayingT b c p m ()
+
+    drawEnd :: EndScreen b p -> m ()
 
     access :: (GameState b c p -> a) -> PlayingT b c p m a
     access = gets
 
     -- | Safely apply an action to the state of a game.
-    turn :: PlayingT b c p m (EndScreen b p)
+    turn :: PlayingT b c p m (EndScreen b p) -- TODO rework all of this!!!
     turn = do gs <- get
-              draw
+              drawGame
               action <- getAction
               act action
               checkRules
-              let handler Redo = put gs >> turn
-                  handler End = finalize <$> get
+              let handler ExceptRedo = put gs >> turn
+                  handler ExceptEnd = finalize <$> get
               gets finalize `catchError` handler
               turn
 
@@ -90,8 +92,8 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
                                                      , previousBoards = [ previousBoard ] -- TODO keep history
                                                      , consecutivePasses = 0
                                                      }
-                        correctedGs = actedGs { currentPlayer = next $ currentPlayer gs -- TODO use monad instead of arguments
-                                              , countTurns = countTurns gs + 1 -- TODO same
+                        correctedGs = actedGs { currentPlayer = next $ currentPlayer gs
+                                              , countTurns = countTurns gs + 1
                                               }
                     put correctedGs
 
@@ -107,16 +109,16 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
                       rPassing <- reader passing
                       case rPassing of
                         Allowed -> unless (consecutivePasses gs < countPlayers (currentPlayer gs)) $
-                                     throwError End
+                                     throwError ExceptEnd
                         Forbidden -> when (lastAction gs == Pass) $
-                                       throwError Redo
+                                       throwError ExceptRedo
 
     checkFree :: PlayingT b c p m ()
     checkFree = do gs <- get
                    case lastAction gs of
                      Pass -> return ()
                      Place c -> unless (getStone (head $ previousBoards gs) c == Free) $ -- TODO unsafe head
-                                  throwError Redo
+                                  throwError ExceptRedo
 
     checkSuicide :: PlayingT b c p m ()
     checkSuicide = do gs <- get
@@ -126,7 +128,7 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
                         Forbidden -> case lastAction gs of
                                        Pass -> return ()
                                        Place c -> when (getStone (currentBoard gs) c == Free) $
-                                                    throwError Redo
+                                                    throwError ExceptRedo
 
     checkKo :: PlayingT b c p m () -- TODO how does passing and ko work together?
     checkKo = do gs <- get
@@ -134,12 +136,12 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
                  case rKo of
                    Ko Allowed -> return ()
                    Ko Forbidden -> when (currentBoard gs == head (previousBoards gs)) $ -- TODO unsafe head
-                                     throwError Redo
+                                     throwError ExceptRedo
                    SuperKo -> return () -- TODO implement
 
 -- TODO no undefined shit
-startPlaying :: forall b c p m. MonadPlaying b c p m => Rules ->  m (EndScreen b p)
-startPlaying rules = fromRight undefined <$> runRulesetEnvT rules (runExceptT (evalStateT play initState))
+start :: forall b c p m. MonadPlaying b c p m => Rules -> m (EndScreen b p)
+start rules = fromRight undefined <$> runRulesetEnvT rules (runExceptT (evalStateT (unwrapPlayingT turn) initState))
   where initState = GState { currentBoard = empty
                            , currentPlayer = minBound
                            , lastAction = Pass
@@ -147,11 +149,6 @@ startPlaying rules = fromRight undefined <$> runRulesetEnvT rules (runExceptT (e
                            , consecutivePasses = 0
                            , countTurns = 0
                            }
-        PlayingT play = turn
-
--- TODO nicer
-start :: forall b c p m. MonadPlaying b c p m => m (EndScreen b p)
-start = startPlaying defaultRules
 
 -- | Transform the state of a finished game to the endscreen.
 finalize :: forall b c p. Game b c p => GameState b c p -> EndScreen b p

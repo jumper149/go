@@ -20,14 +20,14 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
     | otherwise = Place <$> readCoord board str
 
 instance (TermGame b c p) => MonadPlaying b c p IO where
-    draw = do lift . putStr . show =<< access currentBoard
-              lift . print =<< access currentPlayer
-
     getAction = lift . readIOSafe . readAction =<< access currentBoard
 
---endTerm :: EndScreen b p -> IO (b,p)
---endTerm endScr = putStrLn str >> return (lastBoard endScr , winner endScr)
---  where str = show (winner endScr) ++ " wins"
+    drawGame = do lift . putStr . show =<< access currentBoard
+                  lift . print =<< access currentPlayer
+
+    -- TODO more explicit
+    drawEnd endScr = putStrLn str >> return ()
+      where str = show (winner endScr) ++ " wins"
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a

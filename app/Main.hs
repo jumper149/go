@@ -1,5 +1,6 @@
 module Main where
 
+import Rules
 import State
 import Frontend.Term.Term
 import qualified Board.Default as D
@@ -13,7 +14,6 @@ import Text.Read (readMaybe)
 import Control.Monad (void)
 
 data Interface = Term
-               | Snap
   deriving (Read, Show, Enum)
 
 errInterface :: Interface
@@ -57,9 +57,15 @@ options = [ Option ['i'] ["interface"]
           ]
 
 choose :: (Interface,Board) -> IO ()
-choose (Term , Default) = void (start :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Term , Loop) = undefined --void (startTerm :: IO (L.BoardLoop , L.PlayerBW))
+choose (Term , Default) = void (start defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Term , Loop) = void (start defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
+
+defaultRules :: Rules
+defaultRules = Rules { passing = Allowed
+                     , ko = Ko Forbidden
+                     , suicide = Allowed
+                     }
 
 main :: IO ()
 main = do args <- getArgs
