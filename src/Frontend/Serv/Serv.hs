@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, DeriveGeneric, FlexibleInstances, OverloadedStrings, PolyKinds, TypeFamilies, TypeOperators #-}
+{-# LANGUAGE DataKinds, OverloadedStrings, PolyKinds, TypeFamilies, TypeOperators #-}
 
 module Frontend.Serv.Serv ( ServGame (runServer)
                           ) where

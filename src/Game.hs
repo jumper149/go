@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, FunctionalDependencies #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Game ( Game ( getStone
                    , putStone

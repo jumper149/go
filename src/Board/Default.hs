@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Board.Default ( BoardSquare (..)
                      , CoordXY (..)
                      , PlayerBW (..)

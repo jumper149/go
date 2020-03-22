@@ -1,5 +1,3 @@
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-
 module Rules ( RulesetEnvT (..)
              , runRulesetEnvT
              , Rules (..)

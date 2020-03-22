@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, DeriveGeneric, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
 
 module State ( PlayingT
              , MonadPlaying ( getAction

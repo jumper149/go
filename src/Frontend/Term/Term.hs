@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleInstances #-}
-
 module Frontend.Term.Term ( TermGame (readCoord)
                           ) where
 
