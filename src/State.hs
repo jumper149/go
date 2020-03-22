@@ -1,18 +1,14 @@
 {-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
 
 module State ( PlayingT
-             , MonadPlaying ( getAction
-                            , drawGame
-                            , drawEnd
-                            , access
-                            )
              , GameState (..)
              , Action (..)
              , EndScreen (..)
-             , start
              , doTurn
              , initState
              , finalizeState
+             , runPlayingT
+             , play
              ) where
 
 import Control.Monad.Except
@@ -20,7 +16,6 @@ import Control.Monad.Identity
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 
-import Data.Either (fromRight)
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
@@ -85,103 +80,88 @@ newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c 
 instance MonadTrans (PlayingT b c p) where
     lift = PlayingT . lift . lift . lift
 
-class (Game b c p, Monad m) => MonadPlaying b c p m where
-
-    getAction :: PlayingT b c p m (Action c) -- TODO what happens if this fails?
-
-    drawGame :: PlayingT b c p m ()
-
-    drawEnd :: EndScreen b p -> m ()
-
-    access :: (GameState b c p -> a) -> PlayingT b c p m a
-    access = gets
-
-    -- | Safely apply an action to the state of a game.
-    turn :: PlayingT b c p m (EndScreen b p) -- TODO rework all of this!!!
-    turn = do gs <- get
-              drawGame
-              action <- getAction
-              act action
-              checkRules
-              let handler ExceptRedo = put gs >> turn
-                  handler ExceptEnd = finalizeState <$> get
-              gets finalizeState `catchError` handler
-              turn
-
-    -- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
-    act :: Action c -> PlayingT b c p m ()
-    act action = do gs <- get
-                    let previousBoard = currentBoard gs
-                        actedGs = case action of
-                                    Pass -> let newConsecutivePasses = consecutivePasses gs + 1
-                                            in gs { lastAction = Pass
-                                                  , consecutivePasses = newConsecutivePasses
-                                                  }
-                                    Place c -> let newB = updateBoard (putStone (currentBoard gs) c (Stone (currentPlayer gs))) (currentPlayer gs)
-                                               in gs { currentBoard = newB
-                                                     , lastAction = Place c
-                                                     , previousBoards = [ previousBoard ] -- TODO keep history
-                                                     , consecutivePasses = 0
-                                                     }
-                        correctedGs = actedGs { currentPlayer = next $ currentPlayer gs
-                                              , countTurns = countTurns gs + 1
+-- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
+act :: (Game b c p, Monad m) => Action c -> PlayingT b c p m ()
+act action = do gs <- get
+                let previousBoard = currentBoard gs
+                    actedGs = case action of
+                                Pass -> let newConsecutivePasses = consecutivePasses gs + 1
+                                        in gs { lastAction = Pass
+                                              , consecutivePasses = newConsecutivePasses
                                               }
-                    put correctedGs
+                                Place c -> let newB = updateBoard (putStone (currentBoard gs) c (Stone (currentPlayer gs))) (currentPlayer gs)
+                                           in gs { currentBoard = newB
+                                                 , lastAction = Place c
+                                                 , previousBoards = [ previousBoard ] -- TODO keep history
+                                                 , consecutivePasses = 0
+                                                 }
+                    correctedGs = actedGs { currentPlayer = next $ currentPlayer gs
+                                          , countTurns = countTurns gs + 1
+                                          }
+                put correctedGs
 
-    checkRules :: PlayingT b c p m ()
-    checkRules = do checkPassing
-                    checkFree
-                    checkSuicide
-                    checkKo
+checkRules :: (Game b c p, Monad m) => PlayingT b c p m ()
+checkRules = do checkPassing
+                checkFree
+                checkSuicide
+                checkKo
 
-    -- TODO currently everything is checked after acting!
-    checkPassing :: PlayingT b c p m ()
-    checkPassing = do gs <- get
-                      rPassing <- reader passing
-                      case rPassing of
-                        Allowed -> unless (consecutivePasses gs < countPlayers (currentPlayer gs)) $
-                                     throwError ExceptEnd
-                        Forbidden -> when (lastAction gs == Pass) $
-                                       throwError ExceptRedo
+-- TODO currently everything is checked after acting!
+checkPassing :: (Game b c p, Monad m) => PlayingT b c p m ()
+checkPassing = do gs <- get
+                  rPassing <- reader passing
+                  case rPassing of
+                    Allowed -> unless (consecutivePasses gs < countPlayers (currentPlayer gs)) $
+                                 throwError ExceptEnd
+                    Forbidden -> when (lastAction gs == Pass) $
+                                   throwError ExceptRedo
 
-    checkFree :: PlayingT b c p m ()
-    checkFree = do gs <- get
-                   case lastAction gs of
-                     Pass -> return ()
-                     Place c -> unless (getStone (head $ previousBoards gs) c == Free) $ -- TODO unsafe head
-                                  throwError ExceptRedo
+checkFree :: (Game b c p, Monad m) => PlayingT b c p m ()
+checkFree = do gs <- get
+               case lastAction gs of
+                 Pass -> return ()
+                 Place c -> unless (getStone (head $ previousBoards gs) c == Free) $ -- TODO unsafe head
+                              throwError ExceptRedo
 
-    checkSuicide :: PlayingT b c p m ()
-    checkSuicide = do gs <- get
-                      rSuicide <- reader suicide
-                      case rSuicide of
-                        Allowed -> return ()
-                        Forbidden -> case lastAction gs of
-                                       Pass -> return ()
-                                       Place c -> when (getStone (currentBoard gs) c == Free) $
-                                                    throwError ExceptRedo
+checkSuicide :: (Game b c p, Monad m) => PlayingT b c p m ()
+checkSuicide = do gs <- get
+                  rSuicide <- reader suicide
+                  case rSuicide of
+                    Allowed -> return ()
+                    Forbidden -> case lastAction gs of
+                                   Pass -> return ()
+                                   Place c -> when (getStone (currentBoard gs) c == Free) $
+                                                throwError ExceptRedo
 
-    checkKo :: PlayingT b c p m () -- TODO how does passing and ko work together?
-    checkKo = do gs <- get
-                 rKo <- reader ko
-                 case rKo of
-                   Ko Allowed -> return ()
-                   Ko Forbidden -> when (currentBoard gs == head (previousBoards gs)) $ -- TODO unsafe head
-                                     throwError ExceptRedo
-                   SuperKo -> return () -- TODO implement
+checkKo :: (Game b c p, Monad m) => PlayingT b c p m () -- TODO how does passing and ko work together?
+checkKo = do gs <- get
+             rKo <- reader ko
+             case rKo of
+               Ko Allowed -> return ()
+               Ko Forbidden -> when (currentBoard gs == head (previousBoards gs)) $ -- TODO unsafe head
+                                 throwError ExceptRedo
+               SuperKo -> return () -- TODO implement
 
--- TODO no undefined shit
-start :: forall b c p m. MonadPlaying b c p m => Rules -> m (EndScreen b p)
-start rules = fromRight undefined <$> runRulesetEnvT rules (runExceptT (evalStateT (unwrapPlayingT turn) initState))
+runPlayingT :: (Game b c p, Monad m)
+            => Rules
+            -> PlayingT b c p m (GameState b c p)
+            -> m (Either Exception (GameState b c p))
+runPlayingT rules turn = runRulesetEnvT rules . runExceptT $ evalStateT (unwrapPlayingT $ turn) initState
+-- TODO change turn to turns
 
--- TODO HACKY af! needed turn' in doTurn
-instance Game b c p => MonadPlaying b c p Identity where
-    getAction = undefined
-    drawGame = undefined
-    drawEnd = undefined
+-- TODO needs to be the whole game
+play :: (Game b c p, Monad m)
+     => PlayingT b c p m (Action c) -- ^ get Action
+     -> PlayingT b c p m () -- ^ render Board
+     -> PlayingT b c p m (GameState b c p)
+play action render = do render
+                        action >>= act
+                        checkRules
+                        get
 
+-- | Apply action to a GameState.
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> Either Exception (GameState b c p)
-doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalStateT (unwrapPlayingT $ turn') gs
+doTurn rules action gs = runIdentity . runRulesetEnvT rules . runExceptT $ evalStateT (unwrapPlayingT turn') gs
   where turn' = do act action
                    checkRules
                    get
@@ -189,8 +169,8 @@ doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalS
 -- | Return the next player. Helper function for 'act'.
 next :: Player p => p -> p
 next player = if player == maxBound
-              then minBound
-              else succ player
+                 then minBound
+                 else succ player
 
 -- | Count the number of players. Helper function for 'checkPassing'.
 countPlayers :: forall p. Player p => p -> Int

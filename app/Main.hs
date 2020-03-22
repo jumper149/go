@@ -59,8 +59,8 @@ options = [ Option ['i'] ["interface"]
           ]
 
 choose :: (Interface,Board) -> IO ()
-choose (Term , Default) = void (start defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Term , Loop) = void (start defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
+choose (Term , Default) = void (game defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Term , Loop) = void (game defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
 choose (Serv , Default) = void (runServer defaultRules :: IO (D.BoardSquare , D.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
 

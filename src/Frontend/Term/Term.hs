@@ -1,9 +1,13 @@
 module Frontend.Term.Term ( TermGame (readCoord)
+                          , game
                           ) where
 
-import Control.Monad.Trans
+import Control.Monad.State.Strict
+
+import Data.Either (fromRight)
 
 import Game
+import Rules
 import State
 
 class (Game b c p, Show b, Show p) => TermGame b c p where
@@ -17,15 +21,15 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
     | str == "pass" = Just Pass
     | otherwise = Place <$> readCoord board str
 
-instance (TermGame b c p) => MonadPlaying b c p IO where
-    getAction = lift . readIOSafe . readAction =<< access currentBoard
+game :: (TermGame b c p) => Rules -> IO (EndScreen b p)
+game rules = finalizeState . fromRight undefined <$> runPlayingT rules (play action render)
 
-    drawGame = do lift . putStr . show =<< access currentBoard
-                  lift . print =<< access currentPlayer
+action :: (TermGame b c p) => PlayingT b c p IO (Action c)
+action = lift . readIOSafe . readAction =<< gets currentBoard
 
-    -- TODO more explicit
-    drawEnd endScr = putStrLn str >> return ()
-      where str = show (winner endScr) ++ " wins"
+render :: (TermGame b c p) => PlayingT b c p IO ()
+render = do lift . putStr . show =<< gets currentBoard
+            lift . print =<< gets currentPlayer
 
 -- | Read strings from IO, until one is accepted by the reader function.
 readIOSafe :: (String -> Maybe a) -> IO a
