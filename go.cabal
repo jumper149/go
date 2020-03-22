@@ -17,14 +17,14 @@ extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     End
+  exposed-modules:     Board.Default
+                       Board.Loop
+                       End
+                       Frontend.Term.Term
                        Game
                        Rules
+                       Server.JSON
                        State
-                       Frontend.Term.Term
-                       Frontend.Serv.Serv
-                       Board.Default
-                       Board.Loop
   build-depends:       base >=4.12 && <4.13
                      , mtl
                      , transformers

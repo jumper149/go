@@ -4,8 +4,8 @@ import qualified Board.Default as D
 import qualified Board.Loop as L
 import End
 import Frontend.Term.Term
-import Frontend.Serv.Serv
 import Rules
+import Server.JSON
 
 import System.Console.GetOpt
 import System.Environment (getArgs)
@@ -61,7 +61,7 @@ options = [ Option ['i'] ["interface"]
 choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (game defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose (Term , Loop) = void (game defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
-choose (Serv , Default) = void (runServer defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Serv , Default) = void (serverJSON defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()

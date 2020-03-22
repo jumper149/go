@@ -6,7 +6,7 @@ module Board.Default ( BoardSquare (..)
 
 import Game
 import Frontend.Term.Term
-import Frontend.Serv.Serv
+import Server.JSON
 
 import qualified Data.Vector as V
 
@@ -116,4 +116,4 @@ instance TermGame BoardSquare CoordXY PlayerBW where
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance ServGame BoardSquare CoordXY PlayerBW
+instance JSONGame BoardSquare CoordXY PlayerBW
