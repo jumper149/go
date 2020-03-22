@@ -4,9 +4,9 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, containers, hspec, mtl
-      , QuickCheck, servant-server, stdenv, text, transformers, vector
-      , wai, warp
+  f = { mkDerivation, aeson, base, bytestring, containers, hspec
+      , mtl, QuickCheck, servant-server, stdenv, transformers, vector
+      , warp
       }:
       mkDerivation {
         pname = "go";
@@ -15,8 +15,8 @@ let
         isLibrary = true;
         isExecutable = true;
         libraryHaskellDepends = [
-          aeson base containers mtl servant-server text transformers vector
-          wai warp
+          aeson base bytestring containers mtl servant-server transformers
+          vector warp
         ];
         executableHaskellDepends = [ base ];
         testHaskellDepends = [ base hspec QuickCheck ];

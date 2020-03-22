@@ -10,8 +10,8 @@ import Server.JSON
 
 import qualified Data.Vector as V
 
-import GHC.Generics
-import Data.Aeson
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON)
 
 -- | Represents the players.
 data PlayerBW = Black

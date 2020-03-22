@@ -34,8 +34,6 @@ library
                      , aeson
                      , bytestring
                      , servant-server
-                     , text
-                     , wai
                      , warp
   default-extensions:  DeriveGeneric
                      , FlexibleInstances

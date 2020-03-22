@@ -5,12 +5,12 @@ module Server.JSON ( JSONGame
                    ) where
 
 import Data.Aeson
-import qualified Data.ByteString.Lazy as B
-import Data.Proxy
-import GHC.Generics
-import Network.Wai.Handler.Warp
+import Data.Proxy (Proxy)
+import GHC.Generics (Generic)
+import Network.Wai.Handler.Warp (run)
 import Servant
 
+import qualified Data.ByteString.Lazy as B
 import Data.Either (fromRight)
 
 import Control.Monad.IO.Class

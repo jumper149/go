@@ -11,8 +11,8 @@ module Game ( Game ( getStone
 
 import qualified Data.Set as S
 
-import GHC.Generics
-import Data.Aeson
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON)
 
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
