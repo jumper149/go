@@ -12,10 +12,12 @@ data Permission = Allowed
                 | Forbidden
                 deriving (Eq, Show)
 
+-- TODO change?
 data KoRule = Ko Permission
             | SuperKo
             deriving (Eq, Show)
 
+-- TODO improve
 data Komi = Integral Int
           | PlusHalf Int
           deriving (Eq, Show)

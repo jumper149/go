@@ -3,10 +3,8 @@
 module State ( PlayingT
              , GameState (..)
              , Action (..)
-             , EndScreen (..)
              , doTurn
              , initState
-             , finalizeState
              , runPlayingT
              , play
              ) where
@@ -56,26 +54,8 @@ instance (Generic c, ToJSON c) => ToJSON (Action c)
 data Exception = ExceptRedo
                | ExceptEnd
 
--- | Holds informaion for the endscreen.
-data EndScreen b p = EndScreen { lastBoard :: b
-                               , winner :: p
-                               , points :: [(p,Int)]
-                               , stonesOnBoard :: [(p,Int)]
-                               , turns :: Int
-                               }
-
--- | Transform the state of a finished game to the endscreen.
-finalizeState :: forall b c p. Game b c p => GameState b c p -> EndScreen b p
-finalizeState gs = EndScreen { lastBoard = currentBoard gs
-                             , winner = currentPlayer gs
-                             , points = []
-                             , stonesOnBoard = map (\ x -> (x , countStones (currentBoard gs) x)) ([ minBound .. maxBound ] :: [p])
-                             , turns = countTurns gs
-                             }
-
 newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (ExceptT Exception (RulesetEnvT m)) a }
-    deriving (Functor, Applicative, Monad, MonadState (GameState b c p), MonadError Exception,
-              MonadReader Rules)
+    deriving (Functor, Applicative, Monad, MonadState (GameState b c p), MonadError Exception, MonadReader Rules)
 
 instance MonadTrans (PlayingT b c p) where
     lift = PlayingT . lift . lift . lift
@@ -175,8 +155,3 @@ next player = if player == maxBound
 -- | Count the number of players. Helper function for 'checkPassing'.
 countPlayers :: forall p. Player p => p -> Int
 countPlayers _ = length ([ minBound .. maxBound ] :: [p])
-
--- | Count the number of stones a player has on the board. Helper function for 'finalizeState'.
-countStones :: forall b c p. Game b c p => b -> p -> Int
-countStones board player = length $ filter hasPlayerStone $ coords board
-  where hasPlayerStone coord = getStone board coord == Stone player
