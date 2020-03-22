@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DeriveGeneric, FunctionalDependencies #-}
 
 module Game ( Game ( getStone
                    , putStone
@@ -11,10 +11,16 @@ module Game ( Game ( getStone
 
 import qualified Data.Set as S
 
+import GHC.Generics
+import Data.Aeson
+
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
              | Stone p
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic)
+
+instance (Generic p, FromJSON p) => FromJSON (Stone p)
+instance (Generic p, ToJSON p) => ToJSON (Stone p)
 
 -- | Stones placed on coordinates can form chains which are represented by this data type.
 data Chain p c = Chain (Stone p) (S.Set c)

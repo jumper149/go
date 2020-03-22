@@ -31,6 +31,7 @@ library
                      , vector
 
                      , aeson
+                     , bytestring
                      , servant-server
                      , text
                      , wai

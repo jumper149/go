@@ -1,68 +1,46 @@
 {-# LANGUAGE DataKinds, DeriveGeneric, FlexibleInstances, OverloadedStrings, PolyKinds, TypeFamilies, TypeOperators #-}
 
-module Frontend.Serv.Serv ( go
+module Frontend.Serv.Serv ( ServGame (runServer)
                           ) where
 
 import           Data.Aeson
 import           Data.Proxy
-import           Data.Text
 import           GHC.Generics
 import           Network.Wai
 import           Network.Wai.Handler.Warp
-
 import           Servant
+import qualified Data.ByteString.Lazy as B
 
--- * Example
+import Data.Either (fromRight)
 
--- | A greet message data type
-newtype Greet = Greet { _msg :: Text }
-  deriving (Generic, Show)
+import Control.Monad.Trans (lift)
+import Control.Monad.IO.Class
 
-instance FromJSON Greet
-instance ToJSON Greet
+import Game
+import Rules (Rules)
+import State
 
--- API specification
-type TestApi =
-       -- GET /hello/:name?capital={true, false}  returns a Greet as JSON
-       "start" :> Capture "name" Text :> QueryParam "capital" Bool :> Get '[JSON] Greet
+type Api b c p =
+       "create" :> Post '[JSON] FilePath
+  :<|> "render" :> ReqBody '[JSON] FilePath :> Post '[JSON] (GameState b c p)
+  :<|> "play" :> ReqBody '[JSON] (FilePath,Action c) :> Post '[JSON] ()
 
-       -- POST /greet with a Greet as JSON in the request body,
-       --             returns a Greet as JSON
-  :<|> "asd" :> ReqBody '[JSON] Greet :> Post '[JSON] Greet
 
-       -- DELETE /greet/:greetid
-  :<|> "greet" :> Capture "greetid" Text :> Delete '[JSON] NoContent
+class (Game b c p, Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p, ToJSON b, ToJSON c, ToJSON p) => ServGame b c p where
+  server :: Rules -> Server (Api b c p)
+  server rules = createH :<|> renderH :<|> playH
+    where createH = do liftIO . B.writeFile path . encode $ (initState :: GameState b c p)
+                       return path
+            where path = "GameServ.json"
+          renderH path = do gs <- liftIO $ decode <$> B.readFile path
+                            maybe (throwError undefined) return gs
+          playH (path,action) = do gs <- liftIO $ decode <$> B.readFile path
+                                   let newGs = doTurn rules action <$> (gs :: Maybe (GameState b c p))
+                                   maybe (throwError undefined) (liftIO . B.writeFile path . encode . fromRight undefined ) newGs
 
--- Server-side handlers.
---
--- There's one handler per endpoint, which, just like in the type
--- that represents the API, are glued together using :<|>.
---
--- Each handler runs in the 'Handler' monad.
-server :: Server TestApi
-server = helloH :<|> postGreetH :<|> deleteGreetH
-
-  where helloH name Nothing = helloH name (Just False)
-        helloH name (Just False) = return . Greet $ "Hello, " <> name
-        helloH name (Just True) = return . Greet . toUpper $ "Hello, " <> name
-
-        postGreetH greet = return greet
-
-        deleteGreetH _ = return NoContent
-
--- Turn the server into a WAI app. 'serve' is provided by servant,
--- more precisely by the Servant.Server module.
-test :: Application
-test = serve (Proxy :: Proxy TestApi) server
-
--- Run the server.
---
--- 'run' comes from Network.Wai.Handler.Warp
-runTestServer :: Port -> IO ()
-runTestServer port = run port test
-
--- Put this all to work!
-go :: IO ()
-go = do putStrLn $ "Port is " <> show port
-        runTestServer port
-  where port = 8501
+  runServer :: Rules -> IO (b,p)
+  runServer rules = do putStrLn $ "Port is " <> show port
+                       run port app
+                       return undefined
+    where port = 8501
+          app = serve (Proxy :: Proxy (Api b c p)) (server rules :: Server (Api b c p))

@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Board.Default ( BoardSquare (..)
                      , CoordXY (..)
                      , PlayerBW (..)
@@ -6,20 +8,29 @@ module Board.Default ( BoardSquare (..)
 
 import Game
 import Frontend.Term.Term
+import Frontend.Serv.Serv
 
 import qualified Data.Vector as V
+
+import GHC.Generics
+import Data.Aeson
 
 -- | Represents the players.
 data PlayerBW = Black
               | White
-  deriving (Eq, Enum, Bounded, Ord, Show)
+  deriving (Eq, Enum, Bounded, Ord, Show, Generic)
 
 instance Player PlayerBW
+instance FromJSON PlayerBW
+instance ToJSON PlayerBW
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
 data CoordXY = XY Int Int
-  deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show, Generic)
+
+instance FromJSON CoordXY
+instance ToJSON CoordXY
 
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> CoordXY -> Int
@@ -27,7 +38,10 @@ coordToVecInd n (XY x y) = x + n * y
 
 -- | Represents a square board. Contains the BoardSize and a Vector with all points.
 data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
-  deriving Eq
+  deriving (Eq, Generic)
+
+instance FromJSON BoardSquare
+instance ToJSON BoardSquare
 
 -- | Represents the number of rows (or columns) on a square board.
 type BoardSize = Int
@@ -103,3 +117,5 @@ instance TermGame BoardSquare CoordXY PlayerBW where
           charsInRange lo hi st = and bools
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
+
+instance ServGame BoardSquare CoordXY PlayerBW

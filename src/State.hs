@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE AllowAmbiguousTypes, DeriveGeneric, FlexibleContexts, FlexibleInstances, GeneralizedNewtypeDeriving #-}
 
 module State ( PlayingT
              , MonadPlaying ( getAction
@@ -21,6 +21,8 @@ import Control.Monad.Reader
 import Control.Monad.State.Strict
 
 import Data.Either (fromRight)
+import GHC.Generics (Generic)
+import Data.Aeson (FromJSON, ToJSON)
 
 import Game
 import Rules
@@ -34,6 +36,10 @@ data GameState b c p = GState { currentBoard :: b
                               , consecutivePasses :: Int
                               , countTurns :: Int
                               }
+                              deriving Generic
+
+instance (Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p) => FromJSON (GameState b c p)
+instance (Generic b, Generic c, Generic p, ToJSON b, ToJSON c, ToJSON p) => ToJSON (GameState b c p)
 
 initState :: Game b c p => GameState b c p
 initState = GState { currentBoard = empty
@@ -47,7 +53,10 @@ initState = GState { currentBoard = empty
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
-              deriving (Eq)
+              deriving (Eq,Generic)
+
+instance (Generic c, FromJSON c) => FromJSON (Action c)
+instance (Generic c, ToJSON c) => ToJSON (Action c)
 
 data Exception = ExceptRedo
                | ExceptEnd
@@ -172,7 +181,7 @@ instance Game b c p => MonadPlaying b c p Identity where
     drawEnd = undefined
 
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> Either Exception (GameState b c p)
-doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalStateT (unwrapPlayingT $ turn') initState
+doTurn rules action gs = runIdentity $ runRulesetEnvT rules $ runExceptT $ evalStateT (unwrapPlayingT $ turn') gs
   where turn' = do act action
                    checkRules
                    get

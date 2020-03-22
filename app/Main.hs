@@ -61,7 +61,7 @@ options = [ Option ['i'] ["interface"]
 choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (start defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose (Term , Loop) = void (start defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
-choose (Serv , Default) = go
+choose (Serv , Default) = void (runServer defaultRules :: IO (D.BoardSquare , D.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()
