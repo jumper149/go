@@ -21,7 +21,7 @@ library
                        Board.Loop
                        Client.JSONTerm
                        End
-                       Frontend.Term.Term
+                       Frontend.Term
                        Game
                        Rules
                        Server.JSON

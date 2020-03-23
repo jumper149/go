@@ -4,7 +4,7 @@ module Board.Loop ( BoardLoop (..)
                   ) where
 
 import Game
-import Frontend.Term.Term
+import Frontend.Term
 import Board.Default
 
 newtype BoardLoop = BLoop BoardSquare

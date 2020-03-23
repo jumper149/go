@@ -1,8 +1,8 @@
-module Frontend.Term.Term ( TermGame (readCoord)
-                          , game
-                          , action'
-                          , render'
-                          ) where
+module Frontend.Term ( TermGame (readCoord)
+                     , game
+                     , action'
+                     , render'
+                     ) where
 
 import Control.Monad.State.Strict
 

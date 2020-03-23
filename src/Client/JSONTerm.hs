@@ -14,7 +14,7 @@ import Network.HTTP.Client (newManager, defaultManagerSettings)
 import Data.Either (fromRight)
 
 import End
-import Frontend.Term.Term
+import Frontend.Term
 import Game
 import Rules
 import Server.JSON

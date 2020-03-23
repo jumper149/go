@@ -4,7 +4,7 @@ import qualified Board.Default as D
 import qualified Board.Loop as L
 import Client.JSONTerm
 import End
-import Frontend.Term.Term
+import Frontend.Term
 import Rules
 import Server.JSON
 

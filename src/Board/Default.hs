@@ -5,7 +5,7 @@ module Board.Default ( BoardSquare (..)
                      ) where
 
 import Game
-import Frontend.Term.Term
+import Frontend.Term
 import Server.JSON
 
 import qualified Data.Vector as V
