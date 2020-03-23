@@ -2,6 +2,7 @@ module Main where
 
 import qualified Board.Default as D
 import qualified Board.Loop as L
+import Client.JSONTerm
 import End
 import Frontend.Term.Term
 import Rules
@@ -16,6 +17,7 @@ import Control.Monad (void)
 
 data Interface = Term
                | Serv
+               | Cli
   deriving (Read, Show, Enum)
 
 errInterface :: Interface
@@ -62,6 +64,7 @@ choose :: (Interface,Board) -> IO ()
 choose (Term , Default) = void (game defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose (Term , Loop) = void (game defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW))
 choose (Serv , Default) = void (serverJSON defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Cli , Default) = void (clientJSONTerm defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
 choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()

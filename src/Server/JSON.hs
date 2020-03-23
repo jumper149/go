@@ -2,6 +2,7 @@
 
 module Server.JSON ( JSONGame
                    , serverJSON
+                   , api
                    ) where
 
 import Data.Aeson
@@ -20,13 +21,16 @@ import Game
 import Rules
 import State
 
-type Api b c p = "create"                                        :> Post '[JSON] FilePath
+type API b c p = "create"                                        :> Post '[JSON] FilePath
             :<|> "render" :> ReqBody '[JSON] FilePath            :> Post '[JSON] (GameState b c p)
             :<|> "play"   :> ReqBody '[JSON] (FilePath,Action c) :> Post '[JSON] ()
 
+api :: Proxy (API b c p)
+api = Proxy
+
 class (Game b c p, Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p, ToJSON b, ToJSON c, ToJSON p) => JSONGame b c p
 
-server :: forall b c p. JSONGame b c p => Rules -> Server (Api b c p)
+server :: forall b c p. JSONGame b c p => Rules -> Server (API b c p)
 server rules = createH :<|> renderH :<|> playH
   where createH = do liftIO . B.writeFile path . encode $ (initState :: GameState b c p)
                      return path
@@ -42,4 +46,4 @@ serverJSON rules = do putStrLn $ "Port is " <> show port
                       run port app
                       return undefined
   where port = 8501
-        app = serve (Proxy :: Proxy (Api b c p)) (server rules :: Server (Api b c p))
+        app = serve api (server rules :: Server (API b c p))

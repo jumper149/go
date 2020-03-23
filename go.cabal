@@ -19,6 +19,7 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Board.Default
                        Board.Loop
+                       Client.JSONTerm
                        End
                        Frontend.Term.Term
                        Game
@@ -33,6 +34,9 @@ library
 
                      , aeson
                      , bytestring
+                     , http-client
+                     , lucid
+                     , servant-client
                      , servant-server
                      , warp
   default-extensions:  DeriveGeneric

@@ -1,5 +1,7 @@
 module Frontend.Term.Term ( TermGame (readCoord)
                           , game
+                          , action'
+                          , render'
                           ) where
 
 import Control.Monad.State.Strict
@@ -10,6 +12,13 @@ import End
 import Game
 import Rules
 import State
+
+action' :: TermGame b c p => b -> IO (Action c)
+action' = readIOSafe . readAction
+
+render' :: TermGame b c p => b -> p -> IO ()
+render' board player = do putStr . show $ board
+                          print player
 
 class (Game b c p, Show b, Show p) => TermGame b c p where
 
