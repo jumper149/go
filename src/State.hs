@@ -138,6 +138,7 @@ play action render = do render
                         action >>= act
                         checkRules
                         get
+                        play action render
 
 -- | Apply action to a GameState.
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> Either Exception (GameState b c p)

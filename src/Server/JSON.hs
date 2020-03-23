@@ -2,6 +2,7 @@
 
 module Server.JSON ( JSONGame
                    , serverJSON
+                   , API
                    , api
                    ) where
 
