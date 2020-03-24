@@ -3,8 +3,8 @@ module Test.Board.Default where
 import Test.Hspec
 import Test.QuickCheck
 
-import Board.Default
-import Game
+import Go.Board.Default
+import Go.Game.Game
 
 runTests :: IO ()
 runTests = hspec $ do

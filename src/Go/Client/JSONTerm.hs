@@ -10,7 +10,6 @@ import Network.HTTP.Client (newManager, defaultManagerSettings)
 
 import Go.Frontend.Term
 import Go.Game.End
-import Go.Game.Rules
 import Go.Game.State
 import Go.Server.JSON
 
@@ -26,7 +25,7 @@ clientJSONTerm = do manager' <- newManager defaultManagerSettings
                                                    case mbAct of
                                                      Left ExceptRedo -> turn
                                                      Left ExceptEnd -> undefined -- TODO ???
-                                                     Right act -> runClientM (playQ act) clientEnv >> turn
+                                                     Right actn -> runClientM (playQ actn) clientEnv >> turn
                     turn
   where renderQ :<|> playQ = client (api :: Proxy (API b c p))
         port = 8501 -- TODO move away from here
