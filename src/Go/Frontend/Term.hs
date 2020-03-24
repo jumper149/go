@@ -44,4 +44,4 @@ render gs = do putStr . show $ currentBoard gs
 
 -- | Play a whole game in the terminal.
 game :: TermGame b c p => Rules -> IO (EndScreen b p)
-game rules = finalizeState <$> runPlayingT rules (play action render)
+game rules = finalizeState <$> playPlayingT rules (play action render)

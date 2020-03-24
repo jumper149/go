@@ -1,7 +1,7 @@
 {-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
 
 module Go.Game.Playing ( PlayingT
-                       , runPlayingT
+                       , playPlayingT
                        , play
                        , doTurn
                        ) where
@@ -28,18 +28,18 @@ instance MonadTrans (PlayingT b c p) where
 instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
     gamestate = PlayingT get
 
-runPlayingT :: (Game b c p, Monad m)
-            => Rules
-            -> PlayingT b c p m (GameState b c p)
-            -> m (GameState b c p)
-runPlayingT rules turn = runPlayingTRaw rules initState turn
+playPlayingT :: (Game b c p, Monad m)
+             => Rules
+             -> PlayingT b c p m ()
+             -> m (GameState b c p)
+playPlayingT rules turn = snd <$> runPlayingT rules initState turn
 -- TODO change turn to turns EVERYWHERE!!!
 
 -- | Play a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
      => (GameState b c p -> m (Either Exception (Action c))) -- ^ get Action
      -> (GameState b c p -> m ()) -- ^ render Board
-     -> PlayingT b c p m (GameState b c p)
+     -> PlayingT b c p m ()
 play action render = do gs <- gamestate
                         let resetGame = PlayingT (put gs)
                         lift $ render gs
@@ -50,27 +50,27 @@ play action render = do gs <- gamestate
                                            case problem of
                                              Right () -> rec
                                              Left ExceptRedo -> resetGame >> rec
-                                             Left ExceptEnd -> return gs -- TODO return gs or get
+                                             Left ExceptEnd -> return () -- TODO return gs or get
                           Left ExceptRedo -> resetGame >> rec
                           Left ExceptEnd -> undefined
   where rec = play action render
 
 -- | Apply action to a GameState.
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> GameState b c p
-doTurn rules action gs = runIdentity $ runPlayingTRaw rules gs turn
+doTurn rules action gs = snd . runIdentity $ runPlayingT rules gs turn
   where turn = do gs <- gamestate
                   let resetGame = PlayingT (put gs)
                   PlayingT $ act action
                   problem <- PlayingT checkRules
                   case problem of
-                    Right () -> gamestate
-                    Left ExceptRedo -> resetGame >> gamestate
+                    Right () -> return ()
+                    Left ExceptRedo -> resetGame
                     Left ExceptEnd -> undefined
 
 -- | Helper function for 'play' and 'doTurn'.
-runPlayingTRaw :: (Game b c p, Monad m)
-               => Rules
-               -> GameState b c p
-               -> PlayingT b c p m (GameState b c p)
-               -> m (GameState b c p)
-runPlayingTRaw rules gs turn = runRulesetEnvT rules $ evalStateT (unwrapPlayingT turn) gs
+runPlayingT :: (Game b c p, Monad m)
+            => Rules
+            -> GameState b c p
+            -> PlayingT b c p m a
+            -> m (a,GameState b c p)
+runPlayingT rules gs turn = runRulesetEnvT rules $ runStateT (unwrapPlayingT turn) gs
