@@ -4,10 +4,9 @@ module Go.Board.Default ( BoardSquare (..)
                         , emptyFromSize
                         ) where
 
-import qualified Data.Vector as V
-
-import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
+import qualified Data.Vector as V
+import GHC.Generics (Generic)
 
 import Go.Frontend.Term
 import Go.Game.Game

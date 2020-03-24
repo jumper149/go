@@ -3,12 +3,19 @@ module Go.Board.Loop ( BoardLoop (..)
                      , PlayerBW (..)
                      ) where
 
+import Data.Aeson (FromJSON, ToJSON)
+import GHC.Generics (Generic)
+
 import Go.Board.Default
 import Go.Frontend.Term
 import Go.Game.Game
+import Go.Server.JSON
 
 newtype BoardLoop = BLoop BoardSquare
-  deriving Eq
+  deriving (Eq, Generic)
+
+instance FromJSON BoardLoop
+instance ToJSON BoardLoop
 
 instance Show BoardLoop where
   show (BLoop board) = show board
@@ -32,3 +39,5 @@ instance Game BoardLoop CoordXY PlayerBW where
 
 instance TermGame BoardLoop CoordXY PlayerBW where
   readCoord (BLoop board) = readCoord board
+
+instance JSONGame BoardLoop CoordXY PlayerBW
