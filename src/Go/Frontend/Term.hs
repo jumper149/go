@@ -5,9 +5,6 @@ module Go.Frontend.Term ( TermGame (readCoord)
                         ) where
 
 import Control.Monad.Except
-import Control.Monad.State.Strict
-
-import Data.Either (fromRight)
 
 import Go.Game.End
 import Go.Game.Game
@@ -20,14 +17,7 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
     -- | Decide whether a string represents a coordinate and read it.
     readCoord :: b -> String -> Maybe c
 
--- | Decide what and if a string represents an action.
-readAction :: TermGame b c p => b -> IO (Maybe (Action c))
-readAction board = do str <- getLine
-                      case str of
-                        "pass" -> return $ Just Pass
-                        _ -> return $ Place <$> readCoord board str
-
--- | Get action from 'IO' and lift it.
+-- | Get action from 'IO' and check sanity.
 action :: TermGame b c p => GameState b c p -> IO (Either Exception (Action c))
 action gs = do str <- getLine
                let mbActn = case str of
@@ -35,7 +25,7 @@ action gs = do str <- getLine
                               _ -> Place <$> readCoord (currentBoard gs) str
                case mbActn of
                  Just actn -> return . return $ actn
-                 Nothing -> return $ throwError ExceptRedo -- TODO ExceptRedo stops the running program, dont know why
+                 Nothing -> return $ throwError ExceptRedo
 
 -- | Print board and other information to stdout.
 render :: TermGame b c p => GameState b c p -> IO ()

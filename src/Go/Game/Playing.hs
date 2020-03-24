@@ -28,14 +28,14 @@ instance MonadTrans (PlayingT b c p) where
 instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
     gamestate = PlayingT get
 
+-- | Play some turns and return the GameState at the end.
 playPlayingT :: (Game b c p, Monad m)
              => Rules
              -> PlayingT b c p m ()
              -> m (GameState b c p)
-playPlayingT rules turn = snd <$> runPlayingT rules initState turn
--- TODO change turn to turns EVERYWHERE!!!
+playPlayingT rules turns = snd <$> runPlayingT rules initState turns
 
--- | Play a whole game.
+-- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
      => (GameState b c p -> m (Either Exception (Action c))) -- ^ get Action
      -> (GameState b c p -> m ()) -- ^ render Board
@@ -58,13 +58,11 @@ play action render = do gs <- gamestate
 -- | Apply action to a GameState.
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> GameState b c p
 doTurn rules action gs = snd . runIdentity $ runPlayingT rules gs turn
-  where turn = do gs <- gamestate
-                  let resetGame = PlayingT (put gs)
-                  PlayingT $ act action
+  where turn = do PlayingT $ act action
                   problem <- PlayingT checkRules
                   case problem of
                     Right () -> return ()
-                    Left ExceptRedo -> resetGame
+                    Left ExceptRedo -> PlayingT $ put gs
                     Left ExceptEnd -> undefined
 
 -- | Helper function for 'play' and 'doTurn'.
@@ -73,4 +71,4 @@ runPlayingT :: (Game b c p, Monad m)
             -> GameState b c p
             -> PlayingT b c p m a
             -> m (a,GameState b c p)
-runPlayingT rules gs turn = runRulesetEnvT rules $ runStateT (unwrapPlayingT turn) gs
+runPlayingT rules gs turns = runRulesetEnvT rules $ runStateT (unwrapPlayingT turns) gs
