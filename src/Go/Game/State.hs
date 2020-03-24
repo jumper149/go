@@ -1,13 +1,13 @@
 {-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
 
-module State ( PlayingT
-             , GameState (..)
-             , Action (..)
-             , doTurn
-             , initState
-             , runPlayingT
-             , play
-             ) where
+module Go.Game.State ( PlayingT
+                     , GameState (..)
+                     , Action (..)
+                     , doTurn
+                     , initState
+                     , runPlayingT
+                     , play
+                     ) where
 
 import Control.Monad.Except
 import Control.Monad.Identity
@@ -17,8 +17,8 @@ import Control.Monad.State.Strict
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
-import Game
-import Rules
+import Go.Game.Game
+import Go.Game.Rules
 
 -- | This data type contains the current board, the current player, the previous board and the
 -- number of consecutive passes.
@@ -137,7 +137,6 @@ play :: (Game b c p, Monad m)
 play action render = do render
                         action >>= act
                         checkRules
-                        get
                         play action render
 
 -- | Apply action to a GameState.

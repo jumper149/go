@@ -1,11 +1,11 @@
-module Board.Loop ( BoardLoop (..)
-                  , CoordXY (..)
-                  , PlayerBW (..)
-                  ) where
+module Go.Board.Loop ( BoardLoop (..)
+                     , CoordXY (..)
+                     , PlayerBW (..)
+                     ) where
 
-import Game
-import Frontend.Term
-import Board.Default
+import Go.Board.Default
+import Go.Frontend.Term
+import Go.Game.Game
 
 newtype BoardLoop = BLoop BoardSquare
   deriving Eq

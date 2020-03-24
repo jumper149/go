@@ -1,17 +1,17 @@
-module Board.Default ( BoardSquare (..)
-                     , CoordXY (..)
-                     , PlayerBW (..)
-                     , emptyFromSize
-                     ) where
-
-import Game
-import Frontend.Term
-import Server.JSON
+module Go.Board.Default ( BoardSquare (..)
+                        , CoordXY (..)
+                        , PlayerBW (..)
+                        , emptyFromSize
+                        ) where
 
 import qualified Data.Vector as V
 
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
+
+import Go.Frontend.Term
+import Go.Game.Game
+import Go.Server.JSON
 
 -- | Represents the players.
 data PlayerBW = Black

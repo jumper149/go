@@ -1,9 +1,9 @@
-module End ( EndScreen (..)
-           , finalizeState
-           ) where
+module Go.Game.End ( EndScreen (..)
+                   , finalizeState
+                   ) where
 
-import Game
-import State
+import Go.Game.Game
+import Go.Game.State
 
 -- | Holds informaion for the endscreen.
 data EndScreen b p = EndScreen { lastBoard :: b

@@ -1,17 +1,17 @@
-module Frontend.Term ( TermGame (readCoord)
-                     , game
-                     , action'
-                     , render'
-                     ) where
+module Go.Frontend.Term ( TermGame (readCoord)
+                        , game
+                        , action'
+                        , render'
+                        ) where
 
 import Control.Monad.State.Strict
 
 import Data.Either (fromRight)
 
-import End
-import Game
-import Rules
-import State
+import Go.Game.End
+import Go.Game.Game
+import Go.Game.Rules
+import Go.Game.State
 
 action' :: TermGame b c p => b -> IO (Action c)
 action' = readIOSafe . readAction

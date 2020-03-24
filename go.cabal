@@ -17,15 +17,15 @@ extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Board.Default
-                       Board.Loop
-                       Client.JSONTerm
-                       End
-                       Frontend.Term
-                       Game
-                       Rules
-                       Server.JSON
-                       State
+  exposed-modules:     Go.Board.Default
+                       Go.Board.Loop
+                       Go.Client.JSONTerm
+                       Go.Game.End
+                       Go.Frontend.Term
+                       Go.Game.Game
+                       Go.Game.Rules
+                       Go.Server.JSON
+                       Go.Game.State
   build-depends:       base >=4.12 && <4.13
                      , mtl
                      , transformers

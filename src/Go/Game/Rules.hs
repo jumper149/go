@@ -1,10 +1,10 @@
-module Rules ( RulesetEnvT (..)
-             , runRulesetEnvT
-             , Rules (..)
-             , defaultRules
-             , Permission (..)
-             , KoRule (..)
-             ) where
+module Go.Game.Rules ( RulesetEnvT (..)
+                     , runRulesetEnvT
+                     , Rules (..)
+                     , defaultRules
+                     , Permission (..)
+                     , KoRule (..)
+                     ) where
 
 import Control.Monad.Reader
 

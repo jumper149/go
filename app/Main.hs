@@ -1,12 +1,12 @@
 module Main where
 
-import qualified Board.Default as D
-import qualified Board.Loop as L
-import Client.JSONTerm
-import End
-import Frontend.Term
-import Rules
-import Server.JSON
+import qualified Go.Board.Default as D
+import qualified Go.Board.Loop as L
+import Go.Client.JSONTerm
+import Go.Frontend.Term
+import Go.Game.End
+import Go.Game.Rules
+import Go.Server.JSON
 
 import System.Console.GetOpt
 import System.Environment (getArgs)

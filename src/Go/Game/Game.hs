@@ -1,13 +1,13 @@
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Game ( Game ( getStone
-                   , putStone
-                   )
-            , updateBoard
-            , Board (..)
-            , Player
-            , Stone (..)
-            ) where
+module Go.Game.Game ( Game ( getStone
+                           , putStone
+                           )
+                    , updateBoard
+                    , Board (..)
+                    , Player
+                    , Stone (..)
+                    ) where
 
 import qualified Data.Set as S
 

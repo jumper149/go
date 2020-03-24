@@ -1,10 +1,10 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 
-module Server.JSON ( JSONGame
-                   , serverJSON
-                   , API
-                   , api
-                   ) where
+module Go.Server.JSON ( JSONGame
+                      , serverJSON
+                      , API
+                      , api
+                      ) where
 
 import Data.Aeson
 import Data.Proxy (Proxy)
@@ -17,10 +17,10 @@ import Data.Either (fromRight)
 
 import Control.Monad.IO.Class
 
-import End
-import Game
-import Rules
-import State
+import Go.Game.End
+import Go.Game.Game
+import Go.Game.Rules
+import Go.Game.State
 
 type API b c p = "create"                                        :> Post '[JSON] FilePath
             :<|> "render" :> ReqBody '[JSON] FilePath            :> Post '[JSON] (GameState b c p)
