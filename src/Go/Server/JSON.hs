@@ -6,19 +6,18 @@ module Go.Server.JSON ( JSONGame
                       , api
                       ) where
 
+import Control.Monad.IO.Class
 import Data.Aeson
+import qualified Data.ByteString.Lazy as B
 import Data.Proxy (Proxy)
 import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp (run)
 import Servant
 
-import qualified Data.ByteString.Lazy as B
-import Data.Either (fromRight)
-
-import Control.Monad.IO.Class
 
 import Go.Game.End
 import Go.Game.Game
+import Go.Game.Playing
 import Go.Game.Rules
 import Go.Game.State
 
@@ -37,10 +36,10 @@ server rules = createH :<|> renderH :<|> playH
                      return path
           where path = "GameServ.json"
         renderH path = do gs <- liftIO $ decode <$> B.readFile path
-                          maybe (throwError undefined) return gs
+                          maybe undefined return gs
         playH (path,action) = do gs <- liftIO $ decode <$> B.readFile path
                                  let newGs = doTurn rules action <$> (gs :: Maybe (GameState b c p))
-                                 maybe (throwError undefined) (liftIO . B.writeFile path . encode . fromRight undefined) newGs
+                                 maybe undefined (liftIO . B.writeFile path . encode) newGs
 
 serverJSON :: forall b c p. JSONGame b c p => Rules -> IO (EndScreen b p)
 serverJSON rules = do putStrLn $ "Port is " <> show port

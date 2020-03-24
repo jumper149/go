@@ -22,8 +22,8 @@ clientJSONTerm rules = do manager' <- newManager defaultManagerSettings
                           let clientEnv = mkClientEnv manager' $ BaseUrl Http "localhost" port ""
                           path <- fromRight undefined <$> runClientM createQ clientEnv
                           let turn = do gs <- fromRight undefined <$> runClientM (renderQ path) clientEnv
-                                        render' (currentBoard gs) $ currentPlayer gs
-                                        act <- action' $ currentBoard gs
+                                        render gs
+                                        act <- fromRight undefined <$> action gs
                                         _ <- runClientM (playQ (path,act)) clientEnv
                                         turn
                           turn

@@ -1,4 +1,4 @@
-module Go.Game.Rules ( RulesetEnvT (..)
+module Go.Game.Rules ( RulesetEnvT
                      , runRulesetEnvT
                      , Rules (..)
                      , defaultRules

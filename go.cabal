@@ -23,6 +23,7 @@ library
                        Go.Game.End
                        Go.Frontend.Term
                        Go.Game.Game
+                       Go.Game.Playing
                        Go.Game.Rules
                        Go.Server.JSON
                        Go.Game.State
