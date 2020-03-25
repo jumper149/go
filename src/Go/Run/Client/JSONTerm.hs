@@ -4,14 +4,14 @@ module Go.Run.Client.JSONTerm ( clientJSONTerm
                               ) where
 
 import Data.Proxy (Proxy)
+import Network.HTTP.Client (newManager, defaultManagerSettings)
 import Servant
 import Servant.Client
-import Network.HTTP.Client (newManager, defaultManagerSettings)
 
-import Go.Term
 import Go.Game.End
 import Go.Game.State
-import Go.Server.JSON
+import Go.Run.Server.JSON
+import Go.Run.Term
 
 -- TODO move rules?
 clientJSONTerm :: forall b c p. (JSONGame b c p, TermGame b c p) => IO (EndScreen b p)
