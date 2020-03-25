@@ -23,4 +23,4 @@ types = [ mkSumType (Proxy :: Proxy (GameState B C P))
 
 main :: IO ()
 main = writePSTypes frontendPath (buildBridge defaultBridge) types
-    where frontendPath = "../frontend/src/Bridge"
+    where frontendPath = "../frontend/src"
