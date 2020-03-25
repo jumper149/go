@@ -9,7 +9,7 @@ let
       , servant-server, stdenv, transformers, vector, warp
       }:
       mkDerivation {
-        pname = "go";
+        pname = "go-backend";
         version = "0.1.0.0";
         src = ./.;
         isLibrary = true;
@@ -21,7 +21,7 @@ let
         executableHaskellDepends = [ base purescript-bridge ];
         testHaskellDepends = [ base hspec QuickCheck ];
         homepage = "https://github.com/jumper149/go";
-        description = "Go, the abstract strategy board game";
+        description = "Webserver backend";
         license = stdenv.lib.licenses.bsd3;
       };
 
