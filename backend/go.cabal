@@ -52,6 +52,16 @@ executable go
   default-language:    Haskell2010
   ghc-options:         -Wall
 
+executable bridge-go
+  main-is:             Main.hs
+  build-depends:       base >=4.12 && <4.13
+                     , go
+                     , purescript-bridge
+  default-extensions:  DataKinds
+  hs-source-dirs:      bridge
+  default-language:    Haskell2010
+  ghc-options:         -Wall
+
 test-suite test-go
   type:                exitcode-stdio-1.0
   main-is:             Test.hs
