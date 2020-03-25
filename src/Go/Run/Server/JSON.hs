@@ -1,10 +1,10 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 
-module Go.Server.JSON ( JSONGame
-                      , serverJSON
-                      , API
-                      , api
-                      ) where
+module Go.Run.Server.JSON ( JSONGame
+                          , serverJSON
+                          , API
+                          , api
+                          ) where
 
 import Control.Concurrent.MVar
 import Control.Monad.IO.Class
@@ -14,7 +14,6 @@ import Data.Proxy (Proxy)
 import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp (run)
 import Servant
-
 
 import Go.Game.End
 import Go.Game.Game

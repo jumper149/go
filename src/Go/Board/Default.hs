@@ -8,9 +8,9 @@ import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
 
-import Go.Frontend.Term
 import Go.Game.Game
-import Go.Server.JSON
+import Go.Run.Server.JSON
+import Go.Run.Term
 
 -- | Represents the players.
 data PlayerBW = Black

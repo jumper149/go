@@ -1,8 +1,8 @@
-module Go.Frontend.Term ( TermGame (readCoord)
-                        , game
-                        , action
-                        , render
-                        ) where
+module Go.Run.Term ( TermGame (readCoord)
+                   , game
+                   , action
+                   , render
+                   ) where
 
 import Control.Monad.Except
 

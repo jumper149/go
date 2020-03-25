@@ -7,9 +7,9 @@ import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 
 import Go.Board.Default
-import Go.Frontend.Term
 import Go.Game.Game
-import Go.Server.JSON
+import Go.Run.Server.JSON
+import Go.Run.Term
 
 newtype BoardLoop = BLoop BoardSquare
   deriving (Eq, Generic)

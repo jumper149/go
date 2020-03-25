@@ -1,14 +1,14 @@
 {-# LANGUAGE DataKinds, TypeOperators #-}
 
-module Go.Client.JSONTerm ( clientJSONTerm
-                          ) where
+module Go.Run.Client.JSONTerm ( clientJSONTerm
+                              ) where
 
 import Data.Proxy (Proxy)
 import Servant
 import Servant.Client
 import Network.HTTP.Client (newManager, defaultManagerSettings)
 
-import Go.Frontend.Term
+import Go.Term
 import Go.Game.End
 import Go.Game.State
 import Go.Server.JSON

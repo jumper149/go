@@ -2,11 +2,11 @@ module Main where
 
 import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
-import Go.Client.JSONTerm
-import Go.Frontend.Term
 import Go.Game.End
 import Go.Game.Rules
-import Go.Server.JSON
+import Go.Run.Client.JSONTerm
+import Go.Run.Server.JSON
+import Go.Run.Term
 
 import System.Console.GetOpt
 import System.Environment (getArgs)
