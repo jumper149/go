@@ -49,7 +49,7 @@ executable go
   ghc-options:         -Wall
 
 executable bridge
-  main-is:             Main.hs
+  main-is:             Bridge.hs
   build-depends:       base >=4.12 && <4.13
                      , purescript-bridge
                      , go-backend

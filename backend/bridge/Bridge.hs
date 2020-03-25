@@ -1,5 +1,3 @@
-module Main where
-
 import Data.Proxy
 import Language.PureScript.Bridge
 
