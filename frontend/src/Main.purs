@@ -13,4 +13,4 @@ main :: Effect Unit
 main = log "hi" *>
     HA.runHalogenAff do
   body <- HA.awaitBody
-  runUI B.component unit body
+  runUI S.component unit body

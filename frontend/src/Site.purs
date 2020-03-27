@@ -1,13 +1,13 @@
-module Button (component) where
+module Site (component) where
 
 import Prelude
+
+import Data.Maybe (Maybe(..))
 
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-
-import Board.Default
 
 type State = { enabled :: Boolean }
 
@@ -16,7 +16,7 @@ data Action = Toggle
 component :: forall q i o m. H.Component HH.HTML q i o m
 component =
   H.mkComponent
-    { GameState
+    { initialState
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
