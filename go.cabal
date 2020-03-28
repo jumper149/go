@@ -51,7 +51,7 @@ executable go
 
 test-suite test
   type:                exitcode-stdio-1.0
-  main-is:             Test.hs
+  main-is:             Main.hs
   other-modules:       Test.Board.Default
   build-depends:       base >=4.12 && <4.13
                      , hspec
