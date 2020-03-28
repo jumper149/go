@@ -4,9 +4,9 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, containers, go-backend, hspec
-      , http-client, mtl, QuickCheck, servant-client, servant-server
-      , stdenv, transformers, vector, warp
+  f = { mkDerivation, aeson, base, containers, hspec, http-client
+      , mtl, QuickCheck, servant-client, servant-server, stdenv
+      , transformers, vector, warp
       }:
       mkDerivation {
         pname = "go";
@@ -18,8 +18,8 @@ let
           aeson base containers http-client mtl servant-client servant-server
           transformers vector warp
         ];
-        executableHaskellDepends = [ base go-backend ];
-        testHaskellDepends = [ base go-backend hspec QuickCheck ];
+        executableHaskellDepends = [ base ];
+        testHaskellDepends = [ base hspec QuickCheck ];
         homepage = "https://github.com/jumper149/go";
         description = "Go, the abstract strategy board game but with an extended ruleset";
         license = stdenv.lib.licenses.bsd3;
