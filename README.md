@@ -15,5 +15,4 @@ not working:
 
 with nix:
 
-    cd backend
     nix-shell --run "cabal build"
