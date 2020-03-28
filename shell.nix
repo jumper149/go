@@ -4,12 +4,12 @@ let
 
   inherit (nixpkgs) pkgs;
 
-  f = { mkDerivation, aeson, base, containers, hspec, http-client
-      , mtl, purescript-bridge, QuickCheck, servant-client
+  f = { mkDerivation, aeson, base, containers, go-backend, hspec
+      , http-client, mtl, purescript-bridge, QuickCheck, servant-client
       , servant-server, stdenv, transformers, vector, warp
       }:
       mkDerivation {
-        pname = "go-backend";
+        pname = "go";
         version = "0.1.0.0";
         src = ./.;
         isLibrary = true;
@@ -18,10 +18,10 @@ let
           aeson base containers http-client mtl servant-client servant-server
           transformers vector warp
         ];
-        executableHaskellDepends = [ base purescript-bridge ];
-        testHaskellDepends = [ base hspec QuickCheck ];
+        executableHaskellDepends = [ base go-backend purescript-bridge ];
+        testHaskellDepends = [ base go-backend hspec QuickCheck ];
         homepage = "https://github.com/jumper149/go";
-        description = "Webserver backend";
+        description = "Go, the abstract strategy board game but with an extended ruleset";
         license = stdenv.lib.licenses.bsd3;
       };
 

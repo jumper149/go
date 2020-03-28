@@ -1,13 +1,14 @@
-name:                go-backend
+name:                go
 version:             0.1.0.0
-synopsis:            Webserver backend
+synopsis:            Go, the abstract strategy board game but with an extended ruleset
 homepage:            https://github.com/jumper149/go
 license:             BSD3
 license-file:        LICENSE
 author:              Felix Springer
 maintainer:          felixspringer149@gmail.com
+category:            Game, Web
 build-type:          Simple
-extra-source-files:  CHANGELOG.md
+extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
 library

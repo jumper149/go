@@ -1,8 +1,0 @@
-:set -isrc
-:load app/Main
-:set -Wall
-:set -XDeriveGeneric
-:set -XFlexibleInstances
-:set -XGeneralizedNewtypeDeriving
-:set -XMultiParamTypeClasses
-:set -XScopedTypeVariables
