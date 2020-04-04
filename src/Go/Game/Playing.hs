@@ -8,6 +8,7 @@ module Go.Game.Playing ( PlayingT
 
 import Control.Monad.Except
 import Control.Monad.Identity
+import Control.Monad.Reader
 import Control.Monad.State.Strict
 
 import Go.Game.Config
@@ -16,7 +17,6 @@ import Go.Game.Rules
 import Go.Game.State
 
 class (Game b c p, Monad m) => MonadPlaying b c p m where
-
     -- | Retrieve current GameState.
     gamestate :: m (GameState b c p)
 
@@ -30,11 +30,12 @@ instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
     gamestate = PlayingT get
 
 -- | Play some turns and return the GameState at the end.
-playPlayingT :: (Game b c p, Monad m)
-             => Config
-             -> PlayingT b c p m ()
+playPlayingT :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
+             => PlayingT b c p m ()
              -> m (GameState b c p)
-playPlayingT config turns = snd <$> runPlayingT (rules config) (maybe undefined id $ initState config) turns -- TODO: undefined behaviours
+playPlayingT turns = do gs <- initState
+                        rls <- asks rules
+                        snd <$> runPlayingT rls gs turns -- TODO: undefined behaviours
 
 -- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)

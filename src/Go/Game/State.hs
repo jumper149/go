@@ -33,27 +33,28 @@ data GameState b c p = GState { currentBoard :: b
 instance (Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p) => FromJSON (GameState b c p)
 instance (Generic b, Generic c, Generic p, ToJSON b, ToJSON c, ToJSON p) => ToJSON (GameState b c p)
 
-initState :: Game b c p => Config -> Maybe (GameState b c p)
-initState config = do emptyBoard <- empty config
-                      return GState { currentBoard = emptyBoard
-                                    , currentPlayer = minBound
-                                    , lastAction = Pass
-                                    , previousBoards = [ emptyBoard ]
-                                    , consecutivePasses = 0
-                                    , countTurns = 0
-                                    }
+initState :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
+          => m (GameState b c p)
+initState = do emptyBoard <- maybe (throwError MalconfigSize) return =<< asks empty
+               return $ GState { currentBoard = emptyBoard
+                               , currentPlayer = minBound
+                               , lastAction = Pass
+                               , previousBoards = [ emptyBoard ]
+                               , consecutivePasses = 0
+                               , countTurns = 0
+                               }
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
-              deriving (Eq,Generic)
+  deriving (Eq, Show, Generic)
 
 instance (Generic c, FromJSON c) => FromJSON (Action c)
 instance (Generic c, ToJSON c) => ToJSON (Action c)
 
 data Exception = ExceptRedo
                | ExceptEnd
-               deriving Generic
+  deriving (Eq, Show, Generic)
 
 instance FromJSON Exception
 instance ToJSON Exception

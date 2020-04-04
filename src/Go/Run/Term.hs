@@ -18,20 +18,21 @@ class (Game b c p, Show b, Show p) => TermGame b c p where
     readCoord :: b -> String -> Maybe c
 
 -- | Get action from 'IO' and check sanity.
-action :: TermGame b c p => GameState b c p -> IO (Either Exception (Action c))
-action gs = do str <- getLine
+action :: (TermGame b c p, MonadIO m) => GameState b c p -> m (Either Exception (Action c))
+action gs = do str <- liftIO getLine
                let mbActn = case str of
                               "pass" -> Just Pass
                               _ -> Place <$> readCoord (currentBoard gs) str
                case mbActn of
-                 Just actn -> return . return $ actn
+                 Just actn -> return . Right $ actn
                  Nothing -> return $ throwError ExceptRedo
 
 -- | Print board and other information to stdout.
-render :: TermGame b c p => GameState b c p -> IO ()
-render gs = do putStr . show $ currentBoard gs
-               print $ currentPlayer gs
+render :: (TermGame b c p, MonadIO m) => GameState b c p -> m ()
+render gs = do liftIO . putStr . show $ currentBoard gs
+               liftIO . print $ currentPlayer gs
 
 -- | Play a whole game in the terminal.
 game :: TermGame b c p => Config -> IO (EndScreen b p)
-game config = finalizeState <$> playPlayingT config (play action render)
+game config = do eithGs <- runConfiguredT config $ playPlayingT $ play action render
+                 return $ either (error . show) finalizeState eithGs

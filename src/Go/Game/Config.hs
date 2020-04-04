@@ -1,21 +1,14 @@
-{-# LANGUAGE FunctionalDependencies #-}
-
 module Go.Game.Config ( Default (..)
                       , Config (..)
+                      , Malconfig (..)
+                      , ConfiguredT
+                      , runConfiguredT
                       ) where
 
+import Control.Monad.Except
+import Control.Monad.Reader
+
 import Go.Game.Rules
-
--- | The configuration of a game.
-data Config = Config { size  :: Int
-                     , rules :: Rules
-                     }
-  deriving Eq
-
-instance Default Config where
-  def = Config { size = 19
-               , rules = def
-               }
 
 -- | A class for configuration related types with default values.
 class Default a where
@@ -26,3 +19,22 @@ instance Default Rules where
               , ko = Ko Forbidden
               , suicide = Allowed
               }
+
+type ConfiguredT m a = ExceptT Malconfig (ReaderT Config m) a
+
+runConfiguredT :: Config -> ConfiguredT m a -> m (Either Malconfig a)
+runConfiguredT config = flip runReaderT config . runExceptT
+
+-- | The configuration of a game.
+data Config = Config { size  :: Int
+                     , rules :: Rules
+                     }
+  deriving (Eq, Show)
+
+instance Default Config where
+  def = Config { size = 19
+               , rules = def
+               }
+
+data Malconfig = MalconfigSize
+  deriving (Eq, Show)

@@ -54,7 +54,7 @@ instance Bounded BoardSize where
   maxBound = BoardSize { getBoardSize = 26 }
 
 instance Enum BoardSize where
-  toEnum size = fromMaybe undefined $ boardSize size
+  toEnum s = fromMaybe undefined $ boardSize s
   fromEnum s = getBoardSize s
 
 -- | Create 'BoardSize'.

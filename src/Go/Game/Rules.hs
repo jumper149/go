@@ -22,16 +22,16 @@ data Komi = Integral Int
   deriving (Eq, Show)
 
 data Rules = Rules { passing :: Permission
-                   , ko :: KoRule
+                   , ko      :: KoRule
                    , suicide :: Permission
                    }
   deriving (Eq, Show)
 
 newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
-    deriving (Functor, Applicative, Monad, MonadReader Rules)
+  deriving (Functor, Applicative, Monad, MonadReader Rules)
 
 instance MonadTrans RulesetEnvT where
-    lift = RulesetEnvT . lift
+  lift = RulesetEnvT . lift
 
 runRulesetEnvT :: Rules -> RulesetEnvT m a -> m a
 runRulesetEnvT rules rulesetEnv = runReaderT (unwrapRulesetEnvT rulesetEnv) rules

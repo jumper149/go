@@ -43,7 +43,8 @@ server config = renderH :<|> playH
 
 serverJSON :: forall b c p. JSONGame b c p => Config -> IO (EndScreen b p)
 serverJSON config = do putStrLn $ "Port is " <> show port
-                       gs <- newMVar (maybe undefined id (initState config) :: GameState b c p) -- TODO: undefined behaviour
+                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c p)
+                       gs <- newMVar initial
                        let app = serve api $ hoistServer api (\ r -> runReaderT r gs) (server config)
                        run port app
                        return undefined -- TODO: undefined behaviour
