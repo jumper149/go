@@ -16,19 +16,12 @@ import Go.Game.Game
 import Go.Game.Rules
 import Go.Game.State
 
-class (Game b c p, Monad m) => MonadPlaying b c p m where
-  -- | Retrieve current GameState.
-  gamestate :: m (GameState b c p)
-
 -- | A monad where the game is played.
 newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (RulesetEnvT m) a }
   deriving (Functor, Applicative, Monad)
 
 instance MonadTrans (PlayingT b c p) where
   lift = PlayingT . lift . lift
-
-instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
-  gamestate = PlayingT get
 
 -- TODO: Remove this function?
 -- | Play some turns and return the GameState at the end.
@@ -42,9 +35,9 @@ playPlayingT turns = do gs <- initState
 -- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
      => (GameState b c p -> m (Either Exception (Action c))) -- ^ get Action
-     -> (GameState b c p -> m ()) -- ^ render Board
+     -> (GameState b c p -> m ())                            -- ^ render Board
      -> PlayingT b c p m ()
-play action render = do gs <- gamestate
+play action render = do gs <- PlayingT get
                         let resetGame = PlayingT (put gs)
                         lift $ render gs
                         mbAction <- lift (action gs)
@@ -56,7 +49,7 @@ play action render = do gs <- gamestate
                                              Left ExceptRedo -> resetGame >> rec
                                              Left ExceptEnd -> return () -- TODO return gs or get
                           Left ExceptRedo -> resetGame >> rec
-                          Left ExceptEnd -> undefined -- TODO: undefined behavious
+                          Left ExceptEnd -> undefined -- TODO: undefined behaviour
   where rec = play action render
 
 -- | Apply action to a GameState.
@@ -67,7 +60,7 @@ doTurn rls action gs = snd . runIdentity $ runPlayingT rls gs turn
                   case problem of
                     Right () -> return ()
                     Left ExceptRedo -> PlayingT $ put gs
-                    Left ExceptEnd -> undefined -- TODO: undefined behavious
+                    Left ExceptEnd -> undefined -- TODO: undefined behaviour
 
 -- | Helper function for 'play' and 'doTurn'.
 runPlayingT :: (Game b c p, Monad m)
