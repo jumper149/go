@@ -2,7 +2,6 @@ import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
 import Go.Game.Config
 import Go.Game.End
-import Go.Game.Rules
 import Go.Run.Client.JSONTerm
 import Go.Run.Server.JSON
 import Go.Run.Term
@@ -41,10 +40,10 @@ data Options = Options { optInterface :: Interface
                        , optBoard :: Board
                        }
 
-defaultOptions :: Options
-defaultOptions = Options { optInterface = Term
-                         , optBoard = Default
-                         }
+instance Default Options where
+  def = Options { optInterface = Term
+                , optBoard = Default
+                }
 
 options :: [OptDescr (Options -> IO Options)]
 options = [ Option ['i'] ["interface"]
@@ -73,7 +72,7 @@ main = do args <- getArgs
 
           let (optArgs , _ , _) = getOpt Permute options args
 
-          opts <- foldl (>>=) (return defaultOptions) optArgs
+          opts <- foldl (>>=) (return def) optArgs
 
           let Options { optInterface = interface
                       , optBoard = board
