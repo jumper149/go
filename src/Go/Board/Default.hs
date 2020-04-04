@@ -1,13 +1,15 @@
 module Go.Board.Default ( BoardSquare (..)
+                        , BoardSize
                         , CoordXY (..)
                         , PlayerBW (..)
-                        , emptyFromSize
                         ) where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
 
+import Go.Game.Config
 import Go.Game.Game
 import Go.Run.Server.JSON
 import Go.Run.Term
@@ -31,9 +33,9 @@ instance ToJSON CoordXY
 
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> CoordXY -> Int
-coordToVecInd n (XY x y) = x + n * y
+coordToVecInd s (XY x y) = x + getBoardSize s * y
 
--- | Represents a square board. Contains the BoardSize and a Vector with all points.
+-- | Represents a square board. Contains the 'BoardSize' and a 'V.Vector' with all points.
 data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
   deriving (Eq, Generic)
 
@@ -41,31 +43,41 @@ instance FromJSON BoardSquare
 instance ToJSON BoardSquare
 
 -- | Represents the number of rows (or columns) on a square board.
-type BoardSize = Int
+newtype BoardSize = BoardSize { getBoardSize :: Int }
+  deriving (Eq, Ord, Generic)
 
--- | Defines the default board size.
-defaultBoardSize :: BoardSize
-defaultBoardSize = 5
+instance FromJSON BoardSize
+instance ToJSON BoardSize
 
--- | Create an empty board.
-emptyFromSize :: BoardSize -> BoardSquare
-emptyFromSize size
-  | size > 0 && size <= 26 = BSquare size (V.replicate (size * size) Free)
-  | otherwise = undefined
+instance Bounded BoardSize where
+  minBound = BoardSize { getBoardSize = 0 }
+  maxBound = BoardSize { getBoardSize = 26 }
+
+instance Enum BoardSize where
+  toEnum size = fromMaybe undefined $ boardSize size
+  fromEnum s = getBoardSize s
+
+-- | Create 'BoardSize'.
+boardSize :: Int -> Maybe BoardSize
+boardSize size
+  | size > 0 && size <= 26 = Just $ BoardSize { getBoardSize = size }
+  | otherwise = Nothing
 
 instance Show BoardSquare where
   show (BSquare size vec) = decNumbers ++ numbers ++ bStr
     where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare size vec)
-          numbers = " " ++ concatMap (show  . (`mod` 10)) [ 1 .. size ] ++ "\n"
-          decNumbers = if size >= 10 then decNumbersRaw else ""
-          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. size `div` 10 ] ++ "\n"
-          alphabet = map ((toEnum :: BoardSize -> Char) . (+ 96))  [ 1 .. size ]
+          numbers = " " ++ concatMap (show  . (`mod` 10)) [ 1 .. s ] ++ "\n"
+          decNumbers = if s >= 10 then decNumbersRaw else ""
+          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. s `div` 10 ] ++ "\n"
+          alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. s ]
+          s = getBoardSize size
 
 showRaw :: BoardSquare -> String
 showRaw (BSquare size vec) = concatMap showRow rows
   where showRow = (++ "\n") . concat . V.map showStone
-        rows = map slice [ i * size | i <- [0..(size-1)] ] :: [V.Vector (Stone PlayerBW)]
-        slice n = V.slice n size vec
+        rows = map slice [ i * s | i <- [0..(s-1)] ] :: [V.Vector (Stone PlayerBW)]
+        slice n = V.slice n s vec
+        s = getBoardSize size
 
 -- | Show a stone as a single character string.
 showStone :: Stone PlayerBW -> String
@@ -77,9 +89,11 @@ char Black = 'B'
 char White = 'W'
 
 instance Board BoardSquare CoordXY where
-  empty = emptyFromSize defaultBoardSize
+  empty config = do s <- boardSize $ size config
+                    return . BSquare s $ V.replicate (fromEnum s * fromEnum s) Free
+
   coords (BSquare size _) = [ XY x y | x <- range , y <- range ]
-    where range = [ 0 .. (size - 1) ]
+    where range = [ 0 .. (getBoardSize size - 1) ]
 
   libertyCoords board (XY x y) = filter (flip elem $ coords board) unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y
@@ -89,7 +103,6 @@ instance Board BoardSquare CoordXY where
                                 ]
 
 instance Game BoardSquare CoordXY PlayerBW where
-
   getStone (BSquare size vec) (XY x y) = vec V.! coordToVecInd size (XY x y)
 
   putStone (BSquare size vec) coord stone = BSquare size newVec

@@ -1,5 +1,6 @@
 import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
+import Go.Game.Config
 import Go.Game.End
 import Go.Game.Rules
 import Go.Run.Client.JSONTerm
@@ -59,12 +60,12 @@ options = [ Option ['i'] ["interface"]
           ]
 
 choose :: (Interface,Board) -> IO ()
-choose (Term , Default) = void (game           defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Term , Loop   ) = void (game           defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
-choose (Serv , Default) = void (serverJSON     defaultRules :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Serv , Loop   ) = void (serverJSON     defaultRules :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
-choose (Cli  , Default) = void (clientJSONTerm              :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Cli  , Loop   ) = void (clientJSONTerm              :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
+choose (Term , Default) = void (game           def :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Term , Loop   ) = void (game           def :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
+choose (Serv , Default) = void (serverJSON     def :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Serv , Loop   ) = void (serverJSON     def :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
+choose (Cli  , Default) = void (clientJSONTerm     :: IO (EndScreen D.BoardSquare D.PlayerBW))
+choose (Cli  , Loop   ) = void (clientJSONTerm     :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
 choose _ = error "This combination of interface and board is not supported."
 
 main :: IO ()

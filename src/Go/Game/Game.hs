@@ -14,6 +14,8 @@ import qualified Data.Set as S
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
+import Go.Game.Config
+
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
              | Stone p
@@ -43,7 +45,7 @@ class (Eq p, Enum p, Bounded p, Ord p) => Player p
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
   -- | Return an empty board.
-  empty :: b
+  empty :: Config -> Maybe b
 
   -- | Return a list of all coords covering the board.
   coords :: b -> [c]

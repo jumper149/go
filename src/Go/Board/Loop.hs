@@ -7,6 +7,7 @@ import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
 
 import Go.Board.Default
+import Go.Game.Config
 import Go.Game.Game
 import Go.Run.Server.JSON
 import Go.Run.Term
@@ -21,7 +22,8 @@ instance Show BoardLoop where
   show (BLoop board) = show board
 
 instance Board BoardLoop CoordXY where
-  empty = BLoop (empty :: BoardSquare)
+  empty = fmap BLoop . (empty :: Config -> Maybe BoardSquare)
+
   coords (BLoop board) = coords board
 
   libertyCoords (BLoop (BSquare size vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare size vec))) $ map wrap unsafeLibertyCoords
@@ -31,10 +33,11 @@ instance Board BoardLoop CoordXY where
                                 , XY x     (y-1)
                                 ]
           wrap :: CoordXY -> CoordXY
-          wrap (XY a b) = XY (a `mod` size) b
+          wrap (XY a b) = XY (a `mod` fromEnum size) b
 
 instance Game BoardLoop CoordXY PlayerBW where
   getStone (BLoop board) = getStone board
+
   putStone (BLoop board) coord stone = BLoop $ putStone board coord stone
 
 instance TermGame BoardLoop CoordXY PlayerBW where

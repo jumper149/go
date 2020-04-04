@@ -6,10 +6,10 @@ module Go.Run.Term ( TermGame (readCoord)
 
 import Control.Monad.Except
 
+import Go.Game.Config
 import Go.Game.End
 import Go.Game.Game
 import Go.Game.Playing
-import Go.Game.Rules
 import Go.Game.State
 
 class (Game b c p, Show b, Show p) => TermGame b c p where
@@ -33,5 +33,5 @@ render gs = do putStr . show $ currentBoard gs
                print $ currentPlayer gs
 
 -- | Play a whole game in the terminal.
-game :: TermGame b c p => Rules -> IO (EndScreen b p)
-game rules = finalizeState <$> playPlayingT rules (play action render)
+game :: TermGame b c p => Config -> IO (EndScreen b p)
+game config = finalizeState <$> playPlayingT config (play action render)

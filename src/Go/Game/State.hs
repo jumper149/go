@@ -15,6 +15,7 @@ import Control.Monad.State
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
+import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Rules
 
@@ -32,14 +33,15 @@ data GameState b c p = GState { currentBoard :: b
 instance (Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p) => FromJSON (GameState b c p)
 instance (Generic b, Generic c, Generic p, ToJSON b, ToJSON c, ToJSON p) => ToJSON (GameState b c p)
 
-initState :: Game b c p => GameState b c p
-initState = GState { currentBoard = empty
-                   , currentPlayer = minBound
-                   , lastAction = Pass
-                   , previousBoards = [ empty ]
-                   , consecutivePasses = 0
-                   , countTurns = 0
-                   }
+initState :: Game b c p => Config -> Maybe (GameState b c p)
+initState config = do emptyBoard <- empty config
+                      return GState { currentBoard = emptyBoard
+                                    , currentPlayer = minBound
+                                    , lastAction = Pass
+                                    , previousBoards = [ emptyBoard ]
+                                    , consecutivePasses = 0
+                                    , countTurns = 0
+                                    }
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass

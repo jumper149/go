@@ -10,6 +10,7 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.State.Strict
 
+import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Rules
 import Go.Game.State
@@ -30,10 +31,10 @@ instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
 
 -- | Play some turns and return the GameState at the end.
 playPlayingT :: (Game b c p, Monad m)
-             => Rules
+             => Config
              -> PlayingT b c p m ()
              -> m (GameState b c p)
-playPlayingT rules turns = snd <$> runPlayingT rules initState turns
+playPlayingT config turns = snd <$> runPlayingT (rules config) (maybe undefined id $ initState config) turns -- TODO: undefined behaviours
 
 -- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
@@ -52,7 +53,7 @@ play action render = do gs <- gamestate
                                              Left ExceptRedo -> resetGame >> rec
                                              Left ExceptEnd -> return () -- TODO return gs or get
                           Left ExceptRedo -> resetGame >> rec
-                          Left ExceptEnd -> undefined
+                          Left ExceptEnd -> undefined -- TODO: undefined behavious
   where rec = play action render
 
 -- | Apply action to a GameState.
@@ -63,7 +64,7 @@ doTurn rules action gs = snd . runIdentity $ runPlayingT rules gs turn
                   case problem of
                     Right () -> return ()
                     Left ExceptRedo -> PlayingT $ put gs
-                    Left ExceptEnd -> undefined
+                    Left ExceptEnd -> undefined -- TODO: undefined behavious
 
 -- | Helper function for 'play' and 'doTurn'.
 runPlayingT :: (Game b c p, Monad m)
