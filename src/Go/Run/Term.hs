@@ -34,5 +34,5 @@ render gs = do liftIO . putStr . show $ currentBoard gs
 
 -- | Play a whole game in the terminal.
 game :: TermGame b c p => Config -> IO (EndScreen b p)
-game config = do eithGs <- runConfiguredT config $ playPlayingT $ play action render
-                 return $ either (error . show) finalizeState eithGs
+game config = do gs <- either (error . show) id <$> runConfiguredT config initState
+                 fmap finalizeState $ execPlayingT (rules config) gs $ play action render

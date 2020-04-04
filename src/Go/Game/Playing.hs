@@ -1,17 +1,16 @@
 {-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
 
 module Go.Game.Playing ( PlayingT
-                       , playPlayingT
+                       , runPlayingT
+                       , execPlayingT
                        , play
                        , doTurn
                        ) where
 
 import Control.Monad.Except
 import Control.Monad.Identity
-import Control.Monad.Reader
 import Control.Monad.State.Strict
 
-import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Rules
 import Go.Game.State
@@ -23,14 +22,21 @@ newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c 
 instance MonadTrans (PlayingT b c p) where
   lift = PlayingT . lift . lift
 
--- TODO: Remove this function?
--- | Play some turns and return the GameState at the end.
-playPlayingT :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
-             => PlayingT b c p m ()
+-- | Play some turns in 'PlayingT' and evaluate them.
+runPlayingT :: (Game b c p, Monad m)
+            => Rules
+            -> GameState b c p
+            -> PlayingT b c p m a
+            -> m (a,GameState b c p)
+runPlayingT rls gs turns = runRulesetEnvT rls $ runStateT (unwrapPlayingT turns) gs
+
+-- | Play some turns in 'PlayingT' and return 'GameState' at the end.
+execPlayingT :: (Game b c p, Monad m)
+             => Rules
+             -> GameState b c p
+             -> PlayingT b c p m a
              -> m (GameState b c p)
-playPlayingT turns = do gs <- initState
-                        rls <- asks rules
-                        snd <$> runPlayingT rls gs turns
+execPlayingT rls gs turns = snd <$> runPlayingT rls gs turns
 
 -- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
@@ -61,11 +67,3 @@ doTurn rls action gs = snd . runIdentity $ runPlayingT rls gs turn
                     Right () -> return ()
                     Left ExceptRedo -> PlayingT $ put gs
                     Left ExceptEnd -> undefined -- TODO: undefined behaviour
-
--- | Helper function for 'play' and 'doTurn'.
-runPlayingT :: (Game b c p, Monad m)
-            => Rules
-            -> GameState b c p
-            -> PlayingT b c p m a
-            -> m (a,GameState b c p)
-runPlayingT rls gs turns = runRulesetEnvT rls $ runStateT (unwrapPlayingT turns) gs
