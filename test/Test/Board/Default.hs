@@ -4,28 +4,29 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Go.Board.Default
+import Go.Game.Config
 import Go.Game.Game
 
 runTests :: IO ()
 runTests = hspec $ do
   describe "Board.Default" $ do
 
-    let emptyBoard = empty :: BoardSquare
+    let emptyBoard = empty def :: Maybe BoardSquare
     it "creates an empty board" $
-      property $ prop_empty emptyBoard
+      property $ prop_empty <$> emptyBoard
 
     it "lets you place single stones" $
-      property $ prop_single emptyBoard
+      property $ prop_single <$> emptyBoard
 
     it "updates the board properly" $
-      property $ prop_remove emptyBoard
+      property $ prop_remove <$> emptyBoard
 
 
 newtype ArbCoordXY = ArbCoordXY CoordXY
   deriving Show
 
 instance Arbitrary ArbCoordXY where
-  arbitrary = elements $ ArbCoordXY <$> coords (empty :: BoardSquare)
+  arbitrary = elements $ maybe [] (fmap ArbCoordXY . coords) (empty def :: Maybe BoardSquare)
   shrink = shrinkNothing
 
 

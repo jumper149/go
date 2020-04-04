@@ -26,14 +26,14 @@ instance Board BoardLoop CoordXY where
 
   coords (BLoop board) = coords board
 
-  libertyCoords (BLoop (BSquare size vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare size vec))) $ map wrap unsafeLibertyCoords
+  libertyCoords (BLoop (BSquare s vec)) (XY x y) = filter (flip elem $ coords (BLoop (BSquare s vec))) $ map wrap unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y
                                 , XY x     (y+1)
                                 , XY (x+1) y
                                 , XY x     (y-1)
                                 ]
           wrap :: CoordXY -> CoordXY
-          wrap (XY a b) = XY (a `mod` fromEnum size) b
+          wrap (XY a b) = XY (a `mod` fromEnum s) b
 
 instance Game BoardLoop CoordXY PlayerBW where
   getStone (BLoop board) = getStone board

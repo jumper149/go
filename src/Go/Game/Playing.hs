@@ -20,6 +20,7 @@ class (Game b c p, Monad m) => MonadPlaying b c p m where
   -- | Retrieve current GameState.
   gamestate :: m (GameState b c p)
 
+-- | A monad where the game is played.
 newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (RulesetEnvT m) a }
   deriving (Functor, Applicative, Monad)
 
@@ -29,13 +30,14 @@ instance MonadTrans (PlayingT b c p) where
 instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
   gamestate = PlayingT get
 
+-- TODO: Remove this function?
 -- | Play some turns and return the GameState at the end.
 playPlayingT :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
              => PlayingT b c p m ()
              -> m (GameState b c p)
 playPlayingT turns = do gs <- initState
                         rls <- asks rules
-                        snd <$> runPlayingT rls gs turns -- TODO: undefined behaviours
+                        snd <$> runPlayingT rls gs turns
 
 -- | Turns of a whole game.
 play :: forall b c p m. (Game b c p, Monad m)
@@ -59,7 +61,7 @@ play action render = do gs <- gamestate
 
 -- | Apply action to a GameState.
 doTurn :: Game b c p => Rules -> Action c -> GameState b c p -> GameState b c p
-doTurn rules action gs = snd . runIdentity $ runPlayingT rules gs turn
+doTurn rls action gs = snd . runIdentity $ runPlayingT rls gs turn
   where turn = do PlayingT $ act action
                   problem <- PlayingT checkRules
                   case problem of
@@ -73,4 +75,4 @@ runPlayingT :: (Game b c p, Monad m)
             -> GameState b c p
             -> PlayingT b c p m a
             -> m (a,GameState b c p)
-runPlayingT rules gs turns = runRulesetEnvT rules $ runStateT (unwrapPlayingT turns) gs
+runPlayingT rls gs turns = runRulesetEnvT rls $ runStateT (unwrapPlayingT turns) gs
