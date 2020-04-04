@@ -17,17 +17,17 @@ import Go.Game.Rules
 import Go.Game.State
 
 class (Game b c p, Monad m) => MonadPlaying b c p m where
-    -- | Retrieve current GameState.
-    gamestate :: m (GameState b c p)
+  -- | Retrieve current GameState.
+  gamestate :: m (GameState b c p)
 
 newtype PlayingT b c p m a = PlayingT { unwrapPlayingT :: StateT (GameState b c p) (RulesetEnvT m) a }
-    deriving (Functor, Applicative, Monad)
+  deriving (Functor, Applicative, Monad)
 
 instance MonadTrans (PlayingT b c p) where
-    lift = PlayingT . lift . lift
+  lift = PlayingT . lift . lift
 
 instance (Game b c p, Monad m) => MonadPlaying b c p (PlayingT b c p m) where
-    gamestate = PlayingT get
+  gamestate = PlayingT get
 
 -- | Play some turns and return the GameState at the end.
 playPlayingT :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
