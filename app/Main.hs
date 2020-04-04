@@ -13,44 +13,67 @@ import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
 import Control.Monad (void)
 
-data Interface = Term
-               | Serv
-               | Cli
-  deriving (Read, Show, Enum)
+data Run = Local LocalInterface
+         | Server ServerAPI
+         | Client ClientAPI ClientInterface
+  deriving (Eq, Read, Show)
 
-errInterface :: Interface
-errInterface = error $ "Choose interface from: " ++ intercalate ", " interfaces
-  where interfaces = map show ([ toEnum 0 .. ] :: [Interface])
+instance Default Run where
+  def = Local LocalTerm
 
-readInterface :: String -> Interface
-readInterface string = fromMaybe errInterface $ readMaybe string
+data LocalInterface = LocalTerm
+  deriving (Eq, Read, Show, Enum, Bounded)
+
+instance Default LocalInterface where
+  def = LocalTerm
+
+data ServerAPI = ServerJSON
+  deriving (Eq, Read, Show, Enum, Bounded)
+
+instance Default ServerAPI where
+  def = ServerJSON
+
+data ClientAPI = ClientJSON
+  deriving (Eq, Read, Show, Enum, Bounded)
+
+instance Default ClientAPI where
+  def = ClientJSON
+
+data ClientInterface = ClientTerm
+  deriving (Eq, Read, Show, Enum, Bounded)
+
+instance Default ClientInterface where
+  def = ClientTerm
+
+readRunningMode :: String -> Run
+readRunningMode string = fromMaybe (error "RunningMode can't be parsed") $ readMaybe string
 
 data Board = Default
            | Loop
-  deriving (Read, Show, Enum)
+  deriving (Eq, Read, Show, Enum, Bounded)
 
 errBoard :: Board
 errBoard = error $ "Choose board from: " ++ intercalate ", " boards
-  where boards = map show ([ toEnum 0 .. ] :: [Board])
+  where boards = map show ([ minBound .. maxBound ] :: [Board])
 
 readBoard :: String -> Board
 readBoard string = fromMaybe errBoard $ readMaybe string
 
-data Options = Options { optInterface :: Interface
-                       , optBoard :: Board
+data Options = Options { optRunningMode :: Run
+                       , optBoard       :: Board
                        }
 
 instance Default Options where
-  def = Options { optInterface = Term
+  def = Options { optRunningMode = Local LocalTerm
                 , optBoard = Default
                 }
 
 options :: [OptDescr (Options -> IO Options)]
-options = [ Option ['i'] ["interface"]
+options = [ Option ['r'] ["run"]
               (ReqArg
-                (\ arg opt -> return opt { optInterface = readInterface arg })
-                "Interface")
-              "Interface"
+                (\ arg opt -> return opt { optRunningMode = readRunningMode arg })
+                "RunningMode")
+              "RunningMode"
           , Option ['b'] ["board"]
               (ReqArg
                 (\ arg opt -> return opt { optBoard = readBoard arg })
@@ -58,24 +81,24 @@ options = [ Option ['i'] ["interface"]
               "Board"
           ]
 
-choose :: (Interface,Board) -> IO ()
-choose (Term , Default) = void (game           def :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Term , Loop   ) = void (game           def :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
-choose (Serv , Default) = void (serverJSON     def :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Serv , Loop   ) = void (serverJSON     def :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
-choose (Cli  , Default) = void (clientJSONTerm     :: IO (EndScreen D.BoardSquare D.PlayerBW))
-choose (Cli  , Loop   ) = void (clientJSONTerm     :: IO (EndScreen L.BoardLoop L.PlayerBW  ))
-choose _ = error "This combination of interface and board is not supported."
+choose :: Run -> Board -> IO ()
+choose (Local LocalTerm) board = case board of
+                                   Default -> void (game def :: IO (EndScreen D.BoardSquare D.PlayerBW))
+                                   Loop    -> void (game def :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+choose (Server ServerJSON) board = case board of
+                                     Default -> void (serverJSON def :: IO (EndScreen D.BoardSquare D.PlayerBW))
+                                     Loop    -> void (serverJSON def :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+choose (Client ClientJSON ClientTerm) board = case board of
+                                                Default -> void (clientJSONTerm :: IO (EndScreen D.BoardSquare D.PlayerBW))
+                                                Loop    -> void (clientJSONTerm :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+--choose _ _ = error "This combination of running-mode and board is not supported."
 
 main :: IO ()
 main = do args <- getArgs
-
           let (optArgs , _ , _) = getOpt Permute options args
-
           opts <- foldl (>>=) (return def) optArgs
-
-          let Options { optInterface = interface
+          let Options { optRunningMode = runningMode
                       , optBoard = board
                       } = opts
 
-          choose (interface , board)
+          choose runningMode board
