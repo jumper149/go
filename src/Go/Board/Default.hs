@@ -59,25 +59,23 @@ instance Enum BoardSize where
 
 -- | Create 'BoardSize'.
 boardSize :: Int -> Maybe BoardSize
-boardSize size
-  | size > 0 && size <= 26 = Just $ BoardSize { getBoardSize = size }
+boardSize s
+  | s > 0 && s <= 26 = Just $ BoardSize { getBoardSize = s }
   | otherwise = Nothing
 
 instance Show BoardSquare where
-  show (BSquare size vec) = decNumbers ++ numbers ++ bStr
-    where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare size vec)
-          numbers = " " ++ concatMap (show  . (`mod` 10)) [ 1 .. s ] ++ "\n"
-          decNumbers = if s >= 10 then decNumbersRaw else ""
-          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. s `div` 10 ] ++ "\n"
-          alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. s ]
-          s = getBoardSize size
+  show (BSquare s vec) = decNumbers ++ numbers ++ bStr
+    where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare s vec)
+          numbers = " " ++ concatMap (show . (`mod` 10)) [ 1 .. fromEnum s ] ++ "\n"
+          decNumbers = if fromEnum s >= 10 then decNumbersRaw else ""
+          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. fromEnum s `div` 10 ] ++ "\n"
+          alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. fromEnum s ]
 
 showRaw :: BoardSquare -> String
-showRaw (BSquare size vec) = concatMap showRow rows
+showRaw (BSquare s vec) = concatMap showRow rows
   where showRow = (++ "\n") . concat . V.map showStone
-        rows = map slice [ i * s | i <- [0..(s-1)] ] :: [V.Vector (Stone PlayerBW)]
-        slice n = V.slice n s vec
-        s = getBoardSize size
+        rows = map slice [ i * fromEnum s | i <- [0..(fromEnum s - 1)] ] :: [V.Vector (Stone PlayerBW)]
+        slice n = V.slice n (fromEnum s) vec
 
 -- | Show a stone as a single character string.
 showStone :: Stone PlayerBW -> String
@@ -92,8 +90,8 @@ instance Board BoardSquare CoordXY where
   empty config = do s <- boardSize $ size config
                     return . BSquare s $ V.replicate (fromEnum s * fromEnum s) Free
 
-  coords (BSquare size _) = [ XY x y | x <- range , y <- range ]
-    where range = [ 0 .. (getBoardSize size - 1) ]
+  coords (BSquare s _) = [ XY x y | x <- range , y <- range ]
+    where range = [ 0 .. (fromEnum s - 1) ]
 
   libertyCoords board (XY x y) = filter (flip elem $ coords board) unsafeLibertyCoords
     where unsafeLibertyCoords = [ XY (x-1) y
@@ -103,10 +101,10 @@ instance Board BoardSquare CoordXY where
                                 ]
 
 instance Game BoardSquare CoordXY PlayerBW where
-  getStone (BSquare size vec) (XY x y) = vec V.! coordToVecInd size (XY x y)
+  getStone (BSquare s vec) (XY x y) = vec V.! coordToVecInd s (XY x y)
 
-  putStone (BSquare size vec) coord stone = BSquare size newVec
-    where newVec = V.update vec $ V.singleton (coordToVecInd size coord , stone)
+  putStone (BSquare s vec) coord stone = BSquare s newVec
+    where newVec = V.update vec $ V.singleton (coordToVecInd s coord , stone)
 
 instance TermGame BoardSquare CoordXY PlayerBW where
   readCoord board str = if length wrds == 2
