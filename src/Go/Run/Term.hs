@@ -16,7 +16,6 @@ import Go.Game.Playing
 import Go.Game.State
 
 class Game b c n => TermGame b c n where
-
     -- | Display a board on multiple lines.
     renderBoard :: b -> String
 

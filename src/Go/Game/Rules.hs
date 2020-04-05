@@ -35,5 +35,6 @@ newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
 instance MonadTrans RulesetEnvT where
   lift = RulesetEnvT . lift
 
+-- | Evaluate a computation with exposure to the given 'Rules'.
 runRulesetEnvT :: Rules -> RulesetEnvT m a -> m a
 runRulesetEnvT rules rulesetEnv = runReaderT (unwrapRulesetEnvT rulesetEnv) rules

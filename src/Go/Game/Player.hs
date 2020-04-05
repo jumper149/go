@@ -10,6 +10,7 @@ import Data.Proxy
 import GHC.Generics
 import GHC.TypeLits
 
+-- | A parametrized data type holding n players.
 data PlayerN (n :: Nat) = PlayerN { playerNo :: Integer }
   deriving (Eq, Ord, Generic, Read, Show)
 
