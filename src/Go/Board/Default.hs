@@ -1,27 +1,19 @@
 module Go.Board.Default ( BoardSquare (..)
                         , BoardSize
                         , CoordXY (..)
-                        , PlayerBW (..)
                         ) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
 import GHC.Generics (Generic)
+import GHC.TypeLits
 
 import Go.Game.Config
 import Go.Game.Game
+import Go.Game.Player
 import Go.Run.Server.JSON
 import Go.Run.Term
-
--- | Represents the players.
-data PlayerBW = Black
-              | White
-  deriving (Eq, Enum, Bounded, Ord, Show, Generic)
-
-instance Player PlayerBW
-instance FromJSON PlayerBW
-instance ToJSON PlayerBW
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
@@ -36,11 +28,11 @@ coordToVecInd :: BoardSize -> CoordXY -> Int
 coordToVecInd s (XY x y) = x + getBoardSize s * y
 
 -- | Represents a square board. Contains the 'BoardSize' and a 'V.Vector' with all points.
-data BoardSquare = BSquare BoardSize (V.Vector (Stone PlayerBW))
+data BoardSquare n = BSquare BoardSize (V.Vector (Stone (PlayerN n)))
   deriving (Eq, Generic)
 
-instance FromJSON BoardSquare
-instance ToJSON BoardSquare
+instance KnownNat n => FromJSON (BoardSquare n)
+instance KnownNat n => ToJSON (BoardSquare n)
 
 -- | Represents the number of rows (or columns) on a square board.
 newtype BoardSize = BoardSize { getBoardSize :: Int }
@@ -63,30 +55,21 @@ boardSize s
   | s > 0 && s <= 26 = Just $ BoardSize { getBoardSize = s }
   | otherwise = Nothing
 
-instance Show BoardSquare where
-  show (BSquare s vec) = decNumbers ++ numbers ++ bStr
-    where bStr = unlines $ zipWith (:) alphabet $ (lines . showRaw) (BSquare s vec)
-          numbers = " " ++ concatMap (show . (`mod` 10)) [ 1 .. fromEnum s ] ++ "\n"
-          decNumbers = if fromEnum s >= 10 then decNumbersRaw else ""
-          decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. fromEnum s `div` 10 ] ++ "\n"
-          alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. fromEnum s ]
+ppFull :: KnownNat n => BoardSquare n -> String
+ppFull (BSquare s vec) = decNumbers ++ numbers ++ bStr
+  where bStr = unlines $ zipWith (:) alphabet $ (lines . ppRaw) (BSquare s vec)
+        numbers = " " ++ concatMap (show . (`mod` 10)) [ 1 .. fromEnum s ] ++ "\n"
+        decNumbers = if fromEnum s >= 10 then decNumbersRaw else ""
+        decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. fromEnum s `div` 10 ] ++ "\n"
+        alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. fromEnum s ]
 
-showRaw :: BoardSquare -> String
-showRaw (BSquare s vec) = concatMap showRow rows
-  where showRow = (++ "\n") . concat . V.map showStone
-        rows = map slice [ i * fromEnum s | i <- [0..(fromEnum s - 1)] ] :: [V.Vector (Stone PlayerBW)]
+ppRaw :: forall n. KnownNat n => BoardSquare n -> String
+ppRaw (BSquare s vec) = concatMap ppRow rows
+  where ppRow = (++ "\n") . V.toList . V.map (renderStone :: Stone (PlayerN n) -> Char)
+        rows = map slice [ i * fromEnum s | i <- [0..(fromEnum s - 1)] ] :: [V.Vector (Stone (PlayerN n))]
         slice n = V.slice n (fromEnum s) vec
 
--- | Show a stone as a single character string.
-showStone :: Stone PlayerBW -> String
-showStone Free = " "
-showStone (Stone p) = [ char p ]
-
-char :: PlayerBW -> Char
-char Black = 'B'
-char White = 'W'
-
-instance Board BoardSquare CoordXY where
+instance KnownNat n => Board (BoardSquare n) CoordXY where
   empty config = do s <- boardSize $ size config
                     return . BSquare s $ V.replicate (fromEnum s * fromEnum s) Free
 
@@ -100,13 +83,15 @@ instance Board BoardSquare CoordXY where
                                 , XY x     (y-1)
                                 ]
 
-instance Game BoardSquare CoordXY PlayerBW where
+instance KnownNat n => Game (BoardSquare n) CoordXY n where
   getStone (BSquare s vec) (XY x y) = vec V.! coordToVecInd s (XY x y)
 
   putStone (BSquare s vec) coord stone = BSquare s newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd s coord , stone)
 
-instance TermGame BoardSquare CoordXY PlayerBW where
+instance KnownNat n => TermGame (BoardSquare n) CoordXY n where
+  renderBoard = ppFull
+
   readCoord board str = if length wrds == 2
                         && charsInRange 48 57 x
                         && charsInRange 97 122 y
@@ -126,4 +111,4 @@ instance TermGame BoardSquare CoordXY PlayerBW where
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance JSONGame BoardSquare CoordXY PlayerBW
+instance KnownNat n => JSONGame (BoardSquare n) CoordXY n

@@ -1,10 +1,10 @@
 module Go.Board.Loop ( BoardLoop (..)
                      , CoordXY (..)
-                     , PlayerBW (..)
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
+import GHC.TypeLits
 
 import Go.Board.Default
 import Go.Game.Config
@@ -12,17 +12,11 @@ import Go.Game.Game
 import Go.Run.Server.JSON
 import Go.Run.Term
 
-newtype BoardLoop = BLoop BoardSquare
-  deriving (Eq, Generic)
+newtype BoardLoop n = BLoop (BoardSquare n)
+  deriving (Eq, Generic, FromJSON, ToJSON)
 
-instance FromJSON BoardLoop
-instance ToJSON BoardLoop
-
-instance Show BoardLoop where
-  show (BLoop board) = show board
-
-instance Board BoardLoop CoordXY where
-  empty = fmap BLoop . (empty :: Config -> Maybe BoardSquare)
+instance KnownNat n => Board (BoardLoop n) CoordXY where
+  empty = fmap BLoop . (empty :: Config -> Maybe (BoardSquare n))
 
   coords (BLoop board) = coords board
 
@@ -35,12 +29,14 @@ instance Board BoardLoop CoordXY where
           wrap :: CoordXY -> CoordXY
           wrap (XY a b) = XY (a `mod` fromEnum s) b
 
-instance Game BoardLoop CoordXY PlayerBW where
+instance KnownNat n => Game (BoardLoop n) CoordXY n where
   getStone (BLoop board) = getStone board
 
   putStone (BLoop board) coord stone = BLoop $ putStone board coord stone
 
-instance TermGame BoardLoop CoordXY PlayerBW where
+instance KnownNat n => TermGame (BoardLoop n) CoordXY n where
+  renderBoard (BLoop board) = renderBoard board
+
   readCoord (BLoop board) = readCoord board
 
-instance JSONGame BoardLoop CoordXY PlayerBW
+instance KnownNat n => JSONGame (BoardLoop n) CoordXY n

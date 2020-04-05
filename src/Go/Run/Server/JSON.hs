@@ -1,4 +1,4 @@
-{-# LANGUAGE DataKinds, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, TypeOperators #-}
 
 module Go.Run.Server.JSON ( JSONGame
                           , serverJSON
@@ -21,29 +21,29 @@ import Go.Game.Game
 import Go.Game.Playing
 import Go.Game.State
 
-class (Game b c p, Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p, ToJSON b, ToJSON c, ToJSON p) => JSONGame b c p
+class (Game b c n, Generic b, Generic c, FromJSON b, FromJSON c, ToJSON b, ToJSON c) => JSONGame b c n
 
-type API b c p = "render"                               :> Get '[JSON] (GameState b c p)
+type API b c n = "render"                               :> Get '[JSON] (GameState b c n)
             :<|> "play"   :> ReqBody '[JSON] (Action c) :> Post '[JSON] ()
 
-type AppM b c p = ReaderT (MVar (GameState b c p)) Handler
+type AppM b c n = ReaderT (MVar (GameState b c n)) Handler
 
-api :: Proxy (API b c p)
+api :: Proxy (API b c n)
 api = Proxy
 
-server :: forall b c p. JSONGame b c p => Config -> ServerT (API b c p) (AppM b c p)
+server :: forall b c n. JSONGame b c n => Config -> ServerT (API b c n) (AppM b c n)
 server config = renderH :<|> playH
-  where renderH :: AppM b c p (GameState b c p)
+  where renderH :: AppM b c n (GameState b c n)
         renderH = liftIO . readMVar =<< ask
 
-        playH :: Action c -> AppM b c p ()
+        playH :: Action c -> AppM b c n ()
         playH action = do gs <- ask
                           liftIO $ modifyMVar_ gs f
           where f = return . doTurn (rules config) action
 
-serverJSON :: forall b c p. JSONGame b c p => Config -> IO (EndScreen b p)
+serverJSON :: forall b c n. JSONGame b c n => Config -> IO (EndScreen b n)
 serverJSON config = do putStrLn $ "Port is " <> show port
-                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c p)
+                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n)
                        gs <- newMVar initial
                        let app = serve api $ hoistServer api (\ r -> runReaderT r gs) (server config)
                        run port app

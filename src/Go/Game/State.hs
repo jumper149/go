@@ -17,12 +17,13 @@ import Data.Aeson (FromJSON, ToJSON)
 
 import Go.Game.Config
 import Go.Game.Game
+import Go.Game.Player
 import Go.Game.Rules
 
 -- | This data type contains the current board, the current player, the previous board and the
 -- number of consecutive passes.
-data GameState b c p = GState { currentBoard :: b
-                              , currentPlayer :: p
+data GameState b c n = GState { currentBoard :: b
+                              , currentPlayer :: PlayerN n
                               , lastAction :: Action c
                               , previousBoards :: [b]
                               , consecutivePasses :: Int
@@ -30,11 +31,11 @@ data GameState b c p = GState { currentBoard :: b
                               }
                               deriving Generic
 
-instance (Generic b, Generic c, Generic p, FromJSON b, FromJSON c, FromJSON p) => FromJSON (GameState b c p)
-instance (Generic b, Generic c, Generic p, ToJSON b, ToJSON c, ToJSON p) => ToJSON (GameState b c p)
+instance (Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
+instance (Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
 
-initState :: (Game b c p, Monad m, MonadError Malconfig m, MonadReader Config m)
-          => m (GameState b c p)
+initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
+          => m (GameState b c n)
 initState = do emptyBoard <- maybe (throwError MalconfigSize) return =<< asks empty
                return $ GState { currentBoard = emptyBoard
                                , currentPlayer = minBound
@@ -60,7 +61,7 @@ instance FromJSON Exception
 instance ToJSON Exception
 
 -- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
-act :: (Game b c p, Monad m, MonadState (GameState b c p) m) => Action c -> m ()
+act :: (Game b c n, Monad m, MonadState (GameState b c n) m) => Action c -> m ()
 act action = do gs <- get
                 let previousBoard = currentBoard gs
                     actedGs = case action of
@@ -80,13 +81,13 @@ act action = do gs <- get
                 put correctedGs
 
 -- TODO currently everything is checked after acting!
-checkRules :: (Game b c p, Monad m, MonadReader Rules m, MonadState (GameState b c p) m) => m (Either Exception ())
+checkRules :: (Game b c n, Monad m, MonadReader Rules m, MonadState (GameState b c n) m) => m (Either Exception ())
 checkRules = runExceptT $ do checkPassing
                              checkFree
                              checkSuicide
                              checkKo
 
-checkPassing :: (Game b c p, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c p) m) => m ()
+checkPassing :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkPassing = do gs <- get
                   rPassing <- reader passing
                   case rPassing of
@@ -95,14 +96,14 @@ checkPassing = do gs <- get
                     Forbidden -> when (lastAction gs == Pass) $
                                    throwError ExceptRedo
 
-checkFree :: (Game b c p, Monad m, MonadError Exception m, MonadState (GameState b c p) m) => m ()
+checkFree :: (Game b c r, Monad m, MonadError Exception m, MonadState (GameState b c n) m) => m ()
 checkFree = do gs <- get
                case lastAction gs of
                  Pass -> return ()
                  Place c -> when (getStone (head $ previousBoards gs) c /= Free) $ -- TODO unsafe head
                               throwError ExceptRedo
 
-checkSuicide :: (Game b c p, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c p) m) => m ()
+checkSuicide :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkSuicide = do gs <- get
                   rSuicide <- reader suicide
                   case rSuicide of
@@ -113,7 +114,7 @@ checkSuicide = do gs <- get
                                                 throwError ExceptRedo
 
 -- TODO how does passing and ko work together?
-checkKo :: (Game b c p, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c p) m) => m ()
+checkKo :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkKo = do gs <- get
              rKo <- reader ko
              case rKo of
@@ -121,13 +122,3 @@ checkKo = do gs <- get
                Ko Forbidden -> when (currentBoard gs == head (previousBoards gs)) $ -- TODO unsafe head
                                   throwError ExceptRedo
                SuperKo -> return () -- TODO implement carefully
-
--- | Count the number of players. Helper function for 'checkPassing'.
-countPlayers :: forall p. Player p => p -> Int
-countPlayers _ = length ([ minBound .. maxBound ] :: [p])
-
--- | Return the next player. Helper function for 'act'.
-next :: Player p => p -> p
-next player = if player == maxBound
-                 then minBound
-                 else succ player

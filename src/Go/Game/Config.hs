@@ -12,6 +12,7 @@ import Go.Game.Rules
 
 -- | A class for configuration related types with default values.
 class Default a where
+  -- | The default value.
   def :: a
 
 instance Default Rules where
@@ -22,6 +23,7 @@ instance Default Rules where
 
 type ConfiguredT m a = ExceptT Malconfig (ReaderT Config m) a
 
+-- | Run a configured computation by supplying a 'Config'.
 runConfiguredT :: Config -> ConfiguredT m a -> m (Either Malconfig a)
 runConfiguredT config = flip runReaderT config . runExceptT
 
@@ -36,5 +38,6 @@ instance Default Config where
                , rules = def
                }
 
+-- | Exceptions that can thrown if configuration with 'Config' doesn't work.
 data Malconfig = MalconfigSize
   deriving (Eq, Show)

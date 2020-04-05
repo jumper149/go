@@ -17,6 +17,7 @@ library
                        Go.Game.Config
                        Go.Game.End
                        Go.Game.Game
+                       Go.Game.Player
                        Go.Game.Playing
                        Go.Game.Rules
                        Go.Game.State
@@ -33,7 +34,8 @@ library
                      , servant-client
                      , servant-server
                      , warp
-  default-extensions:  DeriveGeneric
+  default-extensions:  DataKinds
+                     , DeriveGeneric
                      , FlexibleInstances
                      , GeneralizedNewtypeDeriving
                      , MultiParamTypeClasses

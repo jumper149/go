@@ -1,3 +1,5 @@
+{-# LANGUAGE DataKinds #-}
+
 import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
 import Go.Game.Config
@@ -83,14 +85,14 @@ options = [ Option ['r'] ["run"]
 
 choose :: Run -> Board -> IO ()
 choose (Local LocalTerm) board = case board of
-                                   Default -> void (game def :: IO (EndScreen D.BoardSquare D.PlayerBW))
-                                   Loop    -> void (game def :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+                                   Default -> void (game def :: IO (EndScreen (D.BoardSquare 2) 2))
+                                   Loop    -> void (game def :: IO (EndScreen (L.BoardLoop 2)   2))
 choose (Server ServerJSON) board = case board of
-                                     Default -> void (serverJSON def :: IO (EndScreen D.BoardSquare D.PlayerBW))
-                                     Loop    -> void (serverJSON def :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+                                     Default -> void (serverJSON def :: IO (EndScreen (D.BoardSquare 2) 2))
+                                     Loop    -> void (serverJSON def :: IO (EndScreen (L.BoardLoop 2)   2))
 choose (Client ClientJSON ClientTerm) board = case board of
-                                                Default -> void (clientJSONTerm :: IO (EndScreen D.BoardSquare D.PlayerBW))
-                                                Loop    -> void (clientJSONTerm :: IO (EndScreen L.BoardLoop   L.PlayerBW))
+                                                Default -> void (clientJSONTerm :: IO (EndScreen (D.BoardSquare 2) 2))
+                                                Loop    -> void (clientJSONTerm :: IO (EndScreen (L.BoardLoop 2)   2))
 --choose _ _ = error "This combination of running-mode and board is not supported."
 
 main :: IO ()
