@@ -7,6 +7,7 @@ module Go.Game.Config ( Default (..)
 
 import Control.Monad.Except
 import Control.Monad.Reader
+import GHC.Generics
 
 import Go.Game.Rules
 
@@ -31,7 +32,7 @@ runConfiguredT config = flip runReaderT config . runExceptT
 data Config = Config { size  :: Int
                      , rules :: Rules
                      }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Config where
   def = Config { size = 19
@@ -40,4 +41,4 @@ instance Default Config where
 
 -- | Exceptions that can thrown if configuration with 'Config' doesn't work.
 data Malconfig = MalconfigSize
-  deriving (Eq, Show)
+  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)

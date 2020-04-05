@@ -11,7 +11,7 @@ module Go.Game.Game ( Game ( getStone
 
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Set as S
-import GHC.Generics (Generic)
+import GHC.Generics
 import GHC.TypeLits
 
 import Go.Game.Config
@@ -20,14 +20,14 @@ import Go.Game.Player
 -- | The states of a spot for a stone are represented by this data type.
 data Stone p = Free
              | Stone p
-  deriving (Eq, Ord, Generic)
+  deriving (Eq, Ord, Generic, Read, Show)
 
 instance (Generic p, FromJSON p) => FromJSON (Stone p)
 instance (Generic p, ToJSON p) => ToJSON (Stone p)
 
 -- | Stones placed on coordinates can form chains which are represented by this data type.
 data Chain p c = Chain (Stone p) (S.Set c)
-  deriving (Eq, Ord)
+  deriving (Eq, Ord, Generic, Read, Show)
 
 -- | Check if a coordinate is part of chain. Does not check if stones are matching.
 partOfChain :: (Ord c, KnownNat n) => c -> Chain (PlayerN n) c -> Bool

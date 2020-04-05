@@ -18,7 +18,7 @@ import Go.Run.Term
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
 data CoordXY = XY Int Int
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Bounded, Eq, Generic, Ord, Read, Show)
 
 instance FromJSON CoordXY
 instance ToJSON CoordXY
@@ -29,14 +29,14 @@ coordToVecInd s (XY x y) = x + getBoardSize s * y
 
 -- | Represents a square board. Contains the 'BoardSize' and a 'V.Vector' with all points.
 data BoardSquare n = BSquare BoardSize (V.Vector (Stone (PlayerN n)))
-  deriving (Eq, Generic)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance KnownNat n => FromJSON (BoardSquare n)
 instance KnownNat n => ToJSON (BoardSquare n)
 
 -- | Represents the number of rows (or columns) on a square board.
 newtype BoardSize = BoardSize { getBoardSize :: Int }
-  deriving (Eq, Ord, Generic)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance FromJSON BoardSize
 instance ToJSON BoardSize

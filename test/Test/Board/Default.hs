@@ -26,7 +26,7 @@ runTests = hspec $ do
 
 
 newtype ArbCoordXY = ArbCoordXY CoordXY
-  deriving Show
+  deriving (Bounded, Eq, Ord, Read, Show)
 
 instance Arbitrary ArbCoordXY where
   arbitrary = elements $ maybe [] (fmap ArbCoordXY . coords) (empty def :: Maybe (BoardSquare 2))

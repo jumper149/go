@@ -12,13 +12,12 @@ import Control.Monad.Identity
 import Control.Monad.State.Strict
 
 import Go.Game.Game
-import Go.Game.Player
 import Go.Game.Rules
 import Go.Game.State
 
 -- | A monad where the game is played.
 newtype PlayingT b c n m a = PlayingT { unwrapPlayingT :: StateT (GameState b c n) (RulesetEnvT m) a }
-  deriving (Functor, Applicative, Monad)
+  deriving (Applicative, Functor, Monad)
 
 instance MonadTrans (PlayingT b c n) where
   lift = PlayingT . lift . lift

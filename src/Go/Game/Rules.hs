@@ -5,27 +5,29 @@ module Go.Game.Rules ( RulesetEnvT
                      , KoRule (..)
                      ) where
 
+import GHC.Generics
+
 import Control.Monad.Reader
 
 data Permission = Allowed
                 | Forbidden
-  deriving (Eq, Show)
+  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
 
 -- TODO change?
 data KoRule = Ko Permission
             | SuperKo
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO improve
 data Komi = Integral Int
           | PlusHalf Int
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 data Rules = Rules { passing :: Permission
                    , ko      :: KoRule
                    , suicide :: Permission
                    }
-  deriving (Eq, Show)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
   deriving (Functor, Applicative, Monad, MonadReader Rules)

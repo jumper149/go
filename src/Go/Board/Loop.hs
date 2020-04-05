@@ -1,5 +1,4 @@
 module Go.Board.Loop ( BoardLoop (..)
-                     , CoordXY (..)
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -13,7 +12,7 @@ import Go.Run.Server.JSON
 import Go.Run.Term
 
 newtype BoardLoop n = BLoop (BoardSquare n)
-  deriving (Eq, Generic, FromJSON, ToJSON)
+  deriving (Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
 
 instance KnownNat n => Board (BoardLoop n) CoordXY where
   empty = fmap BLoop . (empty :: Config -> Maybe (BoardSquare n))

@@ -7,11 +7,11 @@ module Go.Game.Player ( PlayerN
 
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
-import GHC.Generics (Generic)
+import GHC.Generics
 import GHC.TypeLits
 
 data PlayerN (n :: Nat) = PlayerN { playerNo :: Integer }
-  deriving (Eq, Ord, Show, Generic)
+  deriving (Eq, Ord, Generic, Read, Show)
 
 instance FromJSON (PlayerN n)
 instance ToJSON (PlayerN n)

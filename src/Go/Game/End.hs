@@ -2,6 +2,8 @@ module Go.Game.End ( EndScreen (..)
                    , finalizeState
                    ) where
 
+import GHC.Generics
+
 import Go.Game.Game
 import Go.Game.Player
 import Go.Game.State
@@ -13,6 +15,7 @@ data EndScreen b n = EndScreen { lastBoard :: b
                                , stonesOnBoard :: [(PlayerN n,Int)]
                                , turns :: Int
                                }
+  deriving (Eq, Generic, Ord, Read, Show)
 
 -- | Transform the state of a finished game to the endscreen.
 finalizeState :: forall b c n. Game b c n => GameState b c n -> EndScreen b n

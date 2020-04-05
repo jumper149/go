@@ -29,7 +29,7 @@ data GameState b c n = GState { currentBoard :: b
                               , consecutivePasses :: Int
                               , countTurns :: Int
                               }
-                              deriving Generic
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance (Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
 instance (Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
@@ -48,14 +48,14 @@ initState = do emptyBoard <- maybe (throwError MalconfigSize) return =<< asks em
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
               | Place c
-  deriving (Eq, Show, Generic)
+  deriving (Eq, Generic, Ord, Read, Show)
 
 instance (Generic c, FromJSON c) => FromJSON (Action c)
 instance (Generic c, ToJSON c) => ToJSON (Action c)
 
 data Exception = ExceptRedo
                | ExceptEnd
-  deriving (Eq, Show, Generic)
+  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
 
 instance FromJSON Exception
 instance ToJSON Exception
