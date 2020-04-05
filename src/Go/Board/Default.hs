@@ -1,6 +1,6 @@
 module Go.Board.Default ( BoardSquare (..)
                         , BoardSize
-                        , CoordXY (..)
+                        , Coord (..)
                         ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -17,15 +17,17 @@ import Go.Run.Term
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, boardsize).
-data CoordXY = XY Int Int
-  deriving (Bounded, Eq, Generic, Ord, Read, Show)
+data Coord = Coord { getX :: Int
+                   , getY :: Int
+                   }
+  deriving (Eq, Generic, Ord, Read, Show)
 
-instance FromJSON CoordXY
-instance ToJSON CoordXY
+instance FromJSON Coord
+instance ToJSON Coord
 
 -- | Transform coordinate to index to access the array of points on the board.
-coordToVecInd :: BoardSize -> CoordXY -> Int
-coordToVecInd s (XY x y) = x + getBoardSize s * y
+coordToVecInd :: BoardSize -> Coord -> Int
+coordToVecInd s c = getX c + getBoardSize s * getY c
 
 -- | Represents a square board. Contains the 'BoardSize' and a 'V.Vector' with all points.
 data BoardSquare n = BSquare BoardSize (V.Vector (Stone (PlayerN n)))
@@ -42,8 +44,8 @@ instance FromJSON BoardSize
 instance ToJSON BoardSize
 
 instance Bounded BoardSize where
-  minBound = BoardSize { getBoardSize = 0 }
-  maxBound = BoardSize { getBoardSize = 26 }
+  minBound = BoardSize 0
+  maxBound = BoardSize 26
 
 instance Enum BoardSize where
   toEnum s = fromMaybe undefined $ boardSize s
@@ -52,7 +54,7 @@ instance Enum BoardSize where
 -- | Create 'BoardSize'.
 boardSize :: Int -> Maybe BoardSize
 boardSize s
-  | s > 0 && s <= 26 = Just $ BoardSize { getBoardSize = s }
+  | s > 0 && s <= 26 = Just $ BoardSize s
   | otherwise = Nothing
 
 ppFull :: KnownNat n => BoardSquare n -> String
@@ -69,34 +71,34 @@ ppRaw (BSquare s vec) = concatMap ppRow rows
         rows = map slice [ i * fromEnum s | i <- [0..(fromEnum s - 1)] ] :: [V.Vector (Stone (PlayerN n))]
         slice n = V.slice n (fromEnum s) vec
 
-instance KnownNat n => Board (BoardSquare n) CoordXY where
+instance KnownNat n => Board (BoardSquare n) Coord where
   empty config = do s <- boardSize $ size config
                     return . BSquare s $ V.replicate (fromEnum s * fromEnum s) Free
 
-  coords (BSquare s _) = [ XY x y | x <- range , y <- range ]
+  coords (BSquare s _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (fromEnum s - 1) ]
 
-  libertyCoords board (XY x y) = filter (flip elem $ coords board) unsafeLibertyCoords
-    where unsafeLibertyCoords = [ XY (x-1) y
-                                , XY x     (y+1)
-                                , XY (x+1) y
-                                , XY x     (y-1)
+  libertyCoords board (Coord x y) = filter (flip elem $ coords board) unsafeLibertyCoords
+    where unsafeLibertyCoords = [ Coord (x-1) y
+                                , Coord x     (y+1)
+                                , Coord (x+1) y
+                                , Coord x     (y-1)
                                 ]
 
-instance KnownNat n => Game (BoardSquare n) CoordXY n where
-  getStone (BSquare s vec) (XY x y) = vec V.! coordToVecInd s (XY x y)
+instance KnownNat n => Game (BoardSquare n) Coord n where
+  getStone (BSquare s vec) (Coord x y) = vec V.! coordToVecInd s (Coord x y)
 
   putStone (BSquare s vec) coord stone = BSquare s newVec
     where newVec = V.update vec $ V.singleton (coordToVecInd s coord , stone)
 
-instance KnownNat n => TermGame (BoardSquare n) CoordXY n where
+instance KnownNat n => TermGame (BoardSquare n) Coord n where
   renderBoard = ppFull
 
   readCoord board str = if length wrds == 2
                         && charsInRange 48 57 x
                         && charsInRange 97 122 y
                         && length y == 1
-                        then let coord = XY xInt yInt
+                        then let coord = Coord xInt yInt
                              in if coord `elem` coords board
                                 then Just coord
                                 else Nothing
@@ -111,4 +113,4 @@ instance KnownNat n => TermGame (BoardSquare n) CoordXY n where
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance KnownNat n => JSONGame (BoardSquare n) CoordXY n
+instance KnownNat n => JSONGame (BoardSquare n) Coord n
