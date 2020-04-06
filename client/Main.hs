@@ -1,54 +1,45 @@
--- | Haskell language pragma
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
--- | Haskell module declaration
 module Main where
 
--- | Miso framework import
+import Data.Functor.Identity
+import GHC.Generics
 import Miso
 import Miso.String
 
--- | Type synonym for an application model
-type Model = Int
+import qualified Go.Board.Default as D
+import qualified Go.Config as G
+import qualified Go.Game.Playing as G
+import qualified Go.Game.Rules as G
+import qualified Go.Game.State as G
 
--- | Sum type for application events
-data Action
-  = AddOne
-  | SubtractOne
-  | NoOp
-  | SayHelloWorld
-  deriving (Show, Eq)
-
--- | Entry point for a miso application
 main :: IO ()
 main = startApp App {..}
   where
-    initialAction = SayHelloWorld -- initial action to be executed on application load
-    model  = 0                    -- initial model
-    update = updateModel          -- update function
-    view   = viewModel            -- view function
-    events = defaultEvents        -- default delegated events
-    subs   = []                   -- empty subscription list
-    mountPoint = Nothing          -- mount point for application (Nothing defaults to 'body')
+    initialAction = NoOp
+    model  = either undefined id $ runIdentity $ G.runConfiguredT G.def G.initState
+    update = updateModel
+    view   = viewModel
+    events = defaultEvents
+    subs   = []
+    mountPoint = Nothing
 
--- | Updates model, optionally introduces side effects
+type Model = G.GameState (D.BoardSquare 2) D.Coord 2
+
+data Action = NoOp
+            | Act (G.Action D.Coord)
+  deriving (Eq, Ord, Generic, Read, Show)
+
 updateModel :: Action -> Model -> Effect Action Model
 updateModel action m =
   case action of
-    AddOne
-      -> noEff (m + 1)
-    SubtractOne
-      -> noEff (m - 1)
+    Act a
+      -> noEff $ G.doTurn G.def a m
     NoOp
       -> noEff m
-    SayHelloWorld
-      -> m <# do consoleLog "Hello World" >> pure NoOp
 
--- | Constructs a virtual DOM from a model
 viewModel :: Model -> View Action
 viewModel x = div_ [] [
-   button_ [ onClick AddOne ] [ text "+" ]
- , text (ms x)
- , button_ [ onClick SubtractOne ] [ text "-" ]
+   button_ [ onClick (Act (G.Place (D.Coord 2 2))) ] [ text "2 2" ]
+ , text (ms (show x))
  ]

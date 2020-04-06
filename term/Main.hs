@@ -1,5 +1,7 @@
 {-# LANGUAGE DataKinds, GeneralizedNewtypeDeriving #-}
 
+module Main where
+
 import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
 import Go.Config

@@ -71,6 +71,12 @@ executable client
     build-depends:       base
                        , go
                        , miso
+    default-extensions:  DataKinds
+                       , DeriveGeneric
+                       , FlexibleInstances
+                       , GeneralizedNewtypeDeriving
+                       , MultiParamTypeClasses
+                       , ScopedTypeVariables
     default-language:    Haskell2010
     ghcjs-options:       -Wall -dedupe
 
@@ -94,8 +100,8 @@ test-suite test
     hs-source-dirs:      test
     other-modules:       Test.Board.Default
     build-depends:       base
+                       , go
                        , hspec
                        , QuickCheck
-                       , go
     default-language:    Haskell2010
     ghc-options:         -Wall
