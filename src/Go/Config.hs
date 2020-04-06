@@ -1,9 +1,9 @@
-module Go.Game.Config ( Default (..)
-                      , Config (..)
-                      , Malconfig (..)
-                      , ConfiguredT
-                      , runConfiguredT
-                      ) where
+module Go.Config ( Default (..)
+                 , Config (..)
+                 , Malconfig (..)
+                 , ConfiguredT
+                 , runConfiguredT
+                 ) where
 
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -29,14 +29,16 @@ runConfiguredT :: Config -> ConfiguredT m a -> m (Either Malconfig a)
 runConfiguredT config = flip runReaderT config . runExceptT
 
 -- | The configuration of a game.
-data Config = Config { size  :: Int
+data Config = Config { players :: Int
                      , rules :: Rules
+                     , size  :: Int
                      }
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Config where
-  def = Config { size = 19
+  def = Config { players = 2
                , rules = def
+               , size = 19
                }
 
 -- | Exceptions that can thrown if configuration with 'Config' doesn't work.

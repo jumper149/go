@@ -15,7 +15,7 @@ import GHC.Generics (Generic)
 import Network.Wai.Handler.Warp (run)
 import Servant
 
-import Go.Game.Config
+import Go.Config
 import Go.Game.End
 import Go.Game.Game
 import Go.Game.Playing

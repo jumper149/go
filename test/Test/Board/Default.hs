@@ -6,7 +6,7 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Go.Board.Default
-import Go.Game.Config
+import Go.Config
 import Go.Game.Game
 import Go.Game.Player
 
@@ -25,24 +25,24 @@ runTests = hspec $ do
       property $ prop_remove <$> emptyBoard
 
 
-newtype ArbCoordXY = ArbCoordXY CoordXY
+newtype ArbCoord = ArbCoord Coord
   deriving (Bounded, Eq, Ord, Read, Show)
 
-instance Arbitrary ArbCoordXY where
-  arbitrary = elements $ maybe [] (fmap ArbCoordXY . coords) (empty def :: Maybe (BoardSquare 2))
+instance Arbitrary ArbCoord where
+  arbitrary = elements $ maybe [] (fmap ArbCoord . coords) (empty def :: Maybe (BoardSquare 2))
   shrink = shrinkNothing
 
 
 prop_empty :: BoardSquare 2 -> Bool
 prop_empty board = all (== Free) $ getStone board <$> coords board
 
-prop_single :: BoardSquare 2 -> ArbCoordXY -> ArbCoordXY -> Bool
-prop_single board (ArbCoordXY coord1) (ArbCoordXY coord2) = coordsSame == stonesSame
+prop_single :: BoardSquare 2 -> ArbCoord -> ArbCoord -> Bool
+prop_single board (ArbCoord coord1) (ArbCoord coord2) = coordsSame == stonesSame
   where stonesSame = getStone (putStone board coord1 (Stone black)) coord2 == Stone black
         coordsSame = coord1 == coord2
 
-prop_remove :: BoardSquare 2 -> ArbCoordXY -> Bool
-prop_remove board (ArbCoordXY coord) = getStone newBoard coord == Free
+prop_remove :: BoardSquare 2 -> ArbCoord -> Bool
+prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
   where single = putStone board coord $ Stone white
         surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords board coord
         newBoard = updateBoard surrounded black

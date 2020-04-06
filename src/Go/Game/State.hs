@@ -15,7 +15,7 @@ import Control.Monad.State
 import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
 
-import Go.Game.Config
+import Go.Config
 import Go.Game.Game
 import Go.Game.Player
 import Go.Game.Rules

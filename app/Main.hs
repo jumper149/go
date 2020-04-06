@@ -2,7 +2,7 @@
 
 import qualified Go.Board.Default as D
 import qualified Go.Board.Loop as L
-import Go.Game.Config
+import Go.Config
 import Go.Game.End
 import Go.Run.Client.JSONTerm
 import Go.Run.Server.JSON

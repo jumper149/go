@@ -14,7 +14,7 @@ import qualified Data.Set as S
 import GHC.Generics
 import GHC.TypeLits
 
-import Go.Game.Config
+import Go.Config
 import Go.Game.Player
 
 -- | The states of a spot for a stone are represented by this data type.

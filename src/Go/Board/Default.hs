@@ -9,7 +9,7 @@ import qualified Data.Vector as V
 import GHC.Generics (Generic)
 import GHC.TypeLits
 
-import Go.Game.Config
+import Go.Config
 import Go.Game.Game
 import Go.Game.Player
 import Go.Run.Server.JSON
@@ -20,7 +20,7 @@ import Go.Run.Term
 data Coord = Coord { getX :: Int
                    , getY :: Int
                    }
-  deriving (Eq, Generic, Ord, Read, Show)
+  deriving (Bounded, Eq, Generic, Ord, Read, Show)
 
 instance FromJSON Coord
 instance ToJSON Coord
