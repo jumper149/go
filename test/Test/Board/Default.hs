@@ -52,3 +52,10 @@ white = minBound
 
 black :: PlayerN 2
 black = next minBound
+
+-- implemented in QuickCheck >= 2.13
+instance Testable prop => Testable (Maybe prop) where
+  property = property . liftMaybe
+    where
+      liftMaybe Nothing = property Discard
+      liftMaybe (Just prop) = property prop

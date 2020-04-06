@@ -12,54 +12,74 @@ extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
 library
-  exposed-modules:     Go.Board.Default
-                       Go.Board.Loop
-                       Go.Config
-                       Go.Game.End
-                       Go.Game.Game
-                       Go.Game.Player
-                       Go.Game.Playing
-                       Go.Game.Rules
-                       Go.Game.State
-                       Go.Run.Client.JSONTerm
-                       Go.Run.Server.JSON
-                       Go.Run.Term
-  build-depends:       base >=4.12 && <4.13
-                     , mtl
-                     , transformers
-                     , containers
-                     , vector
-                     , aeson
-                     , http-client
-                     , servant-client
-                     , servant-server
-                     , warp
-  default-extensions:  DataKinds
-                     , DeriveGeneric
-                     , FlexibleInstances
-                     , GeneralizedNewtypeDeriving
-                     , MultiParamTypeClasses
-                     , ScopedTypeVariables
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-  ghc-options:         -Wall
+  if impl(ghcjs)
+    buildable: False
+  else
+    exposed-modules:     Go.Board.Default
+                         Go.Board.Loop
+                         Go.Config
+                         Go.Game.End
+                         Go.Game.Game
+                         Go.Game.Player
+                         Go.Game.Playing
+                         Go.Game.Rules
+                         Go.Game.State
+                         Go.Run.Client.JSONTerm
+                         Go.Run.Server.JSON
+                         Go.Run.Term
+    build-depends:       base
+                       , mtl
+                       , transformers
+                       , containers
+                       , vector
+                       , aeson
+                       , http-client
+                       , servant-client
+                       , servant-server
+                       , warp
+    default-extensions:  DataKinds
+                       , DeriveGeneric
+                       , FlexibleInstances
+                       , GeneralizedNewtypeDeriving
+                       , MultiParamTypeClasses
+                       , ScopedTypeVariables
+    hs-source-dirs:      src
+    default-language:    Haskell2010
+    ghc-options:         -Wall
 
 executable go
   main-is:             Main.hs
-  build-depends:       base >=4.12 && <4.13
-                     , go
-  hs-source-dirs:      app
-  default-language:    Haskell2010
-  ghc-options:         -Wall
+  if impl(ghcjs)
+    buildable: False
+  else
+    build-depends:       base
+                       , go
+    hs-source-dirs:      app
+    default-language:    Haskell2010
+    ghc-options:         -Wall
 
 test-suite test
-  type:                exitcode-stdio-1.0
   main-is:             Main.hs
-  other-modules:       Test.Board.Default
-  build-depends:       base >=4.12 && <4.13
-                     , hspec
-                     , QuickCheck
-                     , go
-  hs-source-dirs:      test
-  default-language:    Haskell2010
-  ghc-options:         -Wall
+  type:                exitcode-stdio-1.0
+  if impl(ghcjs)
+      buildable: False
+  else
+    other-modules:       Test.Board.Default
+    build-depends:       base
+                       , hspec
+                       , QuickCheck
+                       , go
+    hs-source-dirs:      test
+    default-language:    Haskell2010
+    ghc-options:         -Wall
+
+executable test-miso
+  main-is:             Main.hs
+  if !impl(ghcjs)
+    buildable: False
+  else
+    build-depends:       base
+                       , miso
+    hs-source-dirs:      frontend
+    default-language:    Haskell2010
+    ghcjs-options:       -dedupe
