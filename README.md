@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-$ go --board=Default --interface=Term
+$ cabal run term --board=Default
  12345
 a
 b
@@ -23,19 +23,19 @@ e
 White
 ```
 
-## Work in Progress
+## Development
 
-working:
-- playing in terminal: `go --interface="Term"`
-- different boards: `go --board="Loop"`
-- hosting server for JSON interaction (all clients are treated the same): `go --interface="Serv"`
-- connecting to JSON server with terminal-client: `go --interface="Term"`
+Build with nix:
+```
+nix-build -A build
+```
 
-not working:
-- all of the frontend
+Build server with cabal in nix-shell:
+```
+nix-shell -A server --run "cabal build"
+```
 
-## Install
-
-with nix:
-
-    nix-shell --run "cabal build"
+Build client with cabal in nix-shell:
+```
+nix-shell -A client --run "cabal build --ghcjs"
+```

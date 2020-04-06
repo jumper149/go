@@ -7,10 +7,12 @@ let
   server = ghc865.callCabal2nix "go" ./. {};
   client = ghcjs86.callCabal2nix "go" ./. {};
   inherit (pkgs) closurecompiler;
-in
-  pkgs.runCommand "go-fullStack" { inherit server client; } ''
-    mkdir -p $out/{bin,static}
-    cp ${server}/bin/* $out/bin
-    ${closurecompiler}/bin/closure-compiler ${client}/bin/test-miso.jsexe/all.js > $out/all.js
-    cp ${client.src}/static/index.html $out/index.html
-  ''
+in {
+  inherit server client;
+  build = pkgs.runCommand "go-fullStack" { inherit server client; } ''
+                           mkdir -p $out/{bin,static}
+                           cp ${server}/bin/* $out/bin
+                           ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/all.js
+                           cp ${client.src}/static/index.html $out/index.html
+                         '';
+  }

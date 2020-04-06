@@ -47,14 +47,35 @@ library
     default-language:    Haskell2010
     ghc-options:         -Wall
 
-executable go
+executable server
+  main-is:             Main.hs
+  if impl(ghcjs)
+    buildable: False
+  else
+    build-depends:       base
+    hs-source-dirs:      server
+    default-language:    Haskell2010
+    ghcjs-options:       -Wall
+
+executable client
+  main-is:             Main.hs
+  if !impl(ghcjs)
+    buildable: False
+  else
+    build-depends:       base
+                       , miso
+    hs-source-dirs:      client
+    default-language:    Haskell2010
+    ghcjs-options:       -Wall -dedupe
+
+executable term
   main-is:             Main.hs
   if impl(ghcjs)
     buildable: False
   else
     build-depends:       base
                        , go
-    hs-source-dirs:      app
+    hs-source-dirs:      term
     default-language:    Haskell2010
     ghc-options:         -Wall
 
@@ -72,14 +93,3 @@ test-suite test
     hs-source-dirs:      test
     default-language:    Haskell2010
     ghc-options:         -Wall
-
-executable test-miso
-  main-is:             Main.hs
-  if !impl(ghcjs)
-    buildable: False
-  else
-    build-depends:       base
-                       , miso
-    hs-source-dirs:      frontend
-    default-language:    Haskell2010
-    ghcjs-options:       -dedupe
