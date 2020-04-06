@@ -9,7 +9,7 @@ let
   inherit (pkgs) closurecompiler;
 in {
   inherit server client;
-  build = pkgs.runCommand "go-fullStack" { inherit server client; } ''
+  build = pkgs.runCommand "go" { inherit server client; } ''
                            mkdir -p $out/{bin,static}
                            cp ${server}/bin/* $out/bin
                            ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/all.js
