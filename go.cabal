@@ -12,9 +12,6 @@ extra-source-files:  CHANGELOG.md, README.md
 cabal-version:       >=1.10
 
 library
-  if impl(ghcjs)
-    buildable: False
-  else
     hs-source-dirs:      src
     exposed-modules:     Go.Board.Default
                          Go.Board.Loop
@@ -25,8 +22,7 @@ library
                          Go.Game.Playing
                          Go.Game.Rules
                          Go.Game.State
-                         Go.Run.Client.JSONTerm
-                         Go.Run.Server.JSON
+                         Go.Run.JSON
                          Go.Run.Term
     build-depends:       base
                        , mtl
@@ -34,10 +30,6 @@ library
                        , containers
                        , vector
                        , aeson
-                       , http-client
-                       , servant-client
-                       , servant-server
-                       , warp
     default-extensions:  DataKinds
                        , DeriveGeneric
                        , FlexibleInstances
@@ -77,6 +69,7 @@ executable client
   else
     hs-source-dirs:      client
     build-depends:       base
+                       , go
                        , miso
     default-language:    Haskell2010
     ghcjs-options:       -Wall -dedupe

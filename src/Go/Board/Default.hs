@@ -12,7 +12,7 @@ import GHC.TypeLits
 import Go.Config
 import Go.Game.Game
 import Go.Game.Player
-import Go.Run.Server.JSON
+import Go.Run.JSON
 import Go.Run.Term
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.

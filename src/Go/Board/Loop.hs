@@ -8,7 +8,7 @@ import GHC.TypeLits
 import qualified Go.Board.Default as D
 import Go.Config
 import Go.Game.Game
-import Go.Run.Server.JSON
+import Go.Run.JSON
 import Go.Run.Term
 
 newtype BoardLoop n = BLoop (D.BoardSquare n)

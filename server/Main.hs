@@ -22,6 +22,12 @@ import Go.Run.Server.JSON
 main :: IO ()
 main = void (serverJSON def :: IO (EndScreen (D.BoardSquare 2) 2))
 
+type API b c n = "render"                               :> Get '[JSON] (GameState b c n)
+            :<|> "play"   :> ReqBody '[JSON] (Action c) :> Post '[JSON] ()
+
+api :: Proxy (API b c n)
+api = Proxy
+
 type AppM b c n = ReaderT (MVar (GameState b c n)) Handler
 
 server :: forall b c n. JSONGame b c n => Config -> ServerT (API b c n) (AppM b c n)
