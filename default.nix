@@ -12,7 +12,8 @@ in {
   build = pkgs.runCommand "go" { inherit server client; } ''
                            mkdir -p $out/{bin,static}
                            cp ${server}/bin/* $out/bin
-                           ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/all.js
-                           cp ${client.src}/static/index.html $out/index.html
+                           ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/bin/all.js
+                           cp ${client.src}/static/index.html $out/static/index.html
+                           cp ${client.src}/static/stylesheet.css $out/static/stylesheet.css
                          '';
   }

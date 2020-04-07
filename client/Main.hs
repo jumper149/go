@@ -63,29 +63,30 @@ updateModel action m =
                             }
 
 viewModel :: Model -> View Action
-viewModel x = div_ [] [ div_ [] [ viewBoard . G.currentBoard . gamestate $ x
-                                ]
-                      , div_ [] [ input_ [ type_ "text"
-                                         , autofocus_ True
-                                         , onInput UpdateCoord
-                                         ]
-                                , button_ [ disabled_ (isNothing (coord x))
-                                          , onClick SubmitPlace
-                                          ] [ text "Place" ]
-                                , button_ [ onClick SubmitPass
-                                          ] [ text "Pass" ]
-                                ]
-                      ]
+viewModel x =
+  div_ [
+       ] [ viewBoard . G.currentBoard . gamestate $ x
+         , div_ [ class_ "control"
+                ] [ input_ [ type_ "text"
+                           , autofocus_ True
+                           , onInput UpdateCoord
+                           ]
+                  , button_ [ disabled_ (isNothing (coord x))
+                            , onClick SubmitPlace
+                            ] [ text "Place" ]
+                  , button_ [ onClick SubmitPass
+                            ] [ text "Pass" ]
+                  ]
+         ]
 
 viewBoard :: D.BoardSquare 2 -> View Action
-viewBoard (D.BSquare _ v) = svg_ [ Miso.style_ $ M.singleton "background-color" "grey" , viewBox_ "0 0 19 19" ] $ (Prelude.concat . V.toList $ V.imap viewStone v)
+viewBoard (D.BSquare _ v) = svg_ [ class_ "board" , viewBox_ "0 0 19 19" ] $ (Prelude.concat . V.toList $ V.imap viewStone v)
 
 viewStone :: KnownNat n => Int -> G.Stone (G.PlayerN n) -> [View Action]
 viewStone _ G.Free = []
 viewStone i (G.Stone p) = [ circle_ [ fill_ (ms $ playerColor p) , cx_ $ ms x , cy_ $ ms y , r_ "0.5" ] []]
   where y = toEnum (i `div` 19) + 0.5 :: Double
         x = toEnum (i `mod` 19) + 0.5 :: Double
-
 
 data Color = Black
            | White
