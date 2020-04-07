@@ -17,7 +17,7 @@ import Go.Game.End
 import Go.Game.Game
 import Go.Game.Playing
 import Go.Game.State
-import Go.Run.Server.JSON
+import Go.Run.JSON
 
 main :: IO ()
 main = void (serverJSON def :: IO (EndScreen (D.BoardSquare 2) 2))

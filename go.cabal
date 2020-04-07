@@ -48,9 +48,7 @@ executable server
     build-depends:       base
                        , go
                        , aeson
-                       , http-client
                        , mtl
-                       , servant-client
                        , servant-server
                        , warp
     default-extensions:  DataKinds
@@ -71,6 +69,8 @@ executable client
     build-depends:       base
                        , go
                        , miso
+                       , containers
+                       , vector
     default-extensions:  DataKinds
                        , DeriveGeneric
                        , FlexibleInstances
