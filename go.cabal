@@ -68,6 +68,7 @@ executable client
     hs-source-dirs:      client
     other-modules:       Action
                          Board.Default
+                         Model
                          Player
     build-depends:       base
                        , go
