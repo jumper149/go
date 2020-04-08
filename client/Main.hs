@@ -15,7 +15,6 @@ import qualified Go.Game.Playing as G
 import qualified Go.Game.State as G
 
 import Board.Default
-import Player
 
 main :: IO ()
 main = startApp App {..}

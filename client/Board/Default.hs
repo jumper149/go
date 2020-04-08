@@ -2,10 +2,9 @@ module Board.Default ( viewBoard
                      ) where
 
 import qualified Data.Vector as V
-import GHC.Generics
 import GHC.TypeLits
-import Miso as Miso
-import Miso.String
+import qualified Miso as Miso
+import qualified Miso.String as MisoS
 import Miso.Svg as Svg
 
 import qualified Go.Board.Default as D
@@ -14,25 +13,48 @@ import qualified Go.Game.Player as G
 
 import Player
 
-viewBoard :: D.BoardSquare 2 -> View action
-viewBoard (D.BSquare _ v) = svg_ [ class_ "board" , viewBox_ "-0.5 -0.5 21 21" ] $ viewGrid <> viewCoords <> (Prelude.concat . V.toList $ V.imap viewStone v)
+viewBoard :: D.BoardSquare 2 -> Miso.View action
+viewBoard (D.BSquare s v) = svg_ [ Miso.class_ "board"
+                                 , viewBox_ . MisoS.unwords . fmap MisoS.ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
+                                 ] $ viewGrid boardLenDim1
+                                  <> viewCoords
+                                  <> (Prelude.concat . V.toList $ V.imap (viewStone boardLenDim1) v)
+  where lenDim1 = toEnum boardLenDim1 + margin - minDim1 :: Double
+        minDim1 = 1 - margin
+        margin = 1.5 -- for coordinate markers with 'viewCoords'
+        boardLenDim1 = fromEnum s
 
--- TODO: Add thicc lines.
-viewGrid :: [View action]
-viewGrid = fmap (\ x -> line_ [ stroke_ "black" , strokeWidth_ "0.1" , x1_ (ms x) , x2_ (ms x) , y1_ "1" , y2_ "19" ] []) dim1Coords<>
-           fmap (\ y -> line_ [ stroke_ "black" , strokeWidth_ "0.1" , x1_ "1" , x2_ "19" , y1_ (ms y) , y2_ (ms y) ] []) dim1Coords
-  where dim1Coords = [ 1 .. (19 :: Int) ]
+viewGrid :: Int -> [Miso.View action]
+viewGrid n = case coordsDim1 of
+               [] -> []
+               cs -> fmap (\ y -> gridLine (head cs) (last cs) y y) cs
+                  <> fmap (\ x -> gridLine x x (head cs) (last cs)) cs
+  where gridLine x1 x2 y1 y2 = line_ [ stroke_ "black" , strokeWidth_ "0.1" ,  x1_ x1 , x2_ x2 , y1_ y1 , y2_ y2 ] []
+        coordsDim1 = fmap MisoS.ms . take n $ [ (1 :: Int) .. ]
 
--- TODO: Make svg chars and import them here.
-viewCoords :: [View action]
-viewCoords = fmap (\ y -> ellipse_ [  cx_ "0" , cy_ (ms y) , rx_ "0.4" , ry_ "0.3" ] []) dim1Coords
-          <> fmap (\ y -> ellipse_ [  cx_ "20" , cy_ (ms y) , rx_ "0.4" , ry_ "0.3" ] []) dim1Coords
-          <> fmap (\ x -> ellipse_ [  cx_ (ms x) , cy_ "0" , rx_ "0.3" , ry_ "0.4" ] []) dim1Coords
-          <> fmap (\ x -> ellipse_ [  cx_ (ms x) , cy_ "20" , rx_ "0.3" , ry_ "0.4" ] []) dim1Coords
-  where dim1Coords = [ 1 .. (19 :: Int) ]
+-- TODO: Make svg chars and import them here. Function will be similar to 'viewGrid'.
+viewCoords :: [Miso.View action]
+viewCoords = []
 
-viewStone :: KnownNat n => Int -> G.Stone (G.PlayerN n) -> [View action]
-viewStone _ G.Free = []
-viewStone i (G.Stone p) = [ circle_ [ fill_ (ms $ colorize p) , cx_ $ ms x , cy_ $ ms y , r_ "0.5" ] []]
-  where y = (i `div` 19) + 1 :: Int
-        x = (i `mod` 19) + 1 :: Int
+viewStone :: KnownNat n
+          => Int                   -- ^ boardsize
+          -> Int                   -- ^ index of stone in boardvector
+          -> G.Stone (G.PlayerN n)
+          -> [Miso.View action]
+viewStone size i s = case s of
+                  G.Free -> [ rect_ [ x_ . MisoS.ms $ x - 0.5
+                                    , y_ . MisoS.ms $ y - 0.5
+                                    , width_ "1"
+                                    , height_ "1"
+                                    , fill_ "green"
+                                    , fillOpacity_ "0.5"
+                                    ] []
+                            ]
+                  G.Stone p -> [ circle_ [ fill_ (MisoS.ms $ colorize p)
+                                         , cx_ $ MisoS.ms x
+                                         , cy_ $ MisoS.ms y
+                                         , r_ "0.5"
+                                         ] []
+                               ]
+  where y = toEnum $ (i `div` size) + 1 :: Double
+        x = toEnum $ (i `mod` size) + 1 :: Double
