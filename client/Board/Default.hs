@@ -15,7 +15,7 @@ import qualified Go.Game.Player as G
 import Action
 import Player
 
-viewBoard :: D.BoardSquare 2 -> Maybe D.Coord -> Miso.View Action
+viewBoard :: KnownNat n => D.BoardSquare n -> Maybe D.Coord -> Miso.View Action
 viewBoard (D.BSquare s v) c = svg_ [ Miso.style_ $ M.fromList [ ("background-color","grey")
                                                               , ("width","50%")
                                                               ]

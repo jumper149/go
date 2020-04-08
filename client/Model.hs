@@ -6,6 +6,7 @@ module Model ( Model
 import Data.Functor.Identity (runIdentity)
 import Data.Maybe (isNothing)
 import GHC.Generics
+import GHC.TypeLits
 import Miso as Miso
 import Miso.String
 import Text.Read (readMaybe)
@@ -18,17 +19,17 @@ import qualified Go.Game.State as G
 import Action
 import Board.Default
 
-data Model = Model { gamestate :: G.GameState (D.BoardSquare 2) D.Coord 2
-                   , coord     :: Maybe D.Coord
-                   }
+data Model n = Model { gamestate :: G.GameState (D.BoardSquare n) D.Coord n
+                     , coord     :: Maybe D.Coord
+                     }
   deriving (Eq, Ord, Generic, Read, Show)
 
-instance G.Default Model where
+instance KnownNat n => G.Default (Model n) where
   def = Model { gamestate = either undefined id $ runIdentity $ G.runConfiguredT G.def G.initState
               , coord = Nothing
               }
 
-updateModel :: Action -> Model -> Effect Action Model
+updateModel :: KnownNat n => Action -> Model n -> Effect Action (Model n)
 updateModel action m =
   case action of
     NoOp -> noEff m
@@ -42,7 +43,7 @@ updateModel action m =
                             , coord = Nothing
                             }
 
-viewModel :: Model -> View Action
+viewModel :: KnownNat n => Model n -> View Action
 viewModel x =
   div_ [
        ] [ viewBoard (G.currentBoard $ gamestate x) (coord x)
