@@ -66,6 +66,7 @@ executable client
     buildable: False
   else
     hs-source-dirs:      client
+    other-modules:       Player
     build-depends:       base
                        , go
                        , miso

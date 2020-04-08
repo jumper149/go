@@ -2,10 +2,8 @@
 
 module Main where
 
-import Data.Char as C (toLower)
 import Data.Functor.Identity (runIdentity)
-import qualified Data.Map as M
-import Data.Maybe (fromMaybe, isNothing)
+import Data.Maybe (isNothing)
 import qualified Data.Vector as V
 import GHC.Generics
 import GHC.TypeLits
@@ -20,6 +18,8 @@ import qualified Go.Game.Game as G
 import qualified Go.Game.Playing as G
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
+
+import Player
 
 main :: IO ()
 main = startApp App {..}
@@ -98,20 +98,6 @@ viewCoords = fmap (\ y -> ellipse_ [  cx_ "0" , cy_ (ms y) , rx_ "0.4" , ry_ "0.
 
 viewStone :: KnownNat n => Int -> G.Stone (G.PlayerN n) -> [View Action]
 viewStone _ G.Free = []
-viewStone i (G.Stone p) = [ circle_ [ fill_ (ms $ playerColor p) , cx_ $ ms x , cy_ $ ms y , r_ "0.5" ] []]
+viewStone i (G.Stone p) = [ circle_ [ fill_ (ms $ colorize p) , cx_ $ ms x , cy_ $ ms y , r_ "0.5" ] []]
   where y = (i `div` 19) + 1 :: Int
         x = (i `mod` 19) + 1 :: Int
-
--- TODO: Outsource everything regarding player.
-data Color = Black
-           | White
-           | Red
-           | Blue
-           | Green
-  deriving (Bounded, Enum, Eq, Ord, Generic, Read, Show)
-
-playerColor :: KnownNat n => G.PlayerN n -> String
-playerColor p = fmap C.toLower . show $ fromMaybe Red $ M.lookup p playerColorMap
-
-playerColorMap :: forall n. KnownNat n => M.Map (G.PlayerN n) Color
-playerColorMap = M.fromList $ Prelude.zip [minBound .. (maxBound :: G.PlayerN n)] [minBound .. (maxBound :: Color)]

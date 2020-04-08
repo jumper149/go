@@ -31,11 +31,11 @@ instance KnownNat n => Enum (PlayerN n) where
                     then p
                     else undefined
 
--- | Count the number of players. Helper function for 'checkPassing'.
+-- | Count the number of players. Helper function for 'Go.Game.State.checkPassing'.
 countPlayers :: forall n. KnownNat n => PlayerN n -> Int                            -- TODO: don't give player as argument
 countPlayers _ = fromEnum (maxBound :: PlayerN n)
 
--- | Return the next player. Helper function for 'act'.
+-- | Return the next player. Helper function for 'Go.Game.State.act'.
 next :: forall n. KnownNat n => PlayerN n -> PlayerN n
 next player = if player == (maxBound :: PlayerN n)
                  then minBound
