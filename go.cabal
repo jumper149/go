@@ -78,6 +78,8 @@ executable client
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+
+                       , OverloadedStrings
     default-language:    Haskell2010
     ghcjs-options:       -Wall -dedupe
 
