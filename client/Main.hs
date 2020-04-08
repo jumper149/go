@@ -14,6 +14,7 @@ import qualified Go.Config as G
 import qualified Go.Game.Playing as G
 import qualified Go.Game.State as G
 
+import Action
 import Board.Default
 
 main :: IO ()
@@ -37,12 +38,6 @@ instance G.Default Model where
               , coord = Nothing
               }
 
-data Action = NoOp
-            | UpdateCoord MisoString
-            | SubmitPlace
-            | SubmitPass
-  deriving (Eq, Ord, Generic, Read, Show)
-
 updateModel :: Action -> Model -> Effect Action Model
 updateModel action m =
   case action of
@@ -60,7 +55,7 @@ updateModel action m =
 viewModel :: Model -> View Action
 viewModel x =
   div_ [
-       ] [ viewBoard . G.currentBoard . gamestate $ x
+       ] [ viewBoard (G.currentBoard $ gamestate x) (coord x)
          , div_ [ class_ "control"
                 ] [ input_ [ type_ "text"
                            , autofocus_ True
