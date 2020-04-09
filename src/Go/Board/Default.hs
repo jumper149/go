@@ -10,7 +10,7 @@ import qualified Data.Vector as V
 import GHC.Generics (Generic)
 import GHC.TypeLits
 
-import Go.Config
+import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
 import Go.Run.JSON

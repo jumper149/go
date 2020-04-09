@@ -1,8 +1,8 @@
-module Go.Config ( Config (..)
-                 , Malconfig (..)
-                 , ConfiguredT
-                 , runConfiguredT
-                 ) where
+module Go.Game.Config ( Config (..)
+                      , Malconfig (..)
+                      , ConfiguredT
+                      , runConfiguredT
+                      ) where
 
 import Control.Monad.Except
 import Control.Monad.Reader

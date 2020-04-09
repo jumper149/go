@@ -8,13 +8,12 @@ module Go.Game.Game ( Game ( getStone
                     , Stone (..)
                     ) where
 
-
 import Data.Aeson (FromJSON, ToJSON)
 import qualified Data.Set as S
 import GHC.Generics
 import GHC.TypeLits
 
-import Go.Config
+import Go.Game.Config
 import Go.Game.Player
 
 -- | The states of a spot for a stone are represented by this data type.

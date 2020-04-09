@@ -13,7 +13,7 @@ import Network.Wai.Handler.Warp (run)
 import Servant
 
 import qualified Go.Board.Default as D
-import Go.Config
+import Go.Game.Config
 import Go.Game.End
 import Go.Game.Game
 import Go.Game.Playing

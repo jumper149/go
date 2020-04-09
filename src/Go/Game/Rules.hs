@@ -5,10 +5,9 @@ module Go.Game.Rules ( RulesetEnvT
                      , KoRule (..)
                      ) where
 
+import Control.Monad.Reader
 import Data.Default.Class
 import GHC.Generics
-
-import Control.Monad.Reader
 
 data Permission = Allowed
                 | Forbidden

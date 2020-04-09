@@ -6,7 +6,7 @@ import GHC.Generics (Generic)
 import GHC.TypeLits
 
 import qualified Go.Board.Default as D
-import Go.Config
+import Go.Game.Config
 import Go.Game.Game
 import Go.Run.JSON
 import Go.Run.Term

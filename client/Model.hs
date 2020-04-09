@@ -9,7 +9,7 @@ import GHC.Generics
 import Miso.Effect
 import Miso.Html
 
-import qualified Go.Config as G
+import qualified Go.Game.Config as G
 import qualified Go.Game.Game as G
 import qualified Go.Game.Playing as G
 import qualified Go.Game.State as G
@@ -17,13 +17,13 @@ import qualified Go.Game.State as G
 import Game
 import Operation
 
-data Model b c n = Model { gamestate  :: G.GameState b c n
+data Model b c n = Model { gameState  :: G.GameState b c n
                          , gameAction :: Maybe (G.Action c)
                          }
   deriving (Eq, Ord, Generic, Read, Show)
 
 instance G.Game b c n => Default (Model b c n) where
-  def = Model { gamestate = either undefined id $ runIdentity $ G.runConfiguredT def G.initState
+  def = Model { gameState = either undefined id $ runIdentity $ G.runConfiguredT def G.initState
               , gameAction = Nothing
               }
 
@@ -35,14 +35,14 @@ updateModel action model =
     UpdateAction mbAct -> noEff $ model { gameAction = mbAct }
     SubmitAction -> case gameAction model of
                       Nothing -> noEff $ model { gameAction = Nothing } -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> noEff $ model { gamestate = G.doTurn def a (gamestate model)
+                      Just a -> noEff $ model { gameState = G.doTurn def a (gameState model)
                                               , gameAction = Nothing
                                               }
 
 viewModel :: MisoGame b c n => Model b c n -> View (Operation c)
 viewModel model =
   div_ [
-       ] [ viewBoard (G.currentBoard $ gamestate model) coord
+       ] [ viewBoard (G.currentBoard $ gameState model) coord
          , button_ [ onClick $ QueueOp [ UpdateAction $ Just G.Pass
                                        , SubmitAction
                                        ]

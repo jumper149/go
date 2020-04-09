@@ -9,7 +9,7 @@ module Go.Run.Term ( TermGame ( renderBoard
 
 import Control.Monad.Except
 
-import Go.Config
+import Go.Game.Config
 import Go.Game.End
 import Go.Game.Game
 import Go.Game.Playing
