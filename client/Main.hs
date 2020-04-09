@@ -4,9 +4,9 @@ module Main where
 
 import Miso
 
-import qualified Go.Board.Default as D
 import Go.Config (Default (..))
 
+import Board.Default as D
 import Operation
 import Model
 

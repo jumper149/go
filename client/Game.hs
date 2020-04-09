@@ -1,9 +1,9 @@
-module Game where
+module Game ( MisoGame (..)
+            ) where
 
 import GHC.TypeLits
 import Miso.Html
 
-import qualified Go.Board.Default as D
 import qualified Go.Game.Game as G
 
 import qualified Board.Default as D
