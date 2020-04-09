@@ -1,5 +1,3 @@
-{-# LANGUAGE DataKinds, GeneralizedNewtypeDeriving #-}
-
 module Main where
 
 import Control.Monad (void)

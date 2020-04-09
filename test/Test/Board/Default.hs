@@ -1,5 +1,3 @@
-{-# LANGUAGE DataKinds #-}
-
 module Test.Board.Default where
 
 import Data.Default.Class

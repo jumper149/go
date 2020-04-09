@@ -7,7 +7,7 @@ module Go.Board.Default ( BoardSquare (..)
 import Data.Aeson (FromJSON, ToJSON)
 import Data.Maybe (fromMaybe)
 import qualified Data.Vector as V
-import GHC.Generics (Generic)
+import GHC.Generics
 import GHC.TypeLits
 
 import Go.Game.Config

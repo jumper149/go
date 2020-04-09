@@ -11,9 +11,8 @@ module Go.Game.State ( GameState (..)
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.State
-
-import GHC.Generics (Generic)
 import Data.Aeson (FromJSON, ToJSON)
+import GHC.Generics (Generic)
 
 import Go.Game.Config
 import Go.Game.Game

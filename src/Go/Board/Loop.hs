@@ -2,7 +2,7 @@ module Go.Board.Loop ( BoardLoop (..)
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
-import GHC.Generics (Generic)
+import GHC.Generics
 import GHC.TypeLits
 
 import qualified Go.Board.Default as D
