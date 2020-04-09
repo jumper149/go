@@ -2,18 +2,18 @@
 
 module Main where
 
-import qualified Go.Board.Default as D
-import qualified Go.Board.Loop as L
-import Go.Config
-import Go.Game.End
-import Go.Run.Term
-
-import System.Console.GetOpt
-import System.Environment (getArgs)
+import Control.Monad (void)
+import Data.Default.Class
 import Data.List (intercalate)
 import Data.Maybe (fromMaybe)
 import Text.Read (readMaybe)
-import Control.Monad (void)
+import System.Console.GetOpt
+import System.Environment (getArgs)
+
+import qualified Go.Board.Default as D
+import qualified Go.Board.Loop as L
+import Go.Game.End
+import Go.Run.Term
 
 data Board = Default
            | Loop

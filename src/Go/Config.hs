@@ -1,5 +1,4 @@
-module Go.Config ( Default (..)
-                 , Config (..)
+module Go.Config ( Config (..)
                  , Malconfig (..)
                  , ConfiguredT
                  , runConfiguredT
@@ -7,20 +6,10 @@ module Go.Config ( Default (..)
 
 import Control.Monad.Except
 import Control.Monad.Reader
+import Data.Default.Class
 import GHC.Generics
 
 import Go.Game.Rules
-
--- | A class for configuration related types with default values.
-class Default a where
-  -- | The default value.
-  def :: a
-
-instance Default Rules where
-  def = Rules { passing = Allowed
-              , ko = Ko Forbidden
-              , suicide = Allowed
-              }
 
 type ConfiguredT m a = ExceptT Malconfig (ReaderT Config m) a
 

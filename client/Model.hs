@@ -3,6 +3,7 @@ module Model ( Model
              , viewModel
              ) where
 
+import Data.Default.Class
 import Data.Functor.Identity (runIdentity)
 import GHC.Generics
 import Miso.Effect
@@ -21,8 +22,8 @@ data Model b c n = Model { gamestate  :: G.GameState b c n
                          }
   deriving (Eq, Ord, Generic, Read, Show)
 
-instance G.Game b c n => G.Default (Model b c n) where
-  def = Model { gamestate = either undefined id $ runIdentity $ G.runConfiguredT G.def G.initState
+instance G.Game b c n => Default (Model b c n) where
+  def = Model { gamestate = either undefined id $ runIdentity $ G.runConfiguredT def G.initState
               , gameAction = Nothing
               }
 
@@ -34,7 +35,7 @@ updateModel action model =
     UpdateAction mbAct -> noEff $ model { gameAction = mbAct }
     SubmitAction -> case gameAction model of
                       Nothing -> noEff $ model { gameAction = Nothing } -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> noEff $ model { gamestate = G.doTurn G.def a (gamestate model)
+                      Just a -> noEff $ model { gamestate = G.doTurn def a (gamestate model)
                                               , gameAction = Nothing
                                               }
 

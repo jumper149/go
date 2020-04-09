@@ -5,6 +5,7 @@ module Go.Game.Rules ( RulesetEnvT
                      , KoRule (..)
                      ) where
 
+import Data.Default.Class
 import GHC.Generics
 
 import Control.Monad.Reader
@@ -28,6 +29,12 @@ data Rules = Rules { passing :: Permission
                    , suicide :: Permission
                    }
   deriving (Eq, Generic, Ord, Read, Show)
+
+instance Default Rules where
+  def = Rules { passing = Allowed
+              , ko = Ko Forbidden
+              , suicide = Allowed
+              }
 
 newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
   deriving (Functor, Applicative, Monad, MonadReader Rules)

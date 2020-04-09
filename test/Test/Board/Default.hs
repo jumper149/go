@@ -2,11 +2,11 @@
 
 module Test.Board.Default where
 
+import Data.Default.Class
 import Test.Hspec
 import Test.QuickCheck
 
 import Go.Board.Default
-import Go.Config
 import Go.Game.Game
 import Go.Game.Player
 
@@ -53,7 +53,7 @@ white = minBound
 black :: PlayerN 2
 black = next minBound
 
--- implemented in QuickCheck >= 2.13
+-- TODO: remove when implemented in QuickCheck >= 2.13
 instance Testable prop => Testable (Maybe prop) where
   property = property . liftMaybe
     where

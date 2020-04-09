@@ -1,3 +1,5 @@
+module Main where
+
 import qualified Test.Board.Default
 
 main :: IO ()

@@ -2,11 +2,10 @@
 
 module Main where
 
+import Data.Default.Class
 import Miso
 
-import Go.Config (Default (..))
-
-import Board.Default as D
+import qualified Board.Default as D
 import Operation
 import Model
 
