@@ -31,7 +31,7 @@ updateModel :: G.Game b c n => Operation c -> Model b c n -> Effect (Operation c
 updateModel action model =
   case action of
     NoOp -> noEff model
-    QueueOp as -> foldr (\ a m -> updateModel a =<< m) (return model) as
+    QueueOp as -> foldl (\ m a -> updateModel a =<< m) (return model) as
     UpdateAction mbAct -> noEff $ model { gameAction = mbAct }
     SubmitAction -> case gameAction model of
                       Nothing -> noEff $ model { gameAction = Nothing } -- TODO: weird exception catch? Prevented by clever button.
