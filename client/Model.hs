@@ -16,6 +16,7 @@ import qualified Go.Game.State as G
 
 import Game
 import Operation
+import Svg
 
 data Model b c n = Model { gameState  :: G.GameState b c n
                          , gameAction :: Maybe (G.Action c)
@@ -43,10 +44,7 @@ viewModel :: MisoGame b c n => Model b c n -> View (Operation c)
 viewModel model =
   div_ [
        ] [ viewBoard (G.currentBoard $ gameState model) coord
-         , button_ [ onClick $ QueueOp [ UpdateAction $ Just G.Pass
-                                       , SubmitAction
-                                       ]
-                   ] [ text "Pass" ]
+         , viewPassButton $ gameAction model
          ]
   where coord = case gameAction model of
                   Just (G.Place c) -> Just c
