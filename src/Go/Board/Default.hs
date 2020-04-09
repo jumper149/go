@@ -1,6 +1,7 @@
 module Go.Board.Default ( BoardSquare (..)
                         , BoardSize
                         , Coord (..)
+                        , mkCoord
                         ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -20,10 +21,17 @@ import Go.Run.Term
 data Coord = Coord { getX :: Int
                    , getY :: Int
                    }
-  deriving (Bounded, Eq, Generic, Ord, Read, Show)
+  deriving (Bounded, Eq, Generic, Ord, Read, Show) -- TODO: nice Bounded instance, maybe Enum too?
 
 instance FromJSON Coord
 instance ToJSON Coord
+
+-- | Smart constructor where coordinates are required to be in the interval [1..boardsize].
+mkCoord :: BoardSize -> Int -> Int -> Maybe Coord
+mkCoord s x y = if check x && check y
+                   then Just $ Coord (x-1) (y-1)
+                   else Nothing
+  where check c = c <= getBoardSize s && c >= 1
 
 -- | Transform coordinate to index to access the array of points on the board.
 coordToVecInd :: BoardSize -> Coord -> Int

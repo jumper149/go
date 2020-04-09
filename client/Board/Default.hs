@@ -11,6 +11,7 @@ import Miso.Svg as Svg
 import qualified Go.Board.Default as D
 import qualified Go.Game.Game as G
 import qualified Go.Game.Player as G
+import qualified Go.Game.State as G
 
 import Action
 import Player
@@ -20,13 +21,13 @@ viewBoard (D.BSquare s v) c = svg_ [ Miso.style_ $ M.fromList [ ("background-col
                                                               , ("width","50%")
                                                               ]
                                    , viewBox_ . MisoS.unwords . fmap MisoS.ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
-                                   , onMouseOut $ UpdateCoord "Nothing"
+                                   , onMouseOut $ UpdateAction Nothing
                                    ] $ viewGrid boardLenDim1
                                     <> viewCoordIndicator
                                     <> case c of
                                          Nothing -> []
                                          Just coord -> [ hintStone coord ]
-                                    <> (Prelude.concat . V.toList $ V.imap (viewStone boardLenDim1) v)
+                                    <> (Prelude.concat . V.toList $ V.imap (viewStone s) v)
   where lenDim1 = toEnum boardLenDim1 + margin - minDim1 :: Double
         minDim1 = 1 - margin
         margin = 1.5 -- for coordinate markers with 'viewCoordIndicator'
@@ -45,19 +46,18 @@ viewCoordIndicator :: [Miso.View action]
 viewCoordIndicator = []
 
 viewStone :: KnownNat n
-          => Int                   -- ^ boardsize
+          => D.BoardSize           -- ^ boardsize
           -> Int                   -- ^ index of stone in boardvector
           -> G.Stone (G.PlayerN n)
           -> [Miso.View Action]
-viewStone size i s = case s of
+viewStone size i stone = case stone of
                   G.Free -> [ rect_ [ x_ . MisoS.ms $ x - 0.5
                                     , y_ . MisoS.ms $ y - 0.5
                                     , width_ "1"
                                     , height_ "1"
                                     , fillOpacity_ "0"
-                                    , onMouseOver $ UpdateCoord $ "Coord{getX=" <> MisoS.ms (fromEnum (x-1))
-                                                               <> ",getY=" <> MisoS.ms (fromEnum (y-1)) <> "}"
-                                    , onClick SubmitPlace
+                                    , onMouseOver $ UpdateAction $ G.Place <$> D.mkCoord size (fromEnum x) (fromEnum y)
+                                    , onClick SubmitAction
                                     ] []
                             ]
                   G.Stone p -> [ circle_ [ fill_ (MisoS.ms $ colorize p)
@@ -66,8 +66,8 @@ viewStone size i s = case s of
                                          , r_ "0.5"
                                          ] []
                                ]
-  where y = toEnum $ (i `div` size) + 1 :: Double
-        x = toEnum $ (i `mod` size) + 1 :: Double
+  where y = toEnum $ (i `div` fromEnum size) + 1 :: Double -- TODO: nicer?
+        x = toEnum $ (i `mod` fromEnum size) + 1 :: Double
 
 hintStone :: D.Coord -> Miso.View Action
 hintStone (D.Coord x y) = circle_ [ fill_ "yellow"

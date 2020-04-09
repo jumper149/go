@@ -7,7 +7,7 @@ import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import GHC.Generics
 import GHC.TypeLits
-import qualified Miso.String as MisoS
+import Miso.String (ToMisoString (..))
 
 import Go.Game.Player
 
@@ -20,11 +20,11 @@ data Color = Black
            | Blue
   deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
 
-instance MisoS.ToMisoString Color where
-    toMisoString = MisoS.toMisoString . fmap toLower . show
+instance ToMisoString Color where
+    toMisoString = toMisoString . fmap toLower . show
 
     -- TODO: Unnecessary function
-    fromMisoString mstr = case MisoS.fromMisoString mstr of
+    fromMisoString mstr = case fromMisoString mstr of
                             "" -> undefined
                             c:cs -> if isLower c
                                        then read $ toUpper c : cs

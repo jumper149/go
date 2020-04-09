@@ -1,10 +1,12 @@
 module Action where
 
 import GHC.Generics
-import Miso.String
+
+import qualified Go.Board.Default as D
+import qualified Go.Game.State as G
 
 data Action = NoOp
-            | UpdateCoord MisoString
-            | SubmitPlace
-            | SubmitPass
+            | QueueOp [Action]
+            | UpdateAction (Maybe (G.Action D.Coord))
+            | SubmitAction
   deriving (Eq, Ord, Generic, Read, Show)
