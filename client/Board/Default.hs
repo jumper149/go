@@ -13,10 +13,10 @@ import qualified Go.Game.Game as G
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
 
-import Action
+import Operation
 import Player
 
-viewBoard :: KnownNat n => D.BoardSquare n -> Maybe D.Coord -> Miso.View Action
+viewBoard :: KnownNat n => D.BoardSquare n -> Maybe D.Coord -> Miso.View (Operation D.Coord)
 viewBoard (D.BSquare s v) c = svg_ [ Miso.style_ $ M.fromList [ ("background-color","grey")
                                                               , ("width","50%")
                                                               ]
@@ -49,7 +49,7 @@ viewStone :: KnownNat n
           => D.BoardSize           -- ^ boardsize
           -> Int                   -- ^ index of stone in boardvector
           -> G.Stone (G.PlayerN n)
-          -> [Miso.View Action]
+          -> [Miso.View (Operation D.Coord)]
 viewStone size i stone = case stone of
                   G.Free -> [ rect_ [ x_ . MisoS.ms $ x - 0.5
                                     , y_ . MisoS.ms $ y - 0.5
@@ -69,7 +69,7 @@ viewStone size i stone = case stone of
   where y = toEnum $ (i `div` fromEnum size) + 1 :: Double -- TODO: nicer?
         x = toEnum $ (i `mod` fromEnum size) + 1 :: Double
 
-hintStone :: D.Coord -> Miso.View Action
+hintStone :: D.Coord -> Miso.View (Operation D.Coord)
 hintStone (D.Coord x y) = circle_ [ fill_ "yellow"
                                   , fillOpacity_ "0.5"
                                   , cx_ $ MisoS.ms $ x + 1

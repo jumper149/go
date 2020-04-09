@@ -5,29 +5,28 @@ module Model ( Model
 
 import Data.Functor.Identity (runIdentity)
 import GHC.Generics
-import GHC.TypeLits
 import Miso.Effect
 import Miso.Html
 
-import qualified Go.Board.Default as D
 import qualified Go.Config as G
+import qualified Go.Game.Game as G
 import qualified Go.Game.Playing as G
 import qualified Go.Game.State as G
 
-import Action
-import Board.Default
+import Game
+import Operation
 
-data Model n = Model { gamestate  :: G.GameState (D.BoardSquare n) D.Coord n
-                     , gameAction :: Maybe (G.Action D.Coord)
-                     }
+data Model b c n = Model { gamestate  :: G.GameState b c n
+                         , gameAction :: Maybe (G.Action c)
+                         }
   deriving (Eq, Ord, Generic, Read, Show)
 
-instance KnownNat n => G.Default (Model n) where
+instance G.Game b c n => G.Default (Model b c n) where
   def = Model { gamestate = either undefined id $ runIdentity $ G.runConfiguredT G.def G.initState
               , gameAction = Nothing
               }
 
-updateModel :: KnownNat n => Action -> Model n -> Effect Action (Model n)
+updateModel :: G.Game b c n => Operation c -> Model b c n -> Effect (Operation c) (Model b c n)
 updateModel action model =
   case action of
     NoOp -> noEff model
@@ -39,7 +38,7 @@ updateModel action model =
                                               , gameAction = Nothing
                                               }
 
-viewModel :: KnownNat n => Model n -> View Action
+viewModel :: MisoGame b c n => Model b c n -> View (Operation c)
 viewModel model =
   div_ [
        ] [ viewBoard (G.currentBoard $ gamestate model) coord

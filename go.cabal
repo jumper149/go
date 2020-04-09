@@ -66,9 +66,10 @@ executable client
     buildable: False
   else
     hs-source-dirs:      client
-    other-modules:       Action
-                         Board.Default
+    other-modules:       Board.Default
+                         Game
                          Model
+                         Operation
                          Player
     build-depends:       base
                        , go
