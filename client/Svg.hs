@@ -35,8 +35,8 @@ viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey
                                      , onClick SubmitAction
                                      ] <> rectSizeAttrs) []
                             ]
-                                where rectSizeAttrs = [ x_ "10"
-                                                      , y_ "10"
-                                                      , width_ "80"
-                                                      , height_ "30"
-                                                      ]
+  where rectSizeAttrs = [ x_ "10"
+                        , y_ "10"
+                        , width_ "80"
+                        , height_ "30"
+                        ]
