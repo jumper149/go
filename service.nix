@@ -45,7 +45,7 @@ in
           Type = "simple";
           User = "${cfg.user}";
           ExecStart = let portStr = toString cfg.port;
-                      in "${build}/bin/server --port ${portStr} ${build}";
+                      in "${build}/bin/server --port ${portStr} ${build}/public";
         };
       };
 
