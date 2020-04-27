@@ -10,10 +10,10 @@ let
 in {
   inherit server client;
   build = pkgs.runCommand "go" { inherit server client; } ''
-                           mkdir -p $out/{bin,static}
+                           mkdir -p $out/bin
                            cp ${server}/bin/* $out/bin
                            ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/bin/all.js
-                           cp ${client.src}/static/index.html $out/static/index.html
-                           cp ${client.src}/static/stylesheet.css $out/static/stylesheet.css
+                           cp ${client.src}/static/index.html $out/index.html
+                           cp ${client.src}/static/stylesheet.css $out/stylesheet.css
                          '';
   }
