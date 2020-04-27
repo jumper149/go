@@ -22,13 +22,11 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-newtype OptArgs = OptArgs { port :: Port
-                          }
+newtype OptArgs = OptArgs { port :: Port }
   deriving (Bounded, Enum, Eq, Ord, Read, Show)
 
 instance Default OptArgs where
-  def = OptArgs { port = 8022
-                }
+  def = OptArgs { port = 8022 }
 
 options :: [OptDescr (OptArgs -> IO OptArgs)]
 options = [ Option ['p'] ["port"]
