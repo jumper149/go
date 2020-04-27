@@ -9,8 +9,10 @@ import Data.Aeson
 import Data.Default.Class
 import Data.Proxy (Proxy)
 import GHC.Generics (Generic)
-import Network.Wai.Handler.Warp (run)
+import Network.Wai.Handler.Warp (Port, run)
 import Servant
+import System.Console.GetOpt
+import System.Environment (getArgs)
 
 import qualified Go.Board.Default as D
 import Go.Game.Config
@@ -20,8 +22,35 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
+newtype OptArgs = OptArgs { port :: Port
+                          }
+  deriving (Bounded, Enum, Eq, Ord, Read, Show)
+
+instance Default OptArgs where
+  def = OptArgs { port = 8022
+                }
+
+options :: [OptDescr (OptArgs -> IO OptArgs)]
+options = [ Option ['p'] ["port"]
+              (ReqArg
+                (\ arg opt -> return opt { port = read arg })
+                "port")
+              "Specify port to listen on"
+          ]
+
+-- TODO: use?: https://cabal.readthedocs.io/en/latest/cabal-package.html?highlight=getDataDir#accessing-data-files-from-package-code
 main :: IO ()
-main = void (serverJSON def :: IO (EndScreen (D.BoardSquare 2) 2))
+main = do args <- getArgs
+          let (optArgs , nonOptArgs , _) = getOpt Permute options args
+          opts <- foldl (>>=) (return def) optArgs
+          let OptArgs { port = port
+                      } = opts
+              path = head nonOptArgs
+          putStrLn $ "Path: " <> path
+          run port $ serve (Proxy :: Proxy Raw) $ serveDirectoryWebApp path
+
+--main :: IO ()
+--main = void (serverJSON def :: IO (EndScreen (D.BoardSquare 2) 2))
 
 type API b c n = "render"                               :> Get '[JSON] (GameState b c n)
             :<|> "play"   :> ReqBody '[JSON] (Action c) :> Post '[JSON] ()
