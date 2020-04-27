@@ -32,10 +32,10 @@ nix-build -A build
 
 Build server with cabal in nix-shell:
 ```
-nix-shell -A server --run "cabal build"
+nix-shell -A server.env --run "cabal build"
 ```
 
 Build client with cabal in nix-shell:
 ```
-nix-shell -A client --run "cabal build --ghcjs"
+nix-shell -A client.env --run "cabal build --ghcjs"
 ```
