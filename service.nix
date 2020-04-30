@@ -5,9 +5,8 @@ let
   goDefault = import ./default.nix;
   build = goDefault.build;
 in
-  with lib;
+  with lib; {
 
-  {
     options = {
       services.goServer = {
         enable = mkOption {
@@ -20,7 +19,7 @@ in
 
         user = mkOption {
           default = "wwwrun";
-          type = with types; uniq string;
+          type = with types; uniq str;
           description = ''
             Name of the user running the server.
           '';
