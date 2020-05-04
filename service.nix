@@ -21,7 +21,7 @@ in
           default = "wwwrun";
           type = with types; uniq str;
           description = ''
-            Name of the user running the server.
+            User running the server.
           '';
         };
 
@@ -32,10 +32,19 @@ in
             Port on which the server will be accessible.
           '';
         };
+
+        openFirewall = mkOption {
+          default = true;
+          type = with types; bool;
+          description = ''
+            Automatically open the specified ports in the firewall.
+          ''
       };
     };
 
     config = mkIf cfg.enable {
+      environment.systemPackages = [ build ];
+
       systemd.services.goSession = {
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
@@ -48,6 +57,6 @@ in
         };
       };
 
-      environment.systemPackages = [ build ];
+      networking.firewall.allowedTCPPorts = if cfg.openFirewall then cfg.ports else [];
     };
   }
