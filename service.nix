@@ -58,6 +58,6 @@ in
         };
       };
 
-      networking.firewall.allowedTCPPorts = if cfg.openFirewall then cfg.ports else [];
+      networking.firewall.allowedTCPPorts = if cfg.openFirewall then [ cfg.port ] else [];
     };
   }
