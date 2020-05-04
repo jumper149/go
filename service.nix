@@ -38,7 +38,7 @@ in
           type = with types; bool;
           description = ''
             Automatically open the specified ports in the firewall.
-          ''
+          '';
         };
       };
     };
