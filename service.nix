@@ -33,7 +33,7 @@ in
         };
 
         openFirewall = mkOption {
-          default = true;
+          default = false;
           type = with types; bool;
           description = ''
             Automatically open the specified ports in the firewall.

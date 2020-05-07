@@ -25,7 +25,7 @@ White
 
 ## Install
 
-Install the go server with NixOS configuration.
+Install go with NixOS configuration.
 Add the options to your configuration by importing `service.nix` and enable the service:
 ```nix
 { config, pkgs, ... }: {
@@ -45,7 +45,7 @@ Add the options to your configuration by importing `service.nix` and enable the 
     enable = true;
     #user = "wwwrun";
     #port = 8022;
-    #openFirewall = true;
+    openFirewall = true;
   };
   #...
 }
