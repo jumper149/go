@@ -7,7 +7,7 @@ let
   server = ghc865.callCabal2nix "go" ./. {};
   client = ghcjs86.callCabal2nix "go" ./. {};
   inherit (pkgs) closurecompiler;
-  build = pkgs.runCommand "go" { inherit server client; } ''
+  build = pkgs.runCommand "go" {} ''
                            mkdir -p $out/{bin,public}
                            cp ${server}/bin/* $out/bin
                            ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/public/all.js
