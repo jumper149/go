@@ -7,8 +7,6 @@ let
   server = ghc865.callCabal2nix "go" ./. {};
   client = ghcjs86.callCabal2nix "go" ./. {};
   inherit (pkgs) closurecompiler;
-in {
-  inherit server client;
   build = pkgs.runCommand "go" { inherit server client; } ''
                            mkdir -p $out/{bin,public}
                            cp ${server}/bin/* $out/bin
@@ -16,4 +14,7 @@ in {
                            cp ${client.src}/static/index.html $out/public/index.html
                            cp ${client.src}/static/stylesheet.css $out/public/stylesheet.css
                          '';
-  }
+  env = pkgs.mkShell {
+          inputsFrom = [ server.env client.env ];
+        };
+in build // { inherit env; }

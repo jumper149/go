@@ -41,10 +41,11 @@ Add the options to your configuration by importing `service.nix` and enable the 
                  #...
                ];
   #...
-  services.goServer = {
+  services.go = {
     enable = true;
     #user = "wwwrun";
     #port = 8022;
+    #openFirewall = true;
   };
   #...
 }
@@ -54,15 +55,11 @@ Add the options to your configuration by importing `service.nix` and enable the 
 
 Build with nix:
 ```
-nix-build -A build
+nix-build
 ```
 
-Build server with cabal in nix-shell:
+Build with cabal in nix-shell:
 ```
-nix-shell -A server.env --run "cabal build"
-```
-
-Build client with cabal in nix-shell:
-```
-nix-shell -A client.env --run "cabal build --ghcjs"
+nix-shell -A env --run "cabal build"         # build server
+nix-shell -A env --run "cabal build --ghcjs" # build client
 ```

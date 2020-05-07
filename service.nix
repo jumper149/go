@@ -1,14 +1,13 @@
 {config, pkgs, lib, ...}:
 
 let
-  cfg = config.services.goServer;
-  goDefault = import ./default.nix;
-  build = goDefault.build;
+  cfg = config.services.go;
+  go = import ./default.nix;
 in
   with lib; {
 
     options = {
-      services.goServer = {
+      services.go = {
         enable = mkOption {
           default = false;
           type = with types; bool;
@@ -44,9 +43,9 @@ in
     };
 
     config = mkIf cfg.enable {
-      environment.systemPackages = [ build ];
+      environment.systemPackages = [ go ];
 
-      systemd.services.goSession = {
+      systemd.services.go = {
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
         description = "go server";
@@ -54,7 +53,7 @@ in
           Type = "simple";
           User = "${cfg.user}";
           ExecStart = let portStr = toString cfg.port;
-                      in "${build}/bin/server --port ${portStr} ${build}/public";
+                      in "${go}/bin/server --port ${portStr} ${go}/public";
         };
       };
 
