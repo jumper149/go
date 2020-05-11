@@ -38,8 +38,8 @@ options = [ Option ['b'] ["board"]
 
 choose :: Board -> IO ()
 choose board = case board of
-                 Default -> void (game def :: IO (EndScreen (D.BoardSquare 5 2) 2))
-                 Loop    -> void (game def :: IO (EndScreen (L.BoardLoop 5 2)   2))
+                 Default -> void (game def :: IO (EndScreen (D.Board 5 2) 2))
+                 Loop    -> void (game def :: IO (EndScreen (L.Board 5 2)   2))
 
 main :: IO ()
 main = do args <- getArgs

@@ -1,6 +1,6 @@
 {-# LANGUAGE KindSignatures #-}
 
-module Go.Board.Default ( BoardSquare (..)
+module Go.Board.Default ( Board (..)
                         , Coord (..) -- TODO: read-only?
                         , mkCoord
                         ) where
@@ -49,7 +49,7 @@ mkCoord x y = if check x && check y
         s = fromEnum $ natVal (Proxy :: Proxy i)
 
 -- | Represents a square board. Contains a 'V.Vector' with all 'Stone's.
-newtype BoardSquare (i :: Nat) n = BSquare (V.Vector i (V.Vector i (Stone (PlayerN n))))
+newtype Board (i :: Nat) n = Board (V.Vector i (V.Vector i (Stone (PlayerN n))))
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: orphan instances
@@ -57,26 +57,26 @@ instance (KnownNat n, FromJSON a) => FromJSON (V.Vector n a) where
   parseJSON = fmap (fromJust . V.toSized) . parseJSON
 instance (KnownNat n, ToJSON a) => ToJSON (V.Vector n a) where
   toJSON = toJSON . V.fromSized
-instance (KnownNat i, KnownNat n) => FromJSON (BoardSquare i n) where
-instance (KnownNat i, KnownNat n) => ToJSON (BoardSquare i n) where
+instance (KnownNat i, KnownNat n) => FromJSON (Board i n) where
+instance (KnownNat i, KnownNat n) => ToJSON (Board i n) where
 
-ppFull :: forall i n. (KnownNat i, KnownNat n) => BoardSquare i n -> String
-ppFull (BSquare vec) = decNumbers ++ numbers ++ bStr
-  where bStr = unlines $ zipWith (:) alphabet $ (lines . ppRaw) (BSquare vec :: BoardSquare i n)
+ppFull :: forall i n. (KnownNat i, KnownNat n) => Board i n -> String
+ppFull (Board vec) = decNumbers ++ numbers ++ bStr
+  where bStr = unlines $ zipWith (:) alphabet $ (lines . ppRaw) (Board vec :: Board i n)
         numbers = " " ++ concatMap (show . (`mod` 10)) [ 1 .. s ] ++ "\n"
         decNumbers = if s >= 10 then decNumbersRaw else ""
         decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. s `div` 10 ] ++ "\n"
         alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. s ]
         s = fromEnum $ natVal (Proxy :: Proxy i)
 
-ppRaw :: forall i n. (KnownNat i, KnownNat n) => BoardSquare i n -> String
-ppRaw (BSquare grid) = concatMap ppRow grid
+ppRaw :: forall i n. (KnownNat i, KnownNat n) => Board i n -> String
+ppRaw (Board grid) = concatMap ppRow grid
   where ppRow = (++ "\n") . V.toList . V.map renderStone
 
-instance (KnownNat i, KnownNat n) => Board (BoardSquare i n) (Coord i) where
-  empty = BSquare . V.replicate . V.replicate $ Free
+instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (Coord i) where
+  empty = Board . V.replicate . V.replicate $ Free
 
-  coords (BSquare _) = [ Coord x y | x <- range , y <- range ]
+  coords (Board _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (s - 1) ]
           s = fromEnum $ natVal (Proxy :: Proxy i)
 
@@ -87,16 +87,16 @@ instance (KnownNat i, KnownNat n) => Board (BoardSquare i n) (Coord i) where
                                 , Coord x     (y-1)
                                 ]
 
-instance (KnownNat i, KnownNat n) => Game (BoardSquare i n) (Coord i) n where
-  getStone (BSquare grid) (Coord x y) = let row = V.unsafeIndex grid y -- TODO: dont use unsafe
+instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
+  getStone (Board grid) (Coord x y) = let row = V.unsafeIndex grid y -- TODO: dont use unsafe
                                         in V.unsafeIndex row x -- TODO
 
-  putStone (BSquare grid) (Coord x y) stone = BSquare newGrid
+  putStone (Board grid) (Coord x y) stone = Board newGrid
     where newGrid = V.update grid $ V.singleton (y , newRow)
           newRow = V.update row $ V.singleton (x , stone)
           row = V.unsafeIndex grid y -- TODO: unsafe
 
-instance (KnownNat i, KnownNat n) => TermGame (BoardSquare i n) (Coord i) n where
+instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
   renderBoard = ppFull
 
   readCoord board str = if length wrds == 2
@@ -118,4 +118,4 @@ instance (KnownNat i, KnownNat n) => TermGame (BoardSquare i n) (Coord i) n wher
             where nums = map fromEnum st
                   bools = map (\ i -> i >= lo && i <= hi) nums
 
-instance (KnownNat i, KnownNat n) => JSONGame (BoardSquare i n) (Coord i) n
+instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n

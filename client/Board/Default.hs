@@ -1,4 +1,4 @@
-module Board.Default ( D.BoardSquare
+module Board.Default ( D.Board
                      , D.Coord
                      , viewBoard
                      ) where
@@ -20,18 +20,18 @@ import qualified Go.Game.State as G
 import Operation
 import Player
 
-viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.BoardSquare i n -> Maybe (D.Coord i) -> Html.View (Operation (D.Coord i))
-viewBoard (D.BSquare grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
-                                                               , ("width","50%")
-                                                               ]
-                                    , viewBox_ . MStr.unwords . fmap ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
-                                    , onMouseOut $ UpdateAction Nothing
-                                    ] $ viewGrid s
-                                     <> viewCoordIndicator
-                                     <> case c of
-                                          Nothing -> []
-                                          Just coord -> [ hintStone coord ]
-                                     <> (uncurry viewStone <$> zip [ 0 .. ] (concatMap V.toList grid))
+viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.Board i n -> Maybe (D.Coord i) -> Html.View (Operation (D.Coord i))
+viewBoard (D.Board grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
+                                                             , ("width","50%")
+                                                             ]
+                                  , viewBox_ . MStr.unwords . fmap ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
+                                  , onMouseOut $ UpdateAction Nothing
+                                  ] $ viewGrid s
+                                   <> viewCoordIndicator
+                                   <> case c of
+                                        Nothing -> []
+                                        Just coord -> [ hintStone coord ]
+                                   <> (uncurry viewStone <$> zip [ 0 .. ] (concatMap V.toList grid))
   where lenDim1 = toEnum s + margin - minDim1 :: Double
         minDim1 = 1 - margin
         margin = 1.5 -- for coordinate markers with 'viewCoordIndicator'

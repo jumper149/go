@@ -4,7 +4,7 @@ module Go.Game.Game ( Game ( getStone
                            , putStone
                            )
                     , updateBoard
-                    , Board (..)
+                    , GameBoard (..)
                     , Stone (..)
                     ) where
 
@@ -39,7 +39,7 @@ prepChains player = swapJoin . split . removeFrees
         split = S.spanAntitone (\ (Chain stone _) -> stone <= Stone player)
         swapJoin (a,b) = S.toAscList b <> S.toAscList a
 
-class (Eq b, Eq c, Ord c) => Board b c | b -> c where
+class (Eq b, Eq c, Ord c) => GameBoard b c | b -> c where
 
   -- | Return an empty board.
   empty :: b
@@ -50,7 +50,7 @@ class (Eq b, Eq c, Ord c) => Board b c | b -> c where
   -- | Return a list of all adjacent coordinates.
   libertyCoords :: b -> c -> [c]
 
-class (Board b c, KnownNat n) => Game b c n | b -> c n where
+class (GameBoard b c, KnownNat n) => Game b c n | b -> c n where
 
   -- | Returns the stone.
   getStone :: b -> c -> Stone (PlayerN n)

@@ -11,7 +11,7 @@ runTests :: IO ()
 runTests = hspec $ do
   describe "Board.Default" $ do
 
-    let emptyBoard = empty :: BoardSquare 13 2
+    let emptyBoard = empty :: Board 13 2
     it "creates an empty board" $
       property $ prop_empty emptyBoard
 
@@ -26,19 +26,19 @@ newtype ArbCoord = ArbCoord (Coord 13)
   deriving (Eq, Ord, Read, Show)
 
 instance Arbitrary ArbCoord where
-  arbitrary = elements $ fmap ArbCoord $ coords $ (empty :: BoardSquare 13 2)
+  arbitrary = elements $ fmap ArbCoord $ coords $ (empty :: Board 13 2)
   shrink = shrinkNothing
 
 
-prop_empty :: BoardSquare 13 2 -> Bool
+prop_empty :: Board 13 2 -> Bool
 prop_empty board = all (== Free) $ getStone board <$> coords board
 
-prop_single :: BoardSquare 13 2 -> ArbCoord -> ArbCoord -> Bool
+prop_single :: Board 13 2 -> ArbCoord -> ArbCoord -> Bool
 prop_single board (ArbCoord coord1) (ArbCoord coord2) = coordsSame == stonesSame
   where stonesSame = getStone (putStone board coord1 (Stone black)) coord2 == Stone black
         coordsSame = coord1 == coord2
 
-prop_remove :: BoardSquare 13 2 -> ArbCoord -> Bool
+prop_remove :: Board 13 2 -> ArbCoord -> Bool
 prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
   where single = putStone board coord $ Stone white
         surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords board coord
