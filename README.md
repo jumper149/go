@@ -60,6 +60,6 @@ nix-build
 
 Build with cabal in nix-shell:
 ```
-nix-shell -A env --run "cabal build"         # build server
-nix-shell -A env --run "cabal build --ghcjs" # build client
+nix-shell --run "cabal build"         # build server
+nix-shell --run "cabal build --ghcjs" # build client
 ```
