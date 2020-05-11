@@ -3,6 +3,7 @@ module Board.Default ( D.Board
                      , viewBoard
                      ) where
 
+import Data.Bifunctor
 import qualified Data.Map as M
 import Data.Proxy
 import qualified Data.Vector.Sized as V
@@ -31,7 +32,7 @@ viewBoard (D.Board grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-colo
                                    <> case c of
                                         Nothing -> []
                                         Just coord -> [ hintStone coord ]
-                                   <> (uncurry viewStone <$> zip [ 0 .. ] (concatMap V.toList grid))
+                                   <> (uncurry viewStone <$> zip [ minBound .. maxBound ] (concatMap V.toList grid))
   where lenDim1 = toEnum s + margin - minDim1 :: Double
         minDim1 = 1 - margin
         margin = 1.5 -- for coordinate markers with 'viewCoordIndicator'
@@ -50,16 +51,16 @@ viewCoordIndicator :: [Html.View action]
 viewCoordIndicator = []
 
 viewStone :: forall i n. (KnownNat i, KnownNat n)
-          => Int                   -- ^ index of stone in board
+          => D.Coord i             -- ^ index of stone in board
           -> G.Stone (G.PlayerN n)
           -> Html.View (Operation (D.Coord i))
-viewStone j stone = case stone of
+viewStone c stone = case stone of
                       G.Free -> rect_ [ x_ . ms $ x - 0.5
                                       , y_ . ms $ y - 0.5
                                       , width_ "1"
                                       , height_ "1"
                                       , fillOpacity_ "0"
-                                      , onMouseOver $ UpdateAction $ G.Place <$> D.mkCoord (fromEnum x) (fromEnum y)
+                                      , onMouseOver $ UpdateAction $ G.Place <$> Just c
                                       , onClick SubmitAction
                                       ] []
                       G.Stone p -> circle_ [ fill_ (ms $ colorize p)
@@ -67,14 +68,14 @@ viewStone j stone = case stone of
                                            , cy_ $ ms y
                                            , r_ "0.5"
                                            ] []
-  where y = toEnum $ D.getY c + 1 :: Double
-        x = toEnum $ D.getX c + 1 :: Double
-        c = toEnum j :: D.Coord i
+  where (x,y) = let cast = fromIntegral . (+1) :: Integer -> Double
+                in bimap cast cast $ D.getCoord c
 
-hintStone :: (D.Coord i) -> Html.View (Operation (D.Coord i))
-hintStone (D.Coord x y) = circle_ [ fill_ "yellow"
-                                  , fillOpacity_ "0.5"
-                                  , cx_ $ ms $ x + 1
-                                  , cy_ $ ms $ y + 1
-                                  , r_ "0.5"
-                                  ] []
+hintStone :: KnownNat i => D.Coord i -> Html.View action
+hintStone c = circle_ [ fill_ "yellow"
+                      , fillOpacity_ "0.5"
+                      , cx_ $ ms $ fromEnum x + 1
+                      , cy_ $ ms $ fromEnum y + 1
+                      , r_ "0.5"
+                      ] []
+  where (x,y) = D.getCoord c

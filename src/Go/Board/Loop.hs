@@ -1,9 +1,11 @@
 module Go.Board.Loop ( Board (..)
                      , D.Coord (..)
-                     , D.mkCoord
+                     , D.packCoord
+                     , D.getCoord
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Maybe (catMaybes)
 import Data.Proxy
 import GHC.Generics
 import GHC.TypeLits
@@ -21,14 +23,15 @@ instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (D.Coord i) where
 
   coords (Board board) = coords board
 
-  libertyCoords (Board (D.Board vec)) (D.Coord x y) = filter (flip elem $ coords (Board (D.Board vec))) $ map wrap unsafeLibertyCoords
-    where unsafeLibertyCoords = [ D.Coord (x-1) y
-                                , D.Coord x     (y+1)
-                                , D.Coord (x+1) y
-                                , D.Coord x     (y-1)
+  libertyCoords _ c = catMaybes $ map (D.packCoord . wrapX) unsafeLibertyCoords
+    where unsafeLibertyCoords = [ (cx-1 , cy  )
+                                , (cx   , cy+1)
+                                , (cx+1 , cy  )
+                                , (cx   , cy-1)
                                 ]
-          wrap c = D.Coord (D.getX c `mod` s) (D.getY c)
-          s = fromEnum $ natVal (Proxy :: Proxy i)
+          wrapX (x,y) = (x `mod` s , y)
+          s = natVal (Proxy :: Proxy i)
+          (cx,cy) = D.getCoord c
 
 instance (KnownNat i, KnownNat n) => Game (Board i n) (D.Coord i) n where
   getStone (Board board) = getStone board

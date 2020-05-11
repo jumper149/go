@@ -2,11 +2,15 @@
 
 module Go.Board.Default ( Board (..)
                         , Coord (..) -- TODO: read-only?
-                        , mkCoord
+                        , packCoord
+                        , getCoord
                         ) where
 
+import Control.Applicative (liftA2)
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import Data.Maybe (fromJust)
+import Data.Bifunctor
+import Data.Finite
+import Data.Maybe (catMaybes, fromJust)
 import Data.Proxy
 import qualified Data.Vector.Sized as V
 import GHC.Generics
@@ -19,34 +23,30 @@ import Go.Run.Term
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, i).
-data Coord (i :: Nat) = Coord { getX :: Int
-                              , getY :: Int
+data Coord (i :: Nat) = Coord { getX :: Finite i -- TODO: turn X and Y around for Ord to be nicer
+                              , getY :: Finite i
                               }
-  deriving (Eq, Generic, Ord, Read, Show)
-
-instance KnownNat i => Bounded (Coord i) where
-  minBound = Coord lo lo
-    where lo = 0
-  maxBound = Coord hi hi
-    where hi = fromEnum (natVal (Proxy :: Proxy i)) - 1
+  deriving (Bounded, Eq, Generic, Ord, Read, Show)
 
 instance KnownNat i => Enum (Coord i) where
-  toEnum j = Coord x y
+  toEnum j = Coord (finite $ toEnum x) (finite $ toEnum y)
     where (y,x) = divMod j s
           s = fromEnum $ natVal (Proxy :: Proxy i)
-  fromEnum (Coord x y) = y * s + x
-    where s = fromEnum $ natVal (Proxy :: Proxy i)
+  fromEnum (Coord x y) = fromEnum $ getFinite y * s + getFinite x
+    where s = natVal (Proxy :: Proxy i)
 
+instance KnownNat n => FromJSON (Finite n) where
+  parseJSON = fmap finite . parseJSON
+instance KnownNat n => ToJSON (Finite n) where
+  toJSON = toJSON . getFinite
 instance KnownNat i => FromJSON (Coord i)
 instance KnownNat i => ToJSON (Coord i)
 
--- | Smart constructor where coordinates are required to be in the interval [1..i).
-mkCoord :: forall i. KnownNat i => Int -> Int -> Maybe (Coord i)
-mkCoord x y = if check x && check y
-                   then Just $ Coord (x-1) (y-1)
-                   else Nothing
-  where check c = c <= s && c >= 1
-        s = fromEnum $ natVal (Proxy :: Proxy i)
+packCoord :: KnownNat i => (Integer,Integer) -> Maybe (Coord i)
+packCoord = fmap (uncurry Coord) . uncurry (liftA2 (,)) . bimap packFinite packFinite
+
+getCoord :: KnownNat i => Coord i -> (Integer,Integer)
+getCoord (Coord x y) = (getFinite x , getFinite y)
 
 -- | Represents a square board. Contains a 'V.Vector' with all 'Stone's.
 newtype Board (i :: Nat) n = Board (V.Vector i (V.Vector i (Stone (PlayerN n))))
@@ -76,25 +76,24 @@ ppRaw (Board grid) = concatMap ppRow grid
 instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (Coord i) where
   empty = Board . V.replicate . V.replicate $ Free
 
-  coords (Board _) = [ Coord x y | x <- range , y <- range ]
-    where range = [ 0 .. (s - 1) ]
-          s = fromEnum $ natVal (Proxy :: Proxy i)
+  coords (Board _) = [ minBound .. maxBound ]
 
-  libertyCoords board (Coord x y) = filter (flip elem $ coords board) unsafeLibertyCoords
-    where unsafeLibertyCoords = [ Coord (x-1) y
-                                , Coord x     (y+1)
-                                , Coord (x+1) y
-                                , Coord x     (y-1)
+  libertyCoords _ c = catMaybes $ map packCoord unsafeLibertyCoords
+    where unsafeLibertyCoords = [ (cx-1 , cy  )
+                                , (cx   , cy+1)
+                                , (cx+1 , cy  )
+                                , (cx   , cy-1)
                                 ]
+          (cx,cy) = getCoord c
 
 instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
-  getStone (Board grid) (Coord x y) = let row = V.unsafeIndex grid y -- TODO: dont use unsafe
-                                        in V.unsafeIndex row x -- TODO
+  getStone (Board grid) (Coord x y) = let row = V.index grid y
+                                      in V.index row x
 
   putStone (Board grid) (Coord x y) stone = Board newGrid
-    where newGrid = V.update grid $ V.singleton (y , newRow)
-          newRow = V.update row $ V.singleton (x , stone)
-          row = V.unsafeIndex grid y -- TODO: unsafe
+    where newGrid = grid V.// [(y , newRow)]
+          newRow = row V.// [(x , stone)]
+          row = V.index grid y
 
 instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
   renderBoard = ppFull
@@ -109,10 +108,10 @@ instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
                                 else Nothing
                         else Nothing
     where wrds = words str
-          x = head wrds :: String
-          y = head $ tail wrds :: String
-          xInt = read x - 1 :: Int
-          yInt = fromEnum (head y) - 97
+          x = head wrds
+          y = head $ tail wrds
+          xInt = toEnum $ read x - 1
+          yInt = toEnum $ fromEnum (head y) - fromEnum 'a'
           charsInRange :: Int -> Int -> String -> Bool
           charsInRange lo hi st = and bools
             where nums = map fromEnum st

@@ -6,18 +6,18 @@ module Go.Game.Player ( PlayerN
                       ) where
 
 import Data.Aeson (FromJSON (..), ToJSON (..))
-import qualified Data.Finite as F
+import Data.Finite
 import GHC.Generics
 import GHC.TypeLits
 
 -- | A parametrized data type holding n players.
-newtype PlayerN (n :: Nat) = PlayerN { playerNo :: F.Finite n }
+newtype PlayerN (n :: Nat) = PlayerN { playerNo :: Finite n }
   deriving (Bounded, Enum, Eq, Ord, Generic, Read, Show)
 
 instance KnownNat n => FromJSON (PlayerN n) where
-  parseJSON = fmap (PlayerN . F.finite) . parseJSON
+  parseJSON = fmap (PlayerN . finite) . parseJSON
 instance KnownNat n => ToJSON (PlayerN n) where
-  toJSON = toJSON . F.getFinite . playerNo
+  toJSON = toJSON . getFinite . playerNo
 
 -- | Count the number of players. Helper function for 'Go.Game.State.checkPassing'.
 countPlayers :: forall n. KnownNat n => PlayerN n -> Int                            -- TODO: don't give player as argument
