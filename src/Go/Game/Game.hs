@@ -13,7 +13,6 @@ import qualified Data.Set as S
 import GHC.Generics
 import GHC.TypeLits
 
-import Go.Game.Config
 import Go.Game.Player
 
 -- | The states of a spot for a stone are represented by this data type.
@@ -43,7 +42,7 @@ prepChains player = swapJoin . split . removeFrees
 class (Eq b, Eq c, Ord c) => Board b c | b -> c where
 
   -- | Return an empty board.
-  empty :: Config -> Maybe b
+  empty :: b
 
   -- | Return a list of all coords covering the board.
   coords :: b -> [c]

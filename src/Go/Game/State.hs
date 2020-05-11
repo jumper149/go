@@ -35,11 +35,10 @@ instance (Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
 
 initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
           => m (GameState b c n)
-initState = do emptyBoard <- maybe (throwError MalconfigSize) return =<< asks empty
-               return $ GState { currentBoard = emptyBoard
+initState = do return $ GState { currentBoard = empty
                                , currentPlayer = minBound
                                , lastAction = Pass
-                               , previousBoards = [ emptyBoard ]
+                               , previousBoards = [ empty ]
                                , consecutivePasses = 0
                                , countTurns = 0
                                }
