@@ -28,6 +28,7 @@ library
                        , aeson
                        , containers
                        , data-default-class
+                       , finite-typelits
                        , mtl
                        , vector-sized
     default-extensions:  DataKinds

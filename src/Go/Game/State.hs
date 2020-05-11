@@ -13,6 +13,7 @@ import Control.Monad.Reader
 import Control.Monad.State
 import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics (Generic)
+import GHC.TypeLits
 
 import Go.Game.Config
 import Go.Game.Game
@@ -30,8 +31,8 @@ data GameState b c n = GState { currentBoard :: b
                               }
   deriving (Eq, Generic, Ord, Read, Show)
 
-instance (Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
-instance (Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
+instance (KnownNat n, Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
+instance (KnownNat n, Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
 
 initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
           => m (GameState b c n)

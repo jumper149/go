@@ -5,7 +5,7 @@ module Go.Board.Default ( Board (..)
                         , mkCoord
                         ) where
 
-import Data.Aeson
+import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.Maybe (fromJust)
 import Data.Proxy
 import qualified Data.Vector.Sized as V
