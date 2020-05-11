@@ -18,11 +18,11 @@ instance FromJSON (PlayerN n)
 instance ToJSON (PlayerN n)
 
 instance KnownNat n => Bounded (PlayerN n) where
-    minBound = PlayerN 1
-    maxBound = let i = natVal (Proxy :: Proxy n)
-                in if i >= playerNo (minBound :: PlayerN n)
-                      then PlayerN i
-                      else undefined
+  minBound = PlayerN 1
+  maxBound = let i = natVal (Proxy :: Proxy n)
+              in if i >= playerNo (minBound :: PlayerN n)
+                    then PlayerN i
+                    else undefined
 
 instance KnownNat n => Enum (PlayerN n) where
   fromEnum (PlayerN i) = fromEnum i
