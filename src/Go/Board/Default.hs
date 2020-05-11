@@ -1,4 +1,4 @@
-{-# LANGUAGE KindSignatures, StandaloneDeriving #-}
+{-# LANGUAGE KindSignatures #-}
 
 module Go.Board.Default ( BoardSquare (..)
                         , Coord (..) -- TODO: read-only?
