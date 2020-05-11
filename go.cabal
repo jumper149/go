@@ -29,7 +29,7 @@ library
                        , containers
                        , data-default-class
                        , mtl
-                       , vector
+                       , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric
                        , FlexibleInstances
@@ -78,7 +78,7 @@ executable client
                        , miso
                        , containers
                        , data-default-class
-                       , vector
+                       , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric
                        , FlexibleInstances

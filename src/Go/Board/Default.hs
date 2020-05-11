@@ -1,13 +1,14 @@
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE KindSignatures, StandaloneDeriving #-}
 
 module Go.Board.Default ( BoardSquare (..)
-                        , Coord (..)
+                        , Coord (..) -- TODO: read-only?
                         , mkCoord
                         ) where
 
-import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson
+import Data.Maybe (fromJust)
 import Data.Proxy
-import qualified Data.Vector as V -- TODO: change for vector-sized
+import qualified Data.Vector.Sized as V
 import GHC.Generics
 import GHC.TypeLits
 
@@ -17,16 +18,29 @@ import Go.Run.JSON
 import Go.Run.Term
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
--- Coordinates are integers in the interval [0, boardsize).
+-- Coordinates are integers in the interval [0, i).
 data Coord (i :: Nat) = Coord { getX :: Int
                               , getY :: Int
                               }
-  deriving (Eq, Generic, Ord, Read, Show) -- TODO: nice Bounded instance, maybe Enum too?
+  deriving (Eq, Generic, Ord, Read, Show)
+
+instance KnownNat i => Bounded (Coord i) where
+  minBound = Coord lo lo
+    where lo = 0
+  maxBound = Coord hi hi
+    where hi = fromEnum (natVal (Proxy :: Proxy i)) - 1
+
+instance KnownNat i => Enum (Coord i) where
+  toEnum j = Coord x y
+    where (y,x) = divMod j s
+          s = fromEnum $ natVal (Proxy :: Proxy i)
+  fromEnum (Coord x y) = y * s + x
+    where s = fromEnum $ natVal (Proxy :: Proxy i)
 
 instance KnownNat i => FromJSON (Coord i)
 instance KnownNat i => ToJSON (Coord i)
 
--- | Smart constructor where coordinates are required to be in the interval [1..boardsize].
+-- | Smart constructor where coordinates are required to be in the interval [1..i).
 mkCoord :: forall i. KnownNat i => Int -> Int -> Maybe (Coord i)
 mkCoord x y = if check x && check y
                    then Just $ Coord (x-1) (y-1)
@@ -34,17 +48,17 @@ mkCoord x y = if check x && check y
   where check c = c <= s && c >= 1
         s = fromEnum $ natVal (Proxy :: Proxy i)
 
--- | Transform coordinate to index to access the array of points on the board.
-coordToVecInd :: forall i. KnownNat i => Coord i -> Int
-coordToVecInd c = getX c + s * getY c
-  where s = fromEnum $ natVal (Proxy :: Proxy i)
-
--- | Represents a square board. Contains the 'Coord' and a 'V.Vector' with all coordinates.
-data BoardSquare (i :: Nat) n = BSquare (V.Vector (Stone (PlayerN n)))
+-- | Represents a square board. Contains a 'V.Vector' with all 'Stone's.
+newtype BoardSquare (i :: Nat) n = BSquare (V.Vector i (V.Vector i (Stone (PlayerN n))))
   deriving (Eq, Generic, Ord, Read, Show)
 
-instance (KnownNat i, KnownNat n) => FromJSON (BoardSquare i n)
-instance (KnownNat i, KnownNat n) => ToJSON (BoardSquare i n)
+-- TODO: orphan instances
+instance (KnownNat n, FromJSON a) => FromJSON (V.Vector n a) where
+  parseJSON = fmap (fromJust . V.toSized) . parseJSON
+instance (KnownNat n, ToJSON a) => ToJSON (V.Vector n a) where
+  toJSON = toJSON . V.fromSized
+instance (KnownNat i, KnownNat n) => FromJSON (BoardSquare i n) where
+instance (KnownNat i, KnownNat n) => ToJSON (BoardSquare i n) where
 
 ppFull :: forall i n. (KnownNat i, KnownNat n) => BoardSquare i n -> String
 ppFull (BSquare vec) = decNumbers ++ numbers ++ bStr
@@ -56,15 +70,11 @@ ppFull (BSquare vec) = decNumbers ++ numbers ++ bStr
         s = fromEnum $ natVal (Proxy :: Proxy i)
 
 ppRaw :: forall i n. (KnownNat i, KnownNat n) => BoardSquare i n -> String
-ppRaw (BSquare vec) = concatMap ppRow rows
-  where ppRow = (++ "\n") . V.toList . V.map (renderStone :: Stone (PlayerN n) -> Char)
-        rows = map slice [ i * s | i <- [0..(s-1)] ] :: [V.Vector (Stone (PlayerN n))]
-        slice n = V.slice n s vec
-        s = fromEnum $ natVal (Proxy :: Proxy i)
+ppRaw (BSquare grid) = concatMap ppRow grid
+  where ppRow = (++ "\n") . V.toList . V.map renderStone
 
 instance (KnownNat i, KnownNat n) => Board (BoardSquare i n) (Coord i) where
-  empty = BSquare $ V.replicate (s * s) Free
-    where s = fromEnum $ natVal (Proxy :: Proxy i)
+  empty = BSquare . V.replicate . V.replicate $ Free
 
   coords (BSquare _) = [ Coord x y | x <- range , y <- range ]
     where range = [ 0 .. (s - 1) ]
@@ -78,10 +88,13 @@ instance (KnownNat i, KnownNat n) => Board (BoardSquare i n) (Coord i) where
                                 ]
 
 instance (KnownNat i, KnownNat n) => Game (BoardSquare i n) (Coord i) n where
-  getStone (BSquare vec) c = vec V.! coordToVecInd c
+  getStone (BSquare grid) (Coord x y) = let row = V.unsafeIndex grid y -- TODO: dont use unsafe
+                                        in V.unsafeIndex row x -- TODO
 
-  putStone (BSquare vec) coord stone = BSquare newVec
-    where newVec = V.update vec $ V.singleton (coordToVecInd coord , stone)
+  putStone (BSquare grid) (Coord x y) stone = BSquare newGrid
+    where newGrid = V.update grid $ V.singleton (y , newRow)
+          newRow = V.update row $ V.singleton (x , stone)
+          row = V.unsafeIndex grid y -- TODO: unsafe
 
 instance (KnownNat i, KnownNat n) => TermGame (BoardSquare i n) (Coord i) n where
   renderBoard = ppFull

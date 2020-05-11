@@ -5,7 +5,7 @@ module Board.Default ( D.BoardSquare
 
 import qualified Data.Map as M
 import Data.Proxy
-import qualified Data.Vector as V
+import qualified Data.Vector.Sized as V
 import GHC.TypeLits
 import qualified Miso.Html as Html
 import qualified Miso.String as MStr
@@ -21,17 +21,17 @@ import Operation
 import Player
 
 viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.BoardSquare i n -> Maybe (D.Coord i) -> Html.View (Operation (D.Coord i))
-viewBoard (D.BSquare v) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
-                                                              , ("width","50%")
-                                                              ]
-                                   , viewBox_ . MStr.unwords . fmap ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
-                                   , onMouseOut $ UpdateAction Nothing
-                                   ] $ viewGrid s
-                                    <> viewCoordIndicator
-                                    <> case c of
-                                         Nothing -> []
-                                         Just coord -> [ hintStone coord ]
-                                    <> (Prelude.concat . V.toList $ V.imap (viewStone s) v)
+viewBoard (D.BSquare grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
+                                                               , ("width","50%")
+                                                               ]
+                                    , viewBox_ . MStr.unwords . fmap ms $ [ minDim1 , minDim1 , lenDim1 , lenDim1 ]
+                                    , onMouseOut $ UpdateAction Nothing
+                                    ] $ viewGrid s
+                                     <> viewCoordIndicator
+                                     <> case c of
+                                          Nothing -> []
+                                          Just coord -> [ hintStone coord ]
+                                     <> (uncurry viewStone <$> zip [ 0 .. ] (concatMap V.toList grid))
   where lenDim1 = toEnum s + margin - minDim1 :: Double
         minDim1 = 1 - margin
         margin = 1.5 -- for coordinate markers with 'viewCoordIndicator'
@@ -49,29 +49,27 @@ viewGrid n = case coordsDim1 of
 viewCoordIndicator :: [Html.View action]
 viewCoordIndicator = []
 
-viewStone :: (KnownNat i, KnownNat n)
-          => Int                   -- ^ boardsize
-          -> Int                   -- ^ index of stone in boardvector
+viewStone :: forall i n. (KnownNat i, KnownNat n)
+          => Int                   -- ^ index of stone in board
           -> G.Stone (G.PlayerN n)
-          -> [Html.View (Operation (D.Coord i))]
-viewStone s i stone = case stone of
-               G.Free -> [ rect_ [ x_ . ms $ x - 0.5
-                                 , y_ . ms $ y - 0.5
-                                 , width_ "1"
-                                 , height_ "1"
-                                 , fillOpacity_ "0"
-                                 , onMouseOver $ UpdateAction $ G.Place <$> D.mkCoord (fromEnum x) (fromEnum y)
-                                 , onClick SubmitAction
-                                 ] []
-                         ]
-               G.Stone p -> [ circle_ [ fill_ (ms $ colorize p)
-                                      , cx_ $ ms x
-                                      , cy_ $ ms y
-                                      , r_ "0.5"
+          -> Html.View (Operation (D.Coord i))
+viewStone j stone = case stone of
+                      G.Free -> rect_ [ x_ . ms $ x - 0.5
+                                      , y_ . ms $ y - 0.5
+                                      , width_ "1"
+                                      , height_ "1"
+                                      , fillOpacity_ "0"
+                                      , onMouseOver $ UpdateAction $ G.Place <$> D.mkCoord (fromEnum x) (fromEnum y)
+                                      , onClick SubmitAction
                                       ] []
-                            ]
-  where y = toEnum $ (i `div` s) + 1 :: Double -- TODO: nicer?
-        x = toEnum $ (i `mod` s) + 1 :: Double
+                      G.Stone p -> circle_ [ fill_ (ms $ colorize p)
+                                           , cx_ $ ms x
+                                           , cy_ $ ms y
+                                           , r_ "0.5"
+                                           ] []
+  where y = toEnum $ D.getY c + 1 :: Double
+        x = toEnum $ D.getX c + 1 :: Double
+        c = toEnum j :: D.Coord i
 
 hintStone :: (D.Coord i) -> Html.View (Operation (D.Coord i))
 hintStone (D.Coord x y) = circle_ [ fill_ "yellow"
