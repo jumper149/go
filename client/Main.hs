@@ -13,7 +13,7 @@ main :: IO ()
 main = startApp App {..}
   where
     initialAction = NoOp
-    model  = def :: Model (D.Board 5 2) (D.Coord 5) 2
+    model  = def :: Model (D.Board 19 2) (D.Coord 19) 2
     update = updateModel
     view   = viewModel
     events = defaultEvents
