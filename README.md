@@ -43,7 +43,6 @@ Add the options to your configuration by importing `service.nix` and enable the 
   #...
   services.go = {
     enable = true;
-    #user = "wwwrun";
     #port = 8022;
     openFirewall = true;
   };

@@ -12,15 +12,7 @@ in
           default = false;
           type = with types; bool;
           description = ''
-            Start a go server.
-          '';
-        };
-
-        user = mkOption {
-          default = "wwwrun";
-          type = with types; uniq str;
-          description = ''
-            User running the server.
+            A go server.
           '';
         };
 
@@ -43,17 +35,13 @@ in
     };
 
     config = mkIf cfg.enable {
-      environment.systemPackages = [ go ];
-
       systemd.services.go = {
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
-        description = "go server";
+        description = "A go server";
         serviceConfig = {
-          Type = "simple";
-          User = "${cfg.user}";
-          ExecStart = let portStr = toString cfg.port;
-                      in "${go}/bin/server --port ${portStr} ${go}/public";
+          DynamicUser = true;
+          ExecStart = "${go}/bin/server --port ${toString cfg.port} ${go}/public";
         };
       };
 
