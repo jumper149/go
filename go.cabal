@@ -46,11 +46,16 @@ executable server
     buildable: False
   else
     hs-source-dirs:      server
+    other-modules:       Html
+                         Server
     build-depends:       base
                        , go
                        , aeson
                        , data-default-class
+                       , directory
+                       , lucid
                        , mtl
+                       , servant-lucid
                        , servant-server
                        , warp
     default-extensions:  DataKinds

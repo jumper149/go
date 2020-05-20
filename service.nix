@@ -41,7 +41,7 @@ in
         description = "A go server";
         serviceConfig = {
           DynamicUser = true;
-          ExecStart = "${go}/bin/server --port ${toString cfg.port} ${go}/public";
+          ExecStart = "${go}/bin/server --directory ${go}/public --port ${toString cfg.port}";
         };
       };
 
