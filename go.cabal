@@ -51,12 +51,15 @@ executable server
     build-depends:       base
                        , go
                        , aeson
+                       , binary
                        , data-default-class
                        , directory
                        , lucid
                        , mtl
                        , servant-lucid
+                       , servant-rawm
                        , servant-server
+                       , wai-extra
                        , warp
     default-extensions:  DataKinds
                        , DeriveGeneric
