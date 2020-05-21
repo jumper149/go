@@ -9,7 +9,7 @@ import qualified Go.Game.State as G
 
 import Operation
 
-viewPassButton :: Maybe (G.Action c) -> Html.View (Operation c)
+viewPassButton :: Maybe (G.Action c) -> Html.View (Operation b c n)
 viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                      , ("width","50%")
                                                      ]

@@ -81,6 +81,7 @@ executable client
                          Model
                          Operation
                          Player
+                         SSE
                          Svg
     build-depends:       base
                        , go

@@ -28,7 +28,7 @@ instance G.Game b c n => Default (Model b c n) where
               , gameAction = Nothing
               }
 
-updateModel :: G.Game b c n => Operation c -> Model b c n -> Effect (Operation c) (Model b c n)
+updateModel :: G.Game b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
 updateModel action model =
   case action of
     NoOp -> noEff model
@@ -39,8 +39,11 @@ updateModel action model =
                       Just a -> noEff $ model { gameState = G.doTurn def a (gameState model)
                                               , gameAction = Nothing
                                               }
+    SetState gs -> noEff $ model { gameState = gs
+                                 , gameAction = Nothing
+                                 }
 
-viewModel :: MisoGame b c n => Model b c n -> View (Operation c)
+viewModel :: MisoGame b c n => Model b c n -> View (Operation b c n)
 viewModel model =
   div_ [
        ] [ viewBoard (G.currentBoard $ gameState model) coord

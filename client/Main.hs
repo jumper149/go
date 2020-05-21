@@ -8,6 +8,7 @@ import Miso
 import qualified Board.Default as D
 import Operation
 import Model
+import SSE
 
 main :: IO ()
 main = startApp App {..}
@@ -17,5 +18,5 @@ main = startApp App {..}
     update = updateModel
     view   = viewModel
     events = defaultEvents
-    subs   = []
+    subs   = [ sseSub "/sse" handleSSE ]
     mountPoint = Nothing

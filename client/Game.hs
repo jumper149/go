@@ -10,7 +10,7 @@ import qualified Board.Default as D
 import Operation
 
 class G.Game b c n => MisoGame b c n where
-  viewBoard :: b -> Maybe c -> View (Operation c)
+  viewBoard :: b -> Maybe c -> View (Operation b c n)
 
 instance (KnownNat i, KnownNat n) => MisoGame (D.Board i n) (D.Coord i) n where
   viewBoard = D.viewBoard
