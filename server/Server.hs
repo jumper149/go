@@ -64,6 +64,7 @@ handler path config = gameH :<|> renderH :<|> playH :<|> sseH :<|> publicH
               -> m ()
         playH action = do gs <- asks mVar
                           liftIO $ modifyMVar_ gs f
+                          updateChan
           where f = return . doTurn (rules config) action
 
         sseH :: MonadReader (ServerState b c n) m => m Application
