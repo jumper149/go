@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, TypeOperators #-}
 
 module Server where
 
@@ -37,15 +37,18 @@ handler path config = gameH :<|> renderH :<|> playH :<|> publicH
   where gameH :: Monad m => m GameHtml
         gameH = return GameHtml
 
-        renderH :: AppM b c n (GameState b c n)
+        renderH :: (MonadIO m, MonadReader (MVar (GameState b c n)) m)
+                => m (GameState b c n)
         renderH = liftIO . readMVar =<< ask
 
-        playH :: Action c -> AppM b c n ()
+        playH :: (MonadIO m, MonadReader (MVar (GameState b c n)) m)
+              => Action c
+              -> m ()
         playH action = do gs <- ask
                           liftIO $ modifyMVar_ gs f
           where f = return . doTurn (rules config) action
 
-        publicH :: ServerT Raw h
+        publicH :: ServerT Raw m
         publicH = serveDirectoryWebApp path
 
 server :: forall b c n. JSONGame b c n => Port -> FilePath -> IO (EndScreen b n)
