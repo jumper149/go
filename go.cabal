@@ -54,13 +54,18 @@ executable server
                        , binary
                        , data-default-class
                        , directory
+                       , http-types
                        , lucid
                        , mtl
                        , servant-lucid
                        , servant-rawm
                        , servant-server
+                       , text
+                       , wai
                        , wai-extra
+                       , wai-websockets
                        , warp
+                       , websockets
     default-extensions:  DataKinds
                        , DeriveGeneric
                        , FlexibleInstances
