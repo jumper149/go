@@ -8,7 +8,6 @@ import Miso
 import qualified Board.Default as D
 import Operation
 import Model
-import SSE
 
 main :: IO ()
 main = startApp App {..}
@@ -18,5 +17,7 @@ main = startApp App {..}
     update = updateModel
     view   = viewModel
     events = defaultEvents
-    subs   = [ sseSub "/sse" handleSSE ]
+    subs   = [ sseSub "/sse" handleSSE
+             --, websocketSub (URL "/wss") (Protocols []) (handleWS :: WebSocket String -> Operation (D.Board 19 2) (D.Coord 19) 2)
+             ]
     mountPoint = Nothing

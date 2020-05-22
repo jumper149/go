@@ -46,4 +46,4 @@ main = do args <- getArgs
           let OptArgs { directory = directory
                       , port = port
                       } = opts
-          void (server port directory :: IO (G.EndScreen (D.Board 13 2) 2))
+          void (server port directory :: IO (G.EndScreen (D.Board 19 2) 2))
