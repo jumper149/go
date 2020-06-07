@@ -34,17 +34,6 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-type API b c (n :: Nat) =             Get '[HTML] GameHtml
-                     :<|> "wss"    :> RawM
-                     :<|> "public" :> Raw
-
-api :: Proxy (API b c n)
-api = Proxy
-
-newtype ServerState b c n = ServerState { gsMVar :: MVar (GameState b c n) }
-
-type AppM b c n = ReaderT (ServerState b c n) Handler
-
 newtype WSServerMessage b c n = WSServerMessage { unwrapWSServerMessage :: ServerMessage b c n }
   deriving (Eq, Generic, Ord, Read, Show)
 
@@ -54,7 +43,7 @@ instance JSONGame b c n => WebSocketsData (WSServerMessage b c n) where
   fromLazyByteString = WSServerMessage . fromMaybe ServerMessageFail . decode
   toLazyByteString = encode . unwrapWSServerMessage
 
-data WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: ClientMessage b c n }
+newtype WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: ClientMessage b c n }
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: instance only covers text, not binary!
@@ -63,7 +52,18 @@ instance JSONGame b c n => WebSocketsData (WSClientMessage b c n) where
   fromLazyByteString = WSClientMessage . fromMaybe ClientMessageFail . decode
   toLazyByteString = encode . unwrapWSClientMessage
 
-handler :: forall b c n. JSONGame b c n => FilePath -> Config -> ServerT (API b c n) (AppM b c n)
+type API =             Get '[HTML] GameHtml
+      :<|> "wss"    :> RawM
+      :<|> "public" :> Raw
+
+api :: Proxy API
+api = Proxy
+
+newtype ServerState b c n = ServerState { gsMVar :: MVar (GameState b c n) }
+
+type AppM b c n = ReaderT (ServerState b c n) Handler
+
+handler :: forall b c n. JSONGame b c n => FilePath -> Config -> ServerT API (AppM b c n)
 handler path config = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => m GameHtml
         gameH = return GameHtml
@@ -78,7 +78,7 @@ handler path config = gameH :<|> wssH :<|> publicH
                                               clientMsg <- unwrapWSClientMessage <$> receiveData conn :: IO (ClientMessage b c n)
                                               BS.putStrLn $ encode clientMsg
                                               case clientMsg of
-                                                ClientMessageFail -> putStrLn "fail" >> return ()
+                                                ClientMessageFail -> putStrLn "failed to do action"
                                                 ClientMessageAction action -> modifyMVar_ gsMVar (return . doTurn (rules config) action) -- TODO: broadcast
 
                 backupApp :: Application
@@ -92,7 +92,7 @@ server port path = do putStrLn $ "Port is: " <> show port
                       putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n) -- TODO: error?
-                      gs <- newMVar $ doTurn def (Place $ head $ coords $ currentBoard initial) initial -- TODO: remove turn
+                      gs <- newMVar initial
 
                       let app = serve api $ hoistServer api (\ r -> runReaderT r (ServerState gs)) (handler path config)
                       run port app
