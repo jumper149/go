@@ -1,15 +1,18 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, KindSignatures, OverloadedStrings, TypeOperators #-}
 
 module Server where
 
-import Control.Concurrent.Chan
 import Control.Concurrent.MVar
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Aeson
-import qualified Data.Binary.Builder as B (fromLazyByteString)
+import qualified Data.Binary.Builder as B
+import qualified Data.ByteString.Lazy as BS
 import Data.Default.Class
+import Data.Maybe (fromMaybe)
 import qualified Data.Text as T
+import GHC.Generics
+import GHC.TypeLits hiding (Text)
 import Network.HTTP.Types.Status
 import Network.Wai
 import Network.Wai.EventSource (ServerEvent (..), eventSourceAppChan)
@@ -31,72 +34,57 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-type API b c n =                                           Get '[HTML] GameHtml
-            :<|> "render"                               :> Get '[JSON] (GameState b c n)
-            :<|> "play"   :> ReqBody '[JSON] (Action c) :> Post '[JSON] ()
-            :<|> "wss"                                  :> RawM
-            :<|> "sse"                                  :> RawM
-            :<|> "public"                               :> Raw
+type API b c (n :: Nat) =             Get '[HTML] GameHtml
+                     :<|> "wss"    :> RawM
+                     :<|> "public" :> Raw
 
 api :: Proxy (API b c n)
 api = Proxy
 
-data ServerState b c n = ServerState { mVar :: MVar (GameState b c n)
-                                     , chan :: Chan ServerEvent
-                                     }
-
-updateChan :: (JSONGame b c n, MonadIO m, MonadReader (ServerState b c n) m) => m ()
-updateChan = do mVarGS <- asks mVar
-                chanSE <- asks chan
-                liftIO $ updateChanIO mVarGS chanSE
-
--- TODO: remove when unnecessary
-updateChanIO :: JSONGame b c n => MVar (GameState b c n) -> Chan ServerEvent -> IO ()
-updateChanIO mVarGS chanSE = do gs <- readMVar mVarGS
-                                let encoding = ServerEvent { eventName = pure "Update GameState"
-                                                           , eventId = pure "0"
-                                                           , eventData = pure . B.fromLazyByteString $ encode gs
-                                                           }
-                                writeChan chanSE encoding
+newtype ServerState b c n = ServerState { mVar :: MVar (GameState b c n) }
 
 type AppM b c n = ReaderT (ServerState b c n) Handler
 
+newtype WSServerMessage b c n = WSServerMessage { unwrapWSServerMessage :: ServerMessage b c n }
+  deriving (Eq, Generic, Ord, Read, Show)
+
+-- TODO: instance only covers text, not binary!
+instance JSONGame b c n => WebSocketsData (WSServerMessage b c n) where
+  fromDataMessage (Text bs _) = fromLazyByteString bs
+  fromLazyByteString = WSServerMessage . fromMaybe ServerMessageFail . decode
+  toLazyByteString = encode . unwrapWSServerMessage
+
+data WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: ClientMessage b c n }
+  deriving (Eq, Generic, Ord, Read, Show)
+
+-- TODO: instance only covers text, not binary!
+instance JSONGame b c n => WebSocketsData (WSClientMessage b c n) where
+  fromDataMessage (Text bs _) = fromLazyByteString bs
+  fromLazyByteString = WSClientMessage . fromMaybe ClientMessageFail . decode
+  toLazyByteString = encode . unwrapWSClientMessage
+
 handler :: forall b c n. JSONGame b c n => FilePath -> Config -> ServerT (API b c n) (AppM b c n)
-handler path config = gameH :<|> renderH :<|> playH :<|> wssH :<|> sseH :<|> publicH
+handler path config = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => m GameHtml
         gameH = return GameHtml
 
-        -- TODO: remove
-        renderH :: (MonadIO m, MonadReader (ServerState b c n) m)
-                => m (GameState b c n)
-        renderH = liftIO . readMVar =<< asks mVar
-
-        -- TODO: remove
-        playH :: (MonadIO m, MonadReader (ServerState b c n) m)
-              => Action c
-              -> m ()
-        playH action = do gs <- asks mVar
-                          liftIO $ modifyMVar_ gs f
-                          updateChan
-          where f = return . doTurn (rules config) action
-
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
         wssH = do gs <- asks mVar
-                  event <- asks chan
-                  return $ websocketsOr defaultConnectionOptions (wsApp gs event) backupApp
-          where wsApp :: MVar (GameState b c n) -> Chan ServerEvent -> PendingConnection -> IO ()
-                wsApp gs event pendingConn = do conn <- acceptRequest pendingConn
-                                                mbAction <- decode <$> receiveData conn :: IO (Maybe (Action c))
-                                                case mbAction of
-                                                  Nothing -> return ()
-                                                  Just action -> modifyMVar_ gs (return . doTurn (rules config) action)
-                                                updateChanIO gs event -- TODO: use updateChan instead, but requires rewrite of websocketsOr
+                  return $ websocketsOr defaultConnectionOptions (wsApp gs) backupApp
+          where wsApp :: MVar (GameState b c n) -> PendingConnection -> IO ()
+                wsApp gsMVar pendingConn = do putStrLn "conn found"
+                                              conn <- acceptRequest pendingConn
+                                              putStrLn "conn acpt"
+                                              gs <- readMVar gsMVar
+                                              sendTextData conn . WSServerMessage $ ServerMessageGameState gs
+                                              mbAction <- decode <$> receiveData conn :: IO (Maybe (Action c))
+                                              case mbAction of
+                                                Nothing -> return ()
+                                                Just action -> do modifyMVar_ gsMVar (return . doTurn (rules config) action)
+                                                                  BS.putStrLn $ encode action -- TODO: broadcast new state
 
                 backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
-
-        sseH :: MonadReader (ServerState b c n) m => m Application
-        sseH = eventSourceAppChan <$> asks chan
 
         publicH :: ServerT Raw m
         publicH = serveDirectoryWebApp path
@@ -106,10 +94,9 @@ server port path = do putStrLn $ "Port is: " <> show port
                       putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n) -- TODO: error?
-                      gs <- newMVar initial
-                      event <- newChan
+                      gs <- newMVar $ doTurn def (Place $ head $ coords $ currentBoard initial) initial -- TODO: remove turn
 
-                      let app = serve api $ hoistServer api (\ r -> runReaderT r (ServerState gs event)) (handler path config)
+                      let app = serve api $ hoistServer api (\ r -> runReaderT r (ServerState gs)) (handler path config)
                       run port app
                       return undefined -- TODO: undefined behaviour
   where config = def

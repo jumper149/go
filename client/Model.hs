@@ -4,7 +4,6 @@ module Model ( Model
              ) where
 
 import Data.Default.Class
-import Data.Functor.Identity (runIdentity)
 import GHC.Generics
 import Miso.Effect
 import Miso.Html
@@ -12,7 +11,6 @@ import Miso.Subscription.WebSocket
 
 import qualified Go.Game.Config as G
 import qualified Go.Game.Game as G
-import qualified Go.Game.Playing as G
 import qualified Go.Game.State as G
 import qualified Go.Run.JSON as G
 
@@ -26,11 +24,11 @@ data Model b c n = Model { gameState  :: G.GameState b c n
   deriving (Eq, Ord, Generic, Read, Show)
 
 instance G.Game b c n => Default (Model b c n) where
-  def = Model { gameState = either undefined id $ runIdentity $ G.runConfiguredT def G.initState
+  def = Model { gameState = either undefined id $ G.configure def G.initState
               , gameAction = Nothing
               }
 
-updateModel :: G.JSONGame b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
+updateModel :: forall b c n. G.JSONGame b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
 updateModel action model =
   case action of
     NoOp -> noEff model
@@ -38,7 +36,7 @@ updateModel action model =
     UpdateAction mbAct -> noEff $ model { gameAction = mbAct }
     SubmitAction -> case gameAction model of
                       Nothing -> noEff $ model { gameAction = Nothing } -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> model <# (send a >> return NoOp)
+                      Just a -> model <# (send (G.ClientMessageAction a :: G.ClientMessage b c n) >> return NoOp)
     SetState gs -> noEff $ model { gameState = gs
                                  , gameAction = Nothing
                                  }

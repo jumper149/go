@@ -52,6 +52,7 @@ executable server
                        , go
                        , aeson
                        , binary
+                       , bytestring
                        , data-default-class
                        , directory
                        , http-types
