@@ -41,7 +41,7 @@ type API b c (n :: Nat) =             Get '[HTML] GameHtml
 api :: Proxy (API b c n)
 api = Proxy
 
-newtype ServerState b c n = ServerState { mVar :: MVar (GameState b c n) }
+newtype ServerState b c n = ServerState { gsMVar :: MVar (GameState b c n) }
 
 type AppM b c n = ReaderT (ServerState b c n) Handler
 
@@ -69,19 +69,17 @@ handler path config = gameH :<|> wssH :<|> publicH
         gameH = return GameHtml
 
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
-        wssH = do gs <- asks mVar
+        wssH = do gs <- asks gsMVar
                   return $ websocketsOr defaultConnectionOptions (wsApp gs) backupApp
           where wsApp :: MVar (GameState b c n) -> PendingConnection -> IO ()
-                wsApp gsMVar pendingConn = do putStrLn "conn found"
-                                              conn <- acceptRequest pendingConn
-                                              putStrLn "conn acpt"
+                wsApp gsMVar pendingConn = do conn <- acceptRequest pendingConn
                                               gs <- readMVar gsMVar
                                               sendTextData conn . WSServerMessage $ ServerMessageGameState gs
-                                              mbAction <- decode <$> receiveData conn :: IO (Maybe (Action c))
-                                              case mbAction of
-                                                Nothing -> return ()
-                                                Just action -> do modifyMVar_ gsMVar (return . doTurn (rules config) action)
-                                                                  BS.putStrLn $ encode action -- TODO: broadcast new state
+                                              clientMsg <- unwrapWSClientMessage <$> receiveData conn :: IO (ClientMessage b c n)
+                                              BS.putStrLn $ encode clientMsg
+                                              case clientMsg of
+                                                ClientMessageFail -> putStrLn "fail" >> return ()
+                                                ClientMessageAction action -> modifyMVar_ gsMVar (return . doTurn (rules config) action) -- TODO: broadcast
 
                 backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
