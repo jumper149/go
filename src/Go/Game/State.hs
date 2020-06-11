@@ -36,13 +36,13 @@ instance (KnownNat n, Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameS
 
 initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
           => m (GameState b c n)
-initState = do return $ GState { currentBoard = empty
-                               , currentPlayer = minBound
-                               , lastAction = Pass
-                               , previousBoards = [ empty ]
-                               , consecutivePasses = 0
-                               , countTurns = 0
-                               }
+initState = return $ GState { currentBoard = empty
+                            , currentPlayer = minBound
+                            , lastAction = Pass
+                            , previousBoards = [ empty ]
+                            , consecutivePasses = 0
+                            , countTurns = 0
+                            }
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass

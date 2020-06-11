@@ -10,7 +10,7 @@ import Control.Applicative (liftA2)
 import Data.Aeson (FromJSON (..), ToJSON (..))
 import Data.Bifunctor
 import Data.Finite
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (mapMaybe, fromJust)
 import Data.Proxy
 import qualified Data.Vector.Sized as V
 import GHC.Generics
@@ -78,7 +78,7 @@ instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (Coord i) where
 
   coords (Board _) = [ minBound .. maxBound ]
 
-  libertyCoords _ c = catMaybes $ map packCoord unsafeLibertyCoords
+  libertyCoords _ c = mapMaybe packCoord unsafeLibertyCoords
     where unsafeLibertyCoords = [ (cx-1 , cy  )
                                 , (cx   , cy+1)
                                 , (cx+1 , cy  )

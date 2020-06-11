@@ -5,7 +5,7 @@ module Go.Board.Loop ( Board (..)
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
-import Data.Maybe (catMaybes)
+import Data.Maybe (mapMaybe)
 import Data.Proxy
 import GHC.Generics
 import GHC.TypeLits
@@ -23,7 +23,7 @@ instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (D.Coord i) where
 
   coords (Board board) = coords board
 
-  libertyCoords _ c = catMaybes $ map (D.packCoord . wrapX) unsafeLibertyCoords
+  libertyCoords _ c = mapMaybe (D.packCoord . wrapX) unsafeLibertyCoords
     where unsafeLibertyCoords = [ (cx-1 , cy  )
                                 , (cx   , cy+1)
                                 , (cx+1 , cy  )

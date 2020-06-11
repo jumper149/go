@@ -8,7 +8,7 @@ import Go.Game.Game
 import Go.Game.Player
 
 runTests :: IO ()
-runTests = hspec $ do
+runTests = hspec $
   describe "Board.Default" $ do
 
     let emptyBoard = empty :: Board 13 2
@@ -26,7 +26,7 @@ newtype ArbCoord = ArbCoord (Coord 13)
   deriving (Eq, Ord, Read, Show)
 
 instance Arbitrary ArbCoord where
-  arbitrary = elements $ fmap ArbCoord $ coords $ (empty :: Board 13 2)
+  arbitrary = elements $ ArbCoord <$> coords (empty :: Board 13 2)
   shrink = shrinkNothing
 
 
