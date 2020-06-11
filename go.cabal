@@ -47,6 +47,7 @@ executable server
   else
     hs-source-dirs:      server
     other-modules:       API
+                         Handler
                          Html
                          Message
                          Server
