@@ -44,7 +44,7 @@ runHandlerM ss = flip runReaderT ss . unwrapHandlerM
 handler :: forall b c n. JSONGame b c n => FilePath -> Config -> ServerT API (HandlerM b c n)
 handler path config = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => m GameHtml
-        gameH = return GameHtml
+        gameH = return $ GameHtml "public/all.js"
 
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
         wssH = do gs <- asks gsMVar
