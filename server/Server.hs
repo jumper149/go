@@ -43,7 +43,11 @@ api = Proxy
 
 newtype ServerState b c n = ServerState { gsMVar :: MVar (GameState b c n) }
 
-type AppM b c n = ReaderT (ServerState b c n) Handler
+newtype AppM b c n a = AppM { unwrapAppM :: ReaderT (ServerState b c n) Handler a }
+  deriving (Applicative, Functor, Monad, MonadIO, MonadReader (ServerState b c n))
+
+runAppM :: ServerState b c n -> AppM b c n a -> Handler a
+runAppM ss = flip runReaderT ss . unwrapAppM
 
 handler :: forall b c n. JSONGame b c n => FilePath -> Config -> ServerT API (AppM b c n)
 handler path config = gameH :<|> wssH :<|> publicH
@@ -76,7 +80,7 @@ server port path = do putStrLn $ "Port is: " <> show port
                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n) -- TODO: error?
                       gs <- newMVar initial
 
-                      let app = serve api $ hoistServer api (\ r -> runReaderT r (ServerState gs)) (handler path config)
+                      let app = serve api $ hoistServer api (runAppM $ ServerState gs) (handler path config)
                       run port app
                       return undefined -- TODO: undefined behaviour
   where config = def
