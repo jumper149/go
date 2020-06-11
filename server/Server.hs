@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, KindSignatures, OverloadedStrings, TypeOperators #-}
+{-# LANGUAGE FlexibleContexts, KindSignatures, OverloadedStrings #-}
 
 module Server where
 
@@ -19,10 +19,9 @@ import Network.Wai.Handler.Warp (Port, run)
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets
 import Servant
-import Servant.HTML.Lucid (HTML)
-import Servant.RawM (RawM)
 import System.Directory (listDirectory)
 
+import API
 import Html
 import Message
 
@@ -33,13 +32,6 @@ import Go.Game.Game
 import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
-
-type API =             Get '[HTML] GameHtml
-      :<|> "wss"    :> RawM
-      :<|> "public" :> Raw
-
-api :: Proxy API
-api = Proxy
 
 newtype ServerState b c n = ServerState { gsMVar :: MVar (GameState b c n) }
 

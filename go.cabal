@@ -46,7 +46,8 @@ executable server
     buildable: False
   else
     hs-source-dirs:      server
-    other-modules:       Html
+    other-modules:       API
+                         Html
                          Message
                          Server
     build-depends:       base
