@@ -22,6 +22,7 @@ server port path = do putStrLn $ "Port is: " <> show port
 
                       initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n) -- TODO: error?
                       gameStateMVar <- newMVar initial
+                      clientsMVar <- newMVar mempty
 
                       let gameConfig = def
                           app = serve api $ hoistServer api (runHandlerM ServerState {..}) (handler path)

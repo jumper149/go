@@ -7,6 +7,8 @@ import Control.Monad.Reader
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Default.Class
+import Data.Foldable (traverse_)
+import qualified Data.Map as M
 import qualified Data.Text as T
 import GHC.Generics
 import GHC.TypeLits hiding (Text)
@@ -23,12 +25,16 @@ import Html
 import Message
 
 import Go.Game.Config
+import Go.Game.Player
 import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
+type Clients n = M.Map (PlayerN n) Connection
+
 data ServerState b c n = ServerState { gameStateMVar :: MVar (GameState b c n)
                                      , gameConfig :: Config
+                                     , clientsMVar :: MVar (Clients n)
                                      }
   deriving (Eq, Generic)
 
@@ -47,19 +53,26 @@ handler path = gameH :<|> wssH :<|> publicH
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
         wssH = do gs <- asks gameStateMVar
                   gc <- asks gameConfig
-                  return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc) backupApp
+                  cs <- asks clientsMVar
+                  return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc cs) backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
         publicH :: ServerT Raw m
         publicH = serveDirectoryWebApp path
 
-handleWSConnection :: forall b c n. JSONGame b c n => MVar (GameState b c n) -> Config -> PendingConnection -> IO ()
-handleWSConnection gsMVar config pendingConn = do conn <- acceptRequest pendingConn
-                                                  gs <- readMVar gsMVar
-                                                  sendTextData conn . WSServerMessage $ ServerMessageGameState gs
-                                                  clientMsg <- unwrapWSClientMessage <$> receiveData conn :: IO (ClientMessage b c n)
-                                                  BS.putStrLn $ encode clientMsg
-                                                  case clientMsg of
-                                                    ClientMessageFail -> putStrLn "failed to do action"
-                                                    ClientMessageAction action -> modifyMVar_ gsMVar (return . doTurn (rules config) action) -- TODO: broadcast
+-- TODO: maybe ping every 30 seconds to keep alive?
+handleWSConnection :: forall b c n. JSONGame b c n => MVar (GameState b c n) -> Config -> MVar (Clients n) -> PendingConnection -> IO ()
+handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest pendingConn
+                                                         modifyMVar_ csMVar $ return . M.insert minBound conn
+                                                         update conn
+                                                         loop conn
+  where loop conn = do clientMsg <- unwrapWSClientMessage <$> receiveData conn :: IO (ClientMessage b c n)
+                       BS.putStrLn $ encode clientMsg
+                       case clientMsg of
+                         ClientMessageFail -> putStrLn "failed to do action"
+                         ClientMessageAction action -> do modifyMVar_ gsMVar $ return . doTurn (rules config) action
+                                                          broadcast
+                       loop conn
+        broadcast = traverse_ update =<< readMVar csMVar
+        update conn = sendTextData conn . WSServerMessage . ServerMessageGameState =<< readMVar gsMVar

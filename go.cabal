@@ -55,6 +55,7 @@ executable server
                        , go
                        , aeson
                        , bytestring
+                       , containers
                        , data-default-class
                        , directory
                        , http-types
