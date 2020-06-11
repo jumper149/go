@@ -1,23 +1,15 @@
-{-# LANGUAGE FlexibleContexts, KindSignatures, OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Server where
 
 import Control.Concurrent.MVar
-import Control.Monad.IO.Class
-import Data.Aeson
-import qualified Data.Binary.Builder as B
-import qualified Data.ByteString.Lazy as BS
 import Data.Default.Class
-import qualified Data.Text as T
-import GHC.Generics
 import Network.Wai.Handler.Warp (Port, run)
 import Servant
 import System.Directory (listDirectory)
 
 import API
 import Handler
-import Html
-import Message
 
 import Go.Game.Config
 import Go.Game.End

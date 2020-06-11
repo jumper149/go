@@ -3,17 +3,15 @@
 module Handler where
 
 import Control.Concurrent.MVar
-import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Aeson
-import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Lazy as BS
 import Data.Default.Class
 import qualified Data.Text as T
 import GHC.Generics
 import GHC.TypeLits hiding (Text)
 import Network.HTTP.Types.Status (status400)
-import Network.Wai
+import Network.Wai (responseLBS)
 import Network.Wai.Handler.Warp (Port, run)
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets
@@ -32,9 +30,10 @@ import Go.Run.JSON
 data ServerState b c n = ServerState { gameStateMVar :: MVar (GameState b c n)
                                      , gameConfig :: Config
                                      }
+  deriving (Eq, Generic)
 
 newtype HandlerM b c n a = HandlerM { unwrapHandlerM :: ReaderT (ServerState b c n) Handler a }
-  deriving (Applicative, Functor, Monad, MonadIO, MonadReader (ServerState b c n))
+  deriving (Applicative, Functor, Generic, Monad, MonadIO, MonadReader (ServerState b c n))
 
 runHandlerM :: ServerState b c n -> HandlerM b c n a -> Handler a
 runHandlerM ss = flip runReaderT ss . unwrapHandlerM

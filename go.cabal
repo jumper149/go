@@ -54,7 +54,6 @@ executable server
     build-depends:       base
                        , go
                        , aeson
-                       , binary
                        , bytestring
                        , data-default-class
                        , directory
