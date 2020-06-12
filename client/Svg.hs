@@ -51,14 +51,15 @@ viewPlayerChoice mbP = svg_ [ Html.style_ $ M.fromList [ ("background-color","gr
                                                        , ("width","20%")
                                                        ]
                             , viewBox_ "0 0 100 50"
-                            ] ([ rect_ [ fill_ "blue"
+                            ] ([ rect_ [ fillOpacity_ "0"
                                        , x_ "10"
                                        , y_ "10"
                                        , width_ "80"
                                        , height_ "15"
                                        , onClick $ SubmitPlayer Nothing
                                        ] []
-                               ] <> map viewPlayer [ minBound .. maxBound ])
+                               ] <> map viewPlayer [ minBound .. maxBound ]
+                                 <> [ hintPlayer mbP ])
 
 viewPlayer :: forall b c n. KnownNat n => G.PlayerN n -> Html.View (Operation b c n)
 viewPlayer p = rect_ [ fill_ . ms $ colorize p
@@ -71,3 +72,17 @@ viewPlayer p = rect_ [ fill_ . ms $ colorize p
   where width = 80 / count
         count = toEnum $ G.countPlayers (toEnum 0 :: G.PlayerN n) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count
+
+hintPlayer :: forall b c n. KnownNat n => Maybe (G.PlayerN n) -> Html.View (Operation b c n)
+hintPlayer Nothing = circle_ [ fill_ "black"
+                             , cx_ "82.5"
+                             , cy_ "17.5"
+                             , r_ "5"
+                             ] []
+hintPlayer (Just p) = circle_ [ fill_ "red"
+                              , cx_ $ ms x
+                              , cy_ "32.5"
+                              , r_ "5"
+                              ] []
+  where count = toEnum $ G.countPlayers (toEnum 0 :: G.PlayerN n) :: Double
+        x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count + 80 / (2 * count)

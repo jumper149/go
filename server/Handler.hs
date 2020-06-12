@@ -86,12 +86,18 @@ handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest p
                                        ClientMessageFail -> putStrLn "failed to do action"
                                        ClientMessageAction action -> do modifyMVar_ gsMVar $ return . doTurn (rules config) action
                                                                         broadcast
-                                       ClientMessagePlayer mbP -> changePlayer key mbP
+                                       ClientMessagePlayer mbP -> do changePlayer key mbP
+                                                                     updatePlayer key
                                      loop key
 
         broadcast = traverse_ update =<< readMVar csMVar
 
         update Client {..} = sendTextData connection . WSServerMessage . ServerMessageGameState =<< readMVar gsMVar
+
+        updatePlayer k = do mbC <- M.lookup k <$> readMVar csMVar
+                            case mbC of
+                              Nothing -> error "can't find client to key"
+                              Just c -> sendTextData (connection c) (WSServerMessage . ServerMessagePlayer . player $ c :: WSServerMessage b c n)
 
         changePlayer k mbP = do mbC <- M.lookup k <$> readMVar csMVar
                                 case mbC of
