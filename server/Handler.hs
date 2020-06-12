@@ -30,7 +30,12 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-type Clients n = M.Map (PlayerN n) Connection
+data Client n = Client { player :: Maybe (PlayerN n)
+                       , connection :: Connection
+                       }
+  deriving Generic
+
+type Clients n = M.Map Int (Client n)
 
 data ServerState b c n = ServerState { gameStateMVar :: MVar (GameState b c n)
                                      , gameConfig :: Config
@@ -64,15 +69,34 @@ handler path = gameH :<|> wssH :<|> publicH
 -- TODO: maybe ping every 30 seconds to keep alive?
 handleWSConnection :: forall b c n. JSONGame b c n => MVar (GameState b c n) -> Config -> MVar (Clients n) -> PendingConnection -> IO ()
 handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest pendingConn
-                                                         modifyMVar_ csMVar $ return . M.insert minBound conn
-                                                         update conn
-                                                         loop conn
-  where loop conn = do clientMsg <- unwrapWSClientMessage <$> receiveData conn :: IO (ClientMessage b c n)
-                       BS.putStrLn $ encode clientMsg
-                       case clientMsg of
-                         ClientMessageFail -> putStrLn "failed to do action"
-                         ClientMessageAction action -> do modifyMVar_ gsMVar $ return . doTurn (rules config) action
-                                                          broadcast
-                       loop conn
+                                                         let client = Client { player = Nothing
+                                                                             , connection = conn
+                                                                             }
+                                                         key <- addClient client
+                                                         update client -- TODO: remove? and only use the update in loop
+                                                         loop key
+  where loop key = do maybeC <- M.lookup key <$> readMVar csMVar
+                      case maybeC of
+                        Nothing -> error "can't find client to key"
+                        Just c -> do clientMsg <- unwrapWSClientMessage <$> receiveData (connection c) :: IO (ClientMessage b c n)
+                                     BS.putStrLn $ encode clientMsg
+                                     case clientMsg of
+                                       ClientMessageFail -> putStrLn "failed to do action"
+                                       ClientMessageAction action -> do modifyMVar_ gsMVar $ return . doTurn (rules config) action
+                                                                        broadcast
+                                       ClientMessagePlayer mbP -> changePlayer key mbP
+                                     loop key
+
         broadcast = traverse_ update =<< readMVar csMVar
-        update conn = sendTextData conn . WSServerMessage . ServerMessageGameState =<< readMVar gsMVar
+
+        update Client {..} = sendTextData connection . WSServerMessage . ServerMessageGameState =<< readMVar gsMVar
+
+        changePlayer k mbP = do mbC <- M.lookup k <$> readMVar csMVar
+                                case mbC of
+                                  Nothing -> error "can't find client to key"
+                                  Just c -> modifyMVar_ csMVar $ return . M.insert k (c { player = mbP })
+
+        addClient c = modifyMVar csMVar $ return . addClient' (toEnum 0) c
+          where addClient' k c cs  = case M.lookup k cs of
+                                       Nothing -> (M.insert k c cs , k)
+                                       Just _ -> addClient' (succ k) c cs

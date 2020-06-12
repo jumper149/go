@@ -11,6 +11,7 @@ import Miso.Subscription.WebSocket
 
 import qualified Go.Game.Config as G
 import qualified Go.Game.Game as G
+import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
 import qualified Go.Run.JSON as G
 
@@ -20,12 +21,14 @@ import Svg
 
 data Model b c n = Model { gameState  :: G.GameState b c n
                          , gameAction :: Maybe (G.Action c)
+                         , chosenPlayer :: Maybe (G.PlayerN n)
                          }
   deriving (Eq, Ord, Generic, Read, Show)
 
 instance G.Game b c n => Default (Model b c n) where
   def = Model { gameState = either undefined id $ G.configure def G.initState
               , gameAction = Nothing
+              , chosenPlayer = Nothing
               }
 
 updateModel :: forall b c n. G.JSONGame b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
@@ -40,12 +43,15 @@ updateModel action model =
     SetState gs -> noEff $ model { gameState = gs
                                  , gameAction = Nothing
                                  }
+    SubmitPlayer mbP -> model <# (send (G.ClientMessagePlayer mbP :: G.ClientMessage b c n) >> return NoOp)
+    SetPlayer mbP -> noEff $ model { chosenPlayer = mbP }
 
 viewModel :: MisoGame b c n => Model b c n -> View (Operation b c n)
 viewModel model =
   div_ [
        ] [ viewBoard (G.currentBoard $ gameState model) coord
          , viewPassButton $ gameAction model
+         , viewPlayerChoice $ chosenPlayer model
          ]
   where coord = case gameAction model of
                   Just (G.Place c) -> Just c
