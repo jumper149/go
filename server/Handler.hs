@@ -3,6 +3,7 @@
 module Handler where
 
 import Control.Concurrent.MVar
+import Control.Exception (finally)
 import Control.Monad.Reader
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
@@ -73,8 +74,9 @@ handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest p
                                                                              , connection = conn
                                                                              }
                                                          key <- addClient client
-                                                         update client -- TODO: remove? and only use the update in loop
-                                                         loop key
+                                                         flip finally (removeClient key) $ do
+                                                           update client -- TODO: remove? and only use the update in loop
+                                                           loop key
   where loop key = do maybeC <- M.lookup key <$> readMVar csMVar
                       case maybeC of
                         Nothing -> error "can't find client to key"
@@ -100,3 +102,5 @@ handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest p
           where addClient' k c cs  = case M.lookup k cs of
                                        Nothing -> (M.insert k c cs , k)
                                        Just _ -> addClient' (succ k) c cs
+
+        removeClient k = modifyMVar_ csMVar (return . M.delete k)
