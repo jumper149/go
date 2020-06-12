@@ -21,7 +21,7 @@ instance KnownNat n => ToJSON (PlayerN n) where
 
 -- | Count the number of players. Helper function for 'Go.Game.State.checkPassing'.
 countPlayers :: forall n. KnownNat n => PlayerN n -> Int                            -- TODO: don't give player as argument
-countPlayers _ = fromEnum (maxBound :: PlayerN n)
+countPlayers _ = fromEnum (maxBound :: PlayerN n) + 1 -- TODO: add +1 ??? currently otherwise passing once with 2 players ends the game
 
 -- | Return the next player. Helper function for 'Go.Game.State.act'.
 next :: forall n. KnownNat n => PlayerN n -> PlayerN n
