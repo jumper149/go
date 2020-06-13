@@ -70,7 +70,7 @@ handleWSConnection gsTVar config csTVar pendingConn = do conn <- acceptRequest p
                                                            writeTVar csTVar $ addClient client clients
                                                            return $ identification client
                                                          removeClientAfter csTVar key $ do
-                                                           sendMessage csTVar key $ ServerMessageGameState <$> readTVar gsTVar
+                                                           sendMessage csTVar key $ Right . ServerMessageGameState <$> readTVar gsTVar
                                                            loopGame gsTVar config csTVar key
 
 -- | Remove client from 'Clients' after the given action in 'IO' ends. Exceptions in 'IO', will be
@@ -86,9 +86,9 @@ loopGame :: forall b c n. JSONGame b c n => TVar (GameState b c n) -> Config -> 
 loopGame gsTVar config csTVar key = do msg <- receiveMessage csTVar key :: IO (ClientMessage b c n)
                                        BS.putStrLn $ encode msg -- TODO: remove?
                                        case msg of
-                                         ClientMessageFail -> putStrLn "failed to do action"
-                                         ClientMessageAction action -> broadcastMessage csTVar $ ServerMessageGameState <$> updateGameState gsTVar config action
-                                         ClientMessagePlayer mbP -> let msg = ServerMessagePlayer <$> updatePlayer csTVar key mbP :: STM (ServerMessage b c n)
+                                         ClientMessageFail _ -> putStrLn "failed to do action"
+                                         ClientMessageAction action -> broadcastMessage csTVar key $ fmap ServerMessageGameState <$> updateGameState gsTVar config csTVar key action
+                                         ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> updatePlayer csTVar key mbP :: STM (Either String (ServerMessage b c n))
                                                                      in sendMessage csTVar key msg
                                        loopGame gsTVar config csTVar key
 
@@ -98,30 +98,46 @@ receiveMessage csTVar key = do conn <- connection . getClient key <$> readTVarIO
                                unwrapWSClientMessage <$> receiveData conn
 
 -- | Send a message via the websocket.
-sendMessage :: JSONGame b c n => TVar (Clients n) -> ClientId -> STM (ServerMessage b c n) -> IO ()
+sendMessage :: forall b c n. JSONGame b c n => TVar (Clients n) -> ClientId -> STM (Either String (ServerMessage b c n)) -> IO ()
 sendMessage csTVar key msgSTM = do (conn , msg) <- atomically $ do
                                      conn <- connection . getClient key <$> readTVar csTVar
                                      msg <- msgSTM
                                      return (conn , msg)
-                                   sendTextData conn $ WSServerMessage msg
+                                   case msg of
+                                     Right rMsg -> sendTextData conn $ WSServerMessage rMsg
+                                     Left lString -> sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
-broadcastMessage :: JSONGame b c n => TVar (Clients n) -> STM (ServerMessage b c n) -> IO ()
-broadcastMessage csTVar msgSTM = do (conns , msg) <- atomically $ do
-                                      conns <- map (connection . snd) . toClientList <$> readTVar csTVar
-                                      msg <- msgSTM
-                                      return (conns , msg)
-                                    traverse_ (\ conn -> sendTextData conn $ WSServerMessage msg) conns
+broadcastMessage :: forall b c n. JSONGame b c n => TVar (Clients n) -> ClientId -> STM (Either String (ServerMessage b c n)) -> IO ()
+broadcastMessage csTVar key msgSTM = do (conns , msg , conn) <- atomically $ do
+                                          conns <- map (connection . snd) . toClientList <$> readTVar csTVar
+                                          msg <- msgSTM
+                                          conn <- connection . getClient key <$> readTVar csTVar
+                                          return (conns , msg , conn)
+                                        case msg of
+                                          Right rMsg -> traverse_ (\ c -> sendTextData c $ WSServerMessage rMsg) conns
+                                          Left lString -> sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Update the 'GameState' in 'STM'.
-updateGameState :: Game b c n => TVar (GameState b c n) -> Config -> Action c -> STM (GameState b c n)
-updateGameState gsTVar config action = do gs <- doTurn (rules config) action <$> readTVar gsTVar
-                                          writeTVar gsTVar gs
-                                          return gs
+updateGameState :: Game b c n => TVar (GameState b c n) -> Config -> TVar (Clients n) -> ClientId -> Action c -> STM (Either String (GameState b c n))
+updateGameState gsTVar config csTVar key action = do clientIsCurrent <- isCurrentPlayer gsTVar csTVar key
+                                                     if clientIsCurrent
+                                                        then do gs <- doTurn (rules config) action <$> readTVar gsTVar
+                                                                writeTVar gsTVar gs
+                                                                return $ Right gs
+                                                        else return $ Left "it's not your turn"
 
 -- | Update the 'maybePlayer' of a specific 'Client' in 'STM'.
-updatePlayer :: TVar (Clients n ) -> ClientId -> Maybe (PlayerN n) -> STM (Maybe (PlayerN n))
+updatePlayer :: TVar (Clients n) -> ClientId -> Maybe (PlayerN n) -> STM (Maybe (PlayerN n))
 updatePlayer csTVar key mbP = do clients <- readTVar csTVar
                                  let client = getClient key clients
                                  writeTVar csTVar $ addClient client { maybePlayer = mbP } clients
                                  maybePlayer . getClient key <$> readTVar csTVar -- TODO: This is the same as 'return mbP'. Change?
+
+-- | Check if given 'ClientId' is the 'currentPlayer'.
+isCurrentPlayer :: TVar (GameState b c n) -> TVar (Clients n) -> ClientId -> STM Bool
+isCurrentPlayer gsTVar csTVar key = do client <- getClient key <$> readTVar csTVar
+                                       gs <- readTVar gsTVar
+                                       case maybePlayer client of
+                                         Nothing -> return False
+                                         Just p -> return $ p == currentPlayer gs

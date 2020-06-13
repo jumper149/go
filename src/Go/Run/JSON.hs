@@ -17,7 +17,7 @@ class (Game b c n, Generic b, Generic c, FromJSON b, FromJSON c, ToJSON b, ToJSO
 
 data ServerMessage b c n = ServerMessageGameState (GameState b c n)
                          | ServerMessagePlayer (Maybe (PlayerN n))
-                         | ServerMessageFail
+                         | ServerMessageFail String
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance JSONGame b c n => FromJSON (ServerMessage b c n) where
@@ -25,7 +25,7 @@ instance JSONGame b c n => ToJSON (ServerMessage b c n) where
 
 data ClientMessage b c (n :: Nat) = ClientMessageAction (Action c)
                                   | ClientMessagePlayer (Maybe (PlayerN n))
-                                  | ClientMessageFail
+                                  | ClientMessageFail String
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance JSONGame b c n => FromJSON (ClientMessage b c n) where

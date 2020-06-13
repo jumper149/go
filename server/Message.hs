@@ -15,7 +15,7 @@ newtype WSServerMessage b c n = WSServerMessage { unwrapWSServerMessage :: Serve
 -- TODO: instance only covers text, not binary!
 instance JSONGame b c n => WebSocketsData (WSServerMessage b c n) where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSServerMessage . fromMaybe ServerMessageFail . decode
+  fromLazyByteString = WSServerMessage . fromMaybe (ServerMessageFail mempty) . decode
   toLazyByteString = encode . unwrapWSServerMessage
 
 newtype WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: ClientMessage b c n }
@@ -24,5 +24,5 @@ newtype WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: Clien
 -- TODO: instance only covers text, not binary!
 instance JSONGame b c n => WebSocketsData (WSClientMessage b c n) where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSClientMessage . fromMaybe ClientMessageFail . decode
+  fromLazyByteString = WSClientMessage . fromMaybe (ClientMessageFail mempty) . decode
   toLazyByteString = encode . unwrapWSClientMessage

@@ -28,5 +28,4 @@ server port path _ = do putStrLn $ "Port is: " <> show port
                         let gameConfig = def
                             app = serve api $ hoistServer api (runHandlerM ServerState {..}) (handler path :: ServerT API (HandlerM b c n))
                         run port app
-                        return undefined -- TODO: undefined behaviour
   where config = def
