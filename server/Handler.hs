@@ -51,9 +51,9 @@ handler path = gameH :<|> wssH :<|> publicH
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
-        wssH = do gs <- asks gameStateTVar
-                  gc <- asks gameConfig
-                  cs <- asks clientsTVar
+        wssH = do gs <- reader gameStateTVar
+                  gc <- reader gameConfig
+                  cs <- reader clientsTVar
                   return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc cs) backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
