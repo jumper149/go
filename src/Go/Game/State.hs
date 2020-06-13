@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
 
 module Go.Game.State ( GameState (..)
                      , Action (..)
@@ -74,6 +74,7 @@ act action = do gs <- get
                            , countTurns = succ $ countTurns gs
                            }
 
+-- | Check rules. This should be done after applying an 'Action' to the 'GameState' with 'act'.
 checkRules :: (Game b c n, Monad m, MonadReader Rules m, MonadState (GameState b c n) m) => m (Either Exception ())
 checkRules = runExceptT $ do checkFree
                              checkPassing

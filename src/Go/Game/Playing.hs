@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Go.Game.Playing ( PlayingT
                        , runPlayingT

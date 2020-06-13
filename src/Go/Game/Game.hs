@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, KindSignatures #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Go.Game.Game ( Game (..)
                     , updateBoard
