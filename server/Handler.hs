@@ -2,19 +2,14 @@
 
 module Handler where
 
-import Control.Concurrent.MVar
+import Control.Monad.IO.Class
 import Control.Exception (finally)
-import Control.Monad.Reader
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
-import Data.Default.Class
 import Data.Foldable (traverse_)
 import GHC.Conc
-import GHC.Generics
-import GHC.TypeLits
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
-import Network.Wai.Handler.Warp (Port, run)
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets
 import Servant

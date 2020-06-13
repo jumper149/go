@@ -42,6 +42,6 @@ evalServerStateT ss sst = flip runReaderT ss $ unwrapServerStateT sst
 runNewServerStateT :: (Game b c n, MonadIO m) => Config -> ServerStateT b c n m a -> m (a, GameState b c n)
 runNewServerStateT gameConfig sst = do gameStateTVar <- liftIO . newTVarIO $ either undefined id $ configure gameConfig initState -- TODO: Use RulesetEnvT
                                        clientsTVar <- liftIO $ newTVarIO mempty
-                                       val <- runServerStateT ServerState {..} sst
+                                       val <- evalServerStateT ServerState {..} sst
                                        gs <- liftIO $ readTVarIO gameStateTVar
                                        return (val , gs)
