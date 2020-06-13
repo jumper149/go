@@ -28,5 +28,5 @@ finalizeState gs = EndScreen { lastBoard = currentBoard gs
 
 -- | Count the number of stones a player has on the board. Helper function for 'finalizeState'.
 countStones :: forall b c n. Game b c n => b -> PlayerN n -> Int
-countStones board player = length $ filter hasPlayerStone $ coords board
+countStones board player = length $ filter hasPlayerStone coords
   where hasPlayerStone coord = getStone board coord == Stone player

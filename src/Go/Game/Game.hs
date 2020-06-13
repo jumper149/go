@@ -1,10 +1,8 @@
 {-# LANGUAGE FunctionalDependencies, KindSignatures #-}
 
-module Go.Game.Game ( Game ( getStone
-                           , putStone
-                           )
+module Go.Game.Game ( Game (..)
                     , updateBoard
-                    , GameBoard (..)
+                    , GameCoord (..)
                     , Stone (..)
                     ) where
 
@@ -39,18 +37,22 @@ prepChains player = swapJoin . split . removeFrees
         split = S.spanAntitone (\ (Chain stone _) -> stone <= Stone player)
         swapJoin (a,b) = S.toAscList b <> S.toAscList a
 
-class (Eq b, Eq c, Ord c) => GameBoard b c | b -> c where
+-- | A class representing coordinates. All coordinates should be enumerable with
+-- '[minBound..maxBound]', so 'Bounded' and 'Enum' should be declared carefully. The ordering for
+-- 'Ord' can be arbitrary.
+class (Bounded c, Enum c, Eq c, Ord c) => GameCoord c where
+
+  -- | Return a list of all coordinates covering the board.
+  coords :: [c]
+  coords = [ minBound .. maxBound ]
+
+  -- | Return a list of all adjacent coordinates.
+  libertyCoords :: c -> [c]
+
+class (Eq b, GameCoord c, KnownNat n) => Game b c n | b -> c n where
 
   -- | Return an empty board.
   empty :: b
-
-  -- | Return a list of all coords covering the board.
-  coords :: b -> [c]
-
-  -- | Return a list of all adjacent coordinates.
-  libertyCoords :: b -> c -> [c]
-
-class (GameBoard b c, KnownNat n) => Game b c n | b -> c n where
 
   -- | Returns the stone.
   getStone :: b -> c -> Stone (PlayerN n)
@@ -63,7 +65,7 @@ accChain board stone coord acc = foldr (accChain board stone) newAcc neededSames
   where newAcc = acc `S.union` sames
         neededSames = sames `S.difference` acc
         sames = S.filter ((== stone) . getStone board) libs
-        libs = S.fromList $ libertyCoords board coord
+        libs = S.fromList $ libertyCoords coord
 
 chain :: forall b c n. Game b c n => b -> c -> Chain (PlayerN n) c
 chain board coord = Chain stone crds
@@ -72,7 +74,7 @@ chain board coord = Chain stone crds
         acc = S.singleton coord
 
 accChains :: forall b c n. Game b c n => b -> S.Set (Chain (PlayerN n) c)
-accChains board = foldr addCoord S.empty $ coords board
+accChains board = foldr addCoord S.empty coords -- TODO: only occurence of 'coords', maybe remove that method completely?
   where addCoord crd chns = if any (partOfChain crd) chns
                                then chns
                                else chain board crd `S.insert` chns
@@ -80,7 +82,7 @@ accChains board = foldr addCoord S.empty $ coords board
 hasLiberty :: forall b c n. Game b c n => b -> Chain (PlayerN n) c -> Bool
 hasLiberty board (Chain _ crds) = or bools
   where bools = S.map ((== Free) . (getStone board :: c -> Stone (PlayerN n))) libs
-        libs = S.unions $ S.map (S.fromList . libertyCoords board) crds
+        libs = S.unions $ S.map (S.fromList . libertyCoords) crds
 
 removeChain :: forall b c n. Game b c n => b -> Chain (PlayerN n) c -> b
 removeChain board (Chain _ crds) = foldl putFree board crds

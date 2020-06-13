@@ -26,12 +26,12 @@ newtype ArbCoord = ArbCoord (Coord 13)
   deriving (Eq, Ord, Read, Show)
 
 instance Arbitrary ArbCoord where
-  arbitrary = elements $ ArbCoord <$> coords (empty :: Board 13 2)
+  arbitrary = elements $ ArbCoord <$> coords
   shrink = shrinkNothing
 
 
 prop_empty :: Board 13 2 -> Bool
-prop_empty board = all (== Free) $ getStone board <$> coords board
+prop_empty board = all (== Free) $ getStone board <$> coords
 
 prop_single :: Board 13 2 -> ArbCoord -> ArbCoord -> Bool
 prop_single board (ArbCoord coord1) (ArbCoord coord2) = coordsSame == stonesSame
@@ -41,7 +41,7 @@ prop_single board (ArbCoord coord1) (ArbCoord coord2) = coordsSame == stonesSame
 prop_remove :: Board 13 2 -> ArbCoord -> Bool
 prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
   where single = putStone board coord $ Stone white
-        surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords board coord
+        surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords coord
         newBoard = updateBoard surrounded black
 
 white :: PlayerN 2

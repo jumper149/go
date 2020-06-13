@@ -73,12 +73,8 @@ ppRaw :: forall i n. (KnownNat i, KnownNat n) => Board i n -> String
 ppRaw (Board grid) = concatMap ppRow grid
   where ppRow = (++ "\n") . V.toList . V.map renderStone
 
-instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (Coord i) where
-  empty = Board . V.replicate . V.replicate $ Free
-
-  coords (Board _) = [ minBound .. maxBound ]
-
-  libertyCoords _ c = mapMaybe packCoord unsafeLibertyCoords
+instance KnownNat i => GameCoord (Coord i) where
+  libertyCoords c = mapMaybe packCoord unsafeLibertyCoords
     where unsafeLibertyCoords = [ (cx-1 , cy  )
                                 , (cx   , cy+1)
                                 , (cx+1 , cy  )
@@ -87,6 +83,8 @@ instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (Coord i) where
           (cx,cy) = getCoord c
 
 instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
+  empty = Board . V.replicate . V.replicate $ Free
+
   getStone (Board grid) (Coord x y) = let row = V.index grid y
                                       in V.index row x
 
@@ -98,15 +96,15 @@ instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
 instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
   renderBoard = ppFull
 
-  readCoord board str = if length wrds == 2
-                        && charsInRange 48 57 x
-                        && charsInRange 97 122 y
-                        && length y == 1
-                        then let coord = Coord xInt yInt
-                             in if coord `elem` coords board
-                                then Just coord
-                                else Nothing
-                        else Nothing
+  readCoord _ str = if length wrds == 2
+                    && charsInRange 48 57 x
+                    && charsInRange 97 122 y
+                    && length y == 1
+                    then let coord = Coord xInt yInt
+                         in if coord `elem` coords
+                            then Just coord
+                            else Nothing
+                    else Nothing
     where wrds = words str
           x = head wrds
           y = head $ tail wrds

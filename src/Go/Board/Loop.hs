@@ -18,12 +18,11 @@ import Go.Run.Term
 newtype Board i n = Board (D.Board i n)
   deriving (Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
 
-instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (D.Coord i) where
-  empty = Board empty
+newtype Coord i = Coord (D.Coord i)
+  deriving (Bounded, Enum, Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
 
-  coords (Board board) = coords board
-
-  libertyCoords _ c = mapMaybe (D.packCoord . wrapX) unsafeLibertyCoords
+instance KnownNat i => GameCoord (Coord i) where
+  libertyCoords (Coord coord) = Coord <$> mapMaybe (D.packCoord . wrapX) unsafeLibertyCoords
     where unsafeLibertyCoords = [ (cx-1 , cy  )
                                 , (cx   , cy+1)
                                 , (cx+1 , cy  )
@@ -31,16 +30,18 @@ instance (KnownNat i, KnownNat n) => GameBoard (Board i n) (D.Coord i) where
                                 ]
           wrapX (x,y) = (x `mod` s , y)
           s = natVal (Proxy :: Proxy i)
-          (cx,cy) = D.getCoord c
+          (cx,cy) = D.getCoord coord
 
-instance (KnownNat i, KnownNat n) => Game (Board i n) (D.Coord i) n where
-  getStone (Board board) = getStone board
+instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
+  empty = Board empty
 
-  putStone (Board board) coord stone = Board $ putStone board coord stone
+  getStone (Board board) (Coord coord) = getStone board coord
 
-instance (KnownNat i, KnownNat n) => TermGame (Board i n) (D.Coord i) n where
+  putStone (Board board) (Coord coord) stone = Board $ putStone board coord stone
+
+instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
   renderBoard (Board board) = renderBoard board
 
-  readCoord (Board board) = readCoord board
+  readCoord (Board board) = fmap Coord . readCoord board
 
-instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (D.Coord i) n
+instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n
