@@ -1,4 +1,4 @@
-{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts #-}
+{-# LANGUAGE AllowAmbiguousTypes, FlexibleContexts, RecordWildCards #-}
 
 module Go.Game.State ( GameState (..)
                      , Action (..)
@@ -36,13 +36,13 @@ instance (KnownNat n, Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameS
 
 initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
           => m (GameState b c n)
-initState = return $ GState { currentBoard = empty
-                            , currentPlayer = minBound
-                            , lastAction = Pass
-                            , previousBoards = [ empty ]
-                            , consecutivePasses = 0
-                            , countTurns = 0
-                            }
+initState = return $ GState {..}
+  where currentBoard = empty
+        currentPlayer = minBound
+        lastAction = Pass
+        previousBoards = [ empty ]
+        consecutivePasses = 0
+        countTurns = 0
 
 -- | A player can execute the actions represented by this data type.
 data Action c = Pass
@@ -59,24 +59,20 @@ data Exception = ExceptRedo
 instance FromJSON Exception
 instance ToJSON Exception
 
--- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
-act :: (Game b c n, Monad m, MonadState (GameState b c n) m) => Action c -> m ()
+-- | Apply action to 'GameState' and handle all fields in 'GameState'. Doesn't check rules.
+act :: forall b c n m. (Game b c n, Monad m, MonadState (GameState b c n) m) => Action c -> m ()
 act action = do gs <- get
-                let actedGs = case action of
-                                Pass -> let newConsecutivePasses = consecutivePasses gs + 1
-                                        in gs { lastAction = Pass
-                                              , consecutivePasses = newConsecutivePasses
-                                              }
-                                Place c -> let newB = updateBoard (putStone (currentBoard gs) c (Stone (currentPlayer gs))) (currentPlayer gs)
-                                           in gs { currentBoard = newB
-                                                 , lastAction = Place c
-                                                 , previousBoards = currentBoard gs : previousBoards gs -- TODO: don't keep infinite history to save memory?
-                                                 , consecutivePasses = 0
-                                                 }
-                    correctedGs = actedGs { currentPlayer = next $ currentPlayer gs
-                                          , countTurns = countTurns gs + 1
-                                          }
-                put correctedGs
+                put GState { currentBoard = case action of
+                                              Pass -> currentBoard gs
+                                              Place coord -> updateBoard (putStone (currentBoard gs) coord (Stone (currentPlayer gs))) (currentPlayer gs)
+                           , currentPlayer = next $ currentPlayer gs
+                           , lastAction = action -- TODO: keep longer history?
+                           , previousBoards = currentBoard gs : previousBoards gs -- TODO: don't keep infinite history to save memory?
+                           , consecutivePasses = case action of
+                                                   Pass -> succ $ consecutivePasses gs
+                                                   Place _ -> 0
+                           , countTurns = succ $ countTurns gs
+                           }
 
 -- TODO currently everything is checked after acting!
 checkRules :: (Game b c n, Monad m, MonadReader Rules m, MonadState (GameState b c n) m) => m (Either Exception ())
