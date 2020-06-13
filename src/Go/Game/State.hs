@@ -74,29 +74,33 @@ act action = do gs <- get
                            , countTurns = succ $ countTurns gs
                            }
 
--- TODO currently everything is checked after acting!
 checkRules :: (Game b c n, Monad m, MonadReader Rules m, MonadState (GameState b c n) m) => m (Either Exception ())
-checkRules = runExceptT $ do checkPassing
-                             checkFree
+checkRules = runExceptT $ do checkFree
+                             checkPassing
                              checkSuicide
                              checkKo
 
+-- | Check that the last placed stone was placed on a free coordinate.
+checkFree :: (Game b c r, Monad m, MonadError Exception m, MonadState (GameState b c n) m) => m ()
+checkFree = do gs <- get
+               case lastAction gs of
+                 Pass -> return ()
+                 Place c -> case previousBoards gs of
+                              previousBoard : _ -> when (getStone previousBoard c /= Free) $
+                                                     throwError ExceptRedo
+                              _ -> return ()
+
+-- | Check if the number of consecutive passes is below the number of players.
 checkPassing :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkPassing = do gs <- get
                   rPassing <- reader passing
                   case rPassing of
                     Allowed -> when (consecutivePasses gs >= countPlayers (currentPlayer gs)) $
-                                  throwError ExceptEnd
+                                 throwError ExceptEnd
                     Forbidden -> when (lastAction gs == Pass) $
                                    throwError ExceptRedo
 
-checkFree :: (Game b c r, Monad m, MonadError Exception m, MonadState (GameState b c n) m) => m ()
-checkFree = do gs <- get
-               case lastAction gs of
-                 Pass -> return ()
-                 Place c -> when (getStone (head $ previousBoards gs) c /= Free) $ -- TODO unsafe head
-                              throwError ExceptRedo
-
+-- | Check that the last placed stone wasn't removed right after, because it didn't have any liberties.
 checkSuicide :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkSuicide = do gs <- get
                   rSuicide <- reader suicide
@@ -107,7 +111,7 @@ checkSuicide = do gs <- get
                                    Place c -> when (getStone (currentBoard gs) c == Free) $
                                                 throwError ExceptRedo
 
--- TODO how does passing and ko work together?
+-- | Check if the last applied action is correct regarding to the ko-rule 'ko'.
 checkKo :: (Game b c n, Monad m, MonadError Exception m, MonadReader Rules m, MonadState (GameState b c n) m) => m ()
 checkKo = do gs <- get
              rKo <- reader ko
@@ -115,6 +119,6 @@ checkKo = do gs <- get
                Ko Allowed -> return ()
                Ko Forbidden -> case previousBoards gs of
                                  _ : compareBoard : _ -> when (currentBoard gs == compareBoard) $
-                                                           throwError ExceptRedo
+                                                           throwError ExceptRedo -- TODO: use more explicit error type
                                  _ -> return ()
                SuperKo -> return () -- TODO implement carefully
