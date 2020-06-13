@@ -62,8 +62,7 @@ instance ToJSON Exception
 -- | Apply action to GameState and handle number of passes. Doesn't check for sanity.
 act :: (Game b c n, Monad m, MonadState (GameState b c n) m) => Action c -> m ()
 act action = do gs <- get
-                let previousBoard = currentBoard gs
-                    actedGs = case action of
+                let actedGs = case action of
                                 Pass -> let newConsecutivePasses = consecutivePasses gs + 1
                                         in gs { lastAction = Pass
                                               , consecutivePasses = newConsecutivePasses
@@ -71,7 +70,7 @@ act action = do gs <- get
                                 Place c -> let newB = updateBoard (putStone (currentBoard gs) c (Stone (currentPlayer gs))) (currentPlayer gs)
                                            in gs { currentBoard = newB
                                                  , lastAction = Place c
-                                                 , previousBoards = [ previousBoard ] -- TODO keep history
+                                                 , previousBoards = currentBoard gs : previousBoards gs -- TODO: don't keep infinite history to save memory?
                                                  , consecutivePasses = 0
                                                  }
                     correctedGs = actedGs { currentPlayer = next $ currentPlayer gs
@@ -118,6 +117,8 @@ checkKo = do gs <- get
              rKo <- reader ko
              case rKo of
                Ko Allowed -> return ()
-               Ko Forbidden -> when (currentBoard gs == head (previousBoards gs)) $ -- TODO unsafe head
-                                  throwError ExceptRedo
+               Ko Forbidden -> case previousBoards gs of
+                                 _ : compareBoard : _ -> when (currentBoard gs == compareBoard) $ -- TODO unsafe head
+                                                           throwError ExceptRedo
+                                 _ -> return ()
                SuperKo -> return () -- TODO implement carefully

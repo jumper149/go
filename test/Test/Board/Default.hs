@@ -3,11 +3,16 @@ module Test.Board.Default where
 import Test.Hspec
 import Test.QuickCheck
 
+import Data.Default.Class
+import Data.Either (fromRight)
 import GHC.TypeLits
 
 import Go.Board.Default
+import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
+import Go.Game.Playing
+import Go.Game.State
 
 runTests :: IO ()
 runTests = hspec $
@@ -22,6 +27,9 @@ runTests = hspec $
 
     it "update the board" $
       property $ prop_remove emptyBoard
+
+    it "check ko-rule" $
+      property $ prop_ko
 
 
 newtype ArbCoord i = ArbCoord (Coord i)
@@ -45,6 +53,23 @@ prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
   where single = putStone board coord $ Stone white
         surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords coord
         newBoard = updateBoard surrounded black
+
+prop_ko :: Bool
+prop_ko = currentBoard beforeKoState == currentBoard afterKoState -- equal, when ko rule kicked in
+  where initalState = fromRight undefined $ configure def initState :: GameState (Board 13 2) (Coord 13) 2
+        turns = [ Place $ Coord 3 2
+                , Place $ Coord 2 2
+                , Place $ Coord 4 3
+                , Place $ Coord 1 3
+                , Place $ Coord 3 4
+                , Place $ Coord 2 4
+                , Place $ Coord 2 3
+                , Place $ Coord 3 3
+                ]
+        koTurn = Place $ Coord 2 3
+        beforeKoState = foldl (flip $ doTurn def) initalState turns
+        afterKoState = doTurn def koTurn beforeKoState
+
 
 white :: KnownNat i => PlayerN i
 white = minBound
