@@ -44,4 +44,4 @@ main = do args <- getArgs
           let OptArgs { directory = directory
                       , port = port
                       } = opts
-          server port directory (Proxy :: Proxy (G.EndScreen (D.Board 19 2) 2)) -- TODO: Don't use endscreen and n, but use associated type from Game class instead
+          server port directory (Proxy :: Proxy (D.Board 19 2)) -- TODO: Don't use endscreen and n, but use associated type from Game class instead

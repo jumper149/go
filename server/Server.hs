@@ -17,7 +17,7 @@ import Go.Game.End
 import Go.Game.State
 import Go.Run.JSON
 
-server :: forall b c n. JSONGame b c n => Port -> FilePath -> Proxy (EndScreen b n) -> IO ()
+server :: forall b c n. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
 server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
