@@ -12,13 +12,13 @@ runTests = hspec $
   describe "Board.Default" $ do
 
     let emptyBoard = empty :: Board 13 2
-    it "creates an empty board" $
+    it "create an empty board" $
       property $ prop_empty emptyBoard
 
-    it "lets you place single stones" $
+    it "place single stones" $
       property $ prop_single emptyBoard
 
-    it "updates the board properly" $
+    it "update the board" $
       property $ prop_remove emptyBoard
 
 
