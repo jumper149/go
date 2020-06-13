@@ -3,6 +3,8 @@ module Test.Board.Default where
 import Test.Hspec
 import Test.QuickCheck
 
+import GHC.TypeLits
+
 import Go.Board.Default
 import Go.Game.Game
 import Go.Game.Player
@@ -22,32 +24,32 @@ runTests = hspec $
       property $ prop_remove emptyBoard
 
 
-newtype ArbCoord = ArbCoord (Coord 13)
+newtype ArbCoord i = ArbCoord (Coord i)
   deriving (Eq, Ord, Read, Show)
 
-instance Arbitrary ArbCoord where
+instance KnownNat i => Arbitrary (ArbCoord i) where
   arbitrary = elements $ ArbCoord <$> coords
   shrink = shrinkNothing
 
 
-prop_empty :: Board 13 2 -> Bool
+prop_empty :: (KnownNat i, KnownNat n) => Board i n -> Bool
 prop_empty board = all (== Free) $ getStone board <$> coords
 
-prop_single :: Board 13 2 -> ArbCoord -> ArbCoord -> Bool
+prop_single :: (KnownNat i, KnownNat n) => Board i n -> ArbCoord i -> ArbCoord i -> Bool
 prop_single board (ArbCoord coord1) (ArbCoord coord2) = coordsSame == stonesSame
   where stonesSame = getStone (putStone board coord1 (Stone black)) coord2 == Stone black
         coordsSame = coord1 == coord2
 
-prop_remove :: Board 13 2 -> ArbCoord -> Bool
+prop_remove :: (KnownNat i, KnownNat n) => Board i n -> ArbCoord i -> Bool
 prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
   where single = putStone board coord $ Stone white
         surrounded = foldl (\ b xy -> putStone b xy $ Stone black) single $ libertyCoords coord
         newBoard = updateBoard surrounded black
 
-white :: PlayerN 2
+white :: KnownNat i => PlayerN i
 white = minBound
 
-black :: PlayerN 2
+black :: KnownNat i => PlayerN i
 black = next minBound
 
 -- TODO: remove when implemented in QuickCheck >= 2.13
