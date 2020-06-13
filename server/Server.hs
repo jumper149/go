@@ -11,6 +11,7 @@ import System.Directory (listDirectory)
 
 import API
 import Handler
+import ServerState
 
 import Go.Game.Config
 import Go.Game.End
@@ -21,11 +22,7 @@ server :: forall b c n. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
 server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
-                        initial <- either (error . show) id <$> runConfiguredT config initState :: IO (GameState b c n) -- TODO: error?
-                        gameStateTVar <- newTVarIO initial
-                        clientsTVar <- newTVarIO mempty
-
-                        let gameConfig = def
-                            app = serve api $ hoistServer api (runHandlerM ServerState {..}) (handler path :: ServerT API (HandlerM b c n))
+                        let hoistHandler = fmap fst . runNewServerStateT config
+                            app = serve api $ hoistServer api hoistHandler (handler path :: ServerT API (ServerStateHandler b c n))
                         run port app
   where config = def

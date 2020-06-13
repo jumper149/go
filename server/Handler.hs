@@ -24,6 +24,7 @@ import API
 import Client
 import Html
 import Message
+import ServerState
 
 import Go.Game.Config
 import Go.Game.Game
@@ -32,28 +33,18 @@ import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-data ServerState b c n = ServerState { gameStateTVar :: TVar (GameState b c n)
-                                     , gameConfig :: Config
-                                     , clientsTVar :: TVar (Clients n)
-                                     }
-  deriving (Eq, Generic)
+type ServerStateHandler b c n = ServerStateT b c n Handler
 
-newtype HandlerM b c n a = HandlerM { unwrapHandlerM :: ReaderT (ServerState b c n) Handler a }
-  deriving (Applicative, Functor, Generic, Monad, MonadIO, MonadReader (ServerState b c n))
-
-runHandlerM :: ServerState b c n -> HandlerM b c n a -> Handler a
-runHandlerM ss = flip runReaderT ss . unwrapHandlerM
-
-handler :: forall b c n. JSONGame b c n => FilePath -> ServerT API (HandlerM b c n)
+handler :: forall b c n. JSONGame b c n => FilePath -> ServerT API (ServerStateHandler b c n)
 handler path = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => m GameHtml
         gameH = return GameHtml {..}
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
-        wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
-        wssH = do gs <- reader gameStateTVar
-                  gc <- reader gameConfig
-                  cs <- reader clientsTVar
+        wssH :: (MonadIO m, MonadServerState b c n m) => m Application
+        wssH = do gs <- serverGameState
+                  gc <- serverGameConfig
+                  cs <- serverClients
                   return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc cs) backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
