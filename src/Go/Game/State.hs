@@ -114,7 +114,7 @@ checkKo = do gs <- get
              case rKo of
                Ko Allowed -> return ()
                Ko Forbidden -> case previousBoards gs of
-                                 _ : compareBoard : _ -> when (currentBoard gs == compareBoard) $ -- TODO unsafe head
+                                 _ : compareBoard : _ -> when (currentBoard gs == compareBoard) $
                                                            throwError ExceptRedo
                                  _ -> return ()
                SuperKo -> return () -- TODO implement carefully
