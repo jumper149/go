@@ -11,6 +11,7 @@ import qualified Go.Run.JSON as G
 
 data Operation b c n = NoOp
                      | QueueOp [Operation b c n]
+                     | WriteErrorLog String
                      | UpdateAction (Maybe (G.Action c))
                      | SubmitAction
                      | SetState (G.GameState b c n)
@@ -20,7 +21,7 @@ data Operation b c n = NoOp
 
 handleWS :: G.JSONGame b c n => WebSocket (G.ServerMessage b c n) -> Operation b c n
 handleWS (WebSocketMessage msg) = case msg of
-                                    G.ServerMessageFail -> NoOp
+                                    G.ServerMessageFail m -> WriteErrorLog (m <> "\n")
                                     G.ServerMessageGameState gs -> SetState gs
                                     G.ServerMessagePlayer mbP -> SetPlayer mbP
 handleWS _ = NoOp
