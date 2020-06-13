@@ -1,8 +1,6 @@
 module Main where
 
-import Control.Monad (void)
 import Data.Default.Class
-import Data.Foldable (traverse_)
 import Data.Proxy (Proxy)
 import GHC.Generics
 import Network.Wai.Handler.Warp (Port)
@@ -46,4 +44,4 @@ main = do args <- getArgs
           let OptArgs { directory = directory
                       , port = port
                       } = opts
-          void (server port directory :: IO (G.EndScreen (D.Board 19 2) 2))
+          server port directory (Proxy :: Proxy (G.EndScreen (D.Board 19 2) 2)) -- TODO: Don't use endscreen and n, but use associated type from Game class instead

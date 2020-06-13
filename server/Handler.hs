@@ -9,10 +9,9 @@ import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Default.Class
 import Data.Foldable (traverse_)
-import qualified Data.Map as M
-import qualified Data.Text as T
+import GHC.Conc
 import GHC.Generics
-import GHC.TypeLits hiding (Text)
+import GHC.TypeLits
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
 import Network.Wai.Handler.Warp (Port, run)
@@ -22,25 +21,20 @@ import Servant
 import System.Directory (listDirectory)
 
 import API
+import Client
 import Html
 import Message
 
 import Go.Game.Config
+import Go.Game.Game
 import Go.Game.Player
 import Go.Game.Playing
 import Go.Game.State
 import Go.Run.JSON
 
-data Client n = Client { player :: Maybe (PlayerN n)
-                       , connection :: Connection
-                       }
-  deriving Generic
-
-type Clients n = M.Map Int (Client n)
-
-data ServerState b c n = ServerState { gameStateMVar :: MVar (GameState b c n)
+data ServerState b c n = ServerState { gameStateTVar :: TVar (GameState b c n)
                                      , gameConfig :: Config
-                                     , clientsMVar :: MVar (Clients n)
+                                     , clientsTVar :: TVar (Clients n)
                                      }
   deriving (Eq, Generic)
 
@@ -57,9 +51,9 @@ handler path = gameH :<|> wssH :<|> publicH
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
         wssH :: (MonadIO m, MonadReader (ServerState b c n) m) => m Application
-        wssH = do gs <- asks gameStateMVar
+        wssH = do gs <- asks gameStateTVar
                   gc <- asks gameConfig
-                  cs <- asks clientsMVar
+                  cs <- asks clientsTVar
                   return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc cs) backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
@@ -68,45 +62,66 @@ handler path = gameH :<|> wssH :<|> publicH
         publicH = serveDirectoryWebApp path
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleWSConnection :: forall b c n. JSONGame b c n => MVar (GameState b c n) -> Config -> MVar (Clients n) -> PendingConnection -> IO ()
-handleWSConnection gsMVar config csMVar pendingConn = do conn <- acceptRequest pendingConn
-                                                         let client = Client { player = Nothing
-                                                                             , connection = conn
-                                                                             }
-                                                         key <- addClient client
-                                                         flip finally (removeClient key) $ do
-                                                           update client -- TODO: remove? and only use the update in loop
-                                                           loop key
-  where loop key = do maybeC <- M.lookup key <$> readMVar csMVar
-                      case maybeC of
-                        Nothing -> error "can't find client to key"
-                        Just c -> do clientMsg <- unwrapWSClientMessage <$> receiveData (connection c) :: IO (ClientMessage b c n)
-                                     BS.putStrLn $ encode clientMsg
-                                     case clientMsg of
-                                       ClientMessageFail -> putStrLn "failed to do action"
-                                       ClientMessageAction action -> do modifyMVar_ gsMVar $ return . doTurn (rules config) action
-                                                                        broadcast
-                                       ClientMessagePlayer mbP -> do changePlayer key mbP
-                                                                     updatePlayer key
-                                     loop key
+handleWSConnection :: forall b c n. JSONGame b c n => TVar (GameState b c n) -> Config -> TVar (Clients n) -> PendingConnection -> IO ()
+handleWSConnection gsTVar config csTVar pendingConn = do conn <- acceptRequest pendingConn
+                                                         key <- atomically $ do
+                                                           clients <- readTVar csTVar
+                                                           let client = newClient conn clients
+                                                           writeTVar csTVar $ addClient client clients
+                                                           return $ identification client
+                                                         removeClientAfter csTVar key $ do
+                                                           sendMessage csTVar key $ ServerMessageGameState <$> readTVar gsTVar
+                                                           loopGame gsTVar config csTVar key
 
-        broadcast = traverse_ update =<< readMVar csMVar
+-- | Remove client from 'Clients' after the given action in 'IO' ends. Exceptions in 'IO', will be
+-- caught by this function.
+removeClientAfter :: TVar (Clients n) -> ClientId -> IO a -> IO a
+removeClientAfter csTVar key cont = finally cont $ atomically remove
+  where remove = do clients <- readTVar csTVar
+                    writeTVar csTVar $ removeClient key clients
 
-        update Client {..} = sendTextData connection . WSServerMessage . ServerMessageGameState =<< readMVar gsMVar
+-- | A loop, that receives messages via the websocket and also answers back, while progressing the
+-- 'GameState'.
+loopGame :: forall b c n. JSONGame b c n => TVar (GameState b c n) -> Config -> TVar (Clients n) -> ClientId -> IO ()
+loopGame gsTVar config csTVar key = do msg <- receiveMessage csTVar key :: IO (ClientMessage b c n)
+                                       BS.putStrLn $ encode msg -- TODO: remove?
+                                       case msg of
+                                         ClientMessageFail -> putStrLn "failed to do action"
+                                         ClientMessageAction action -> broadcastMessage csTVar $ ServerMessageGameState <$> updateGameState gsTVar config action
+                                         ClientMessagePlayer mbP -> let msg = ServerMessagePlayer <$> updatePlayer csTVar key mbP :: STM (ServerMessage b c n)
+                                                                     in sendMessage csTVar key msg
+                                       loopGame gsTVar config csTVar key
 
-        updatePlayer k = do mbC <- M.lookup k <$> readMVar csMVar
-                            case mbC of
-                              Nothing -> error "can't find client to key"
-                              Just c -> sendTextData (connection c) (WSServerMessage . ServerMessagePlayer . player $ c :: WSServerMessage b c n)
+-- | Read a message from the websocket.
+receiveMessage :: JSONGame b c n => TVar (Clients n) -> ClientId -> IO (ClientMessage b c n)
+receiveMessage csTVar key = do conn <- connection . getClient key <$> readTVarIO csTVar
+                               unwrapWSClientMessage <$> receiveData conn
 
-        changePlayer k mbP = do mbC <- M.lookup k <$> readMVar csMVar
-                                case mbC of
-                                  Nothing -> error "can't find client to key"
-                                  Just c -> modifyMVar_ csMVar $ return . M.insert k (c { player = mbP })
+-- | Send a message via the websocket.
+sendMessage :: JSONGame b c n => TVar (Clients n) -> ClientId -> STM (ServerMessage b c n) -> IO ()
+sendMessage csTVar key msgSTM = do (conn , msg) <- atomically $ do
+                                     conn <- connection . getClient key <$> readTVar csTVar
+                                     msg <- msgSTM
+                                     return (conn , msg)
+                                   sendTextData conn $ WSServerMessage msg
 
-        addClient c = modifyMVar csMVar $ return . addClient' (toEnum 0) c
-          where addClient' k c cs  = case M.lookup k cs of
-                                       Nothing -> (M.insert k c cs , k)
-                                       Just _ -> addClient' (succ k) c cs
+-- | Send a message to all clients in 'Clients' via the websocket.
+broadcastMessage :: JSONGame b c n => TVar (Clients n) -> STM (ServerMessage b c n) -> IO ()
+broadcastMessage csTVar msgSTM = do (conns , msg) <- atomically $ do
+                                      conns <- map (connection . snd) . toClientList <$> readTVar csTVar
+                                      msg <- msgSTM
+                                      return (conns , msg)
+                                    traverse_ (\ conn -> sendTextData conn $ WSServerMessage msg) conns
 
-        removeClient k = modifyMVar_ csMVar (return . M.delete k)
+-- | Update the 'GameState' in 'STM'.
+updateGameState :: Game b c n => TVar (GameState b c n) -> Config -> Action c -> STM (GameState b c n)
+updateGameState gsTVar config action = do gs <- doTurn (rules config) action <$> readTVar gsTVar
+                                          writeTVar gsTVar gs
+                                          return gs
+
+-- | Update the 'maybePlayer' of a specific 'Client' in 'STM'.
+updatePlayer :: TVar (Clients n ) -> ClientId -> Maybe (PlayerN n) -> STM (Maybe (PlayerN n))
+updatePlayer csTVar key mbP = do clients <- readTVar csTVar
+                                 let client = getClient key clients
+                                 writeTVar csTVar $ addClient client { maybePlayer = mbP } clients
+                                 maybePlayer . getClient key <$> readTVar csTVar -- TODO: This is the same as 'return mbP'. Change?
