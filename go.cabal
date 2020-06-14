@@ -52,6 +52,7 @@ executable server
                          Html
                          Message
                          Server
+                         ServerState
     build-depends:       base
                        , go
                        , aeson
