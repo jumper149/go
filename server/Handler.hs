@@ -39,7 +39,7 @@ handler path = gameH :<|> wssH :<|> publicH
 
         wssH :: (MonadIO m, MonadServerState b c n m) => m Application
         wssH = do ss <- serverState
-                  let hoistedConnector conn = evalServerStateT ss $ handleWSConnection conn
+                  let hoistedConnector conn = evalServerStateT ss $ handleWSConnection conn -- TODO: only works, because it's MonadReader in disguise
                   return $ websocketsOr defaultConnectionOptions hoistedConnector backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
@@ -48,13 +48,13 @@ handler path = gameH :<|> wssH :<|> publicH
         publicH = serveDirectoryWebApp path
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleWSConnection :: JSONGame b c n => PendingConnection -> ServerStateT b c n IO ()
+handleWSConnection :: (JSONGame b c n, MonadIO m) => PendingConnection -> ServerStateT b c n m ()
 handleWSConnection pendingConn = do csTVar <- serverClients
                                     gsTVar <- serverGameState
                                     gameConfig <- serverGameConfig
 
                                     conn <- liftIO $ acceptRequest pendingConn
-                                    key <- mapServerStateT atomically $ serverAddClient conn
+                                    key <- mapServerStateT (liftIO . atomically) $ serverAddClient conn
 
                                     liftIO $ removeClientAfter csTVar key $ do
                                         sendMessage csTVar key $ Right . ServerMessageGameState <$> readTVar gsTVar
@@ -69,6 +69,19 @@ serverAddClient conn = do clients <- readServerClients
 serverRemoveClient :: ClientId -> ServerStateT b c n STM ()
 serverRemoveClient key = do clients <- readServerClients
                             writeServerClients $ removeClient key clients
+
+serverReceiveMessage :: JSONGame b c n => ClientId -> ServerStateT b c n IO (ClientMessage b c n)
+serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT atomically readServerClients
+                              unwrapWSClientMessage <$> (liftIO $ receiveData conn)
+
+serverSendMessage :: forall b c n. JSONGame b c n => ClientId -> STM (Either String (ServerMessage b c n)) -> ServerStateT b c n IO ()
+serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ do
+                                    conn <- connection . getClient key <$> readServerClients
+                                    msg <- lift msgSTM
+                                    return (conn , msg)
+                                  case msg of
+                                    Right rMsg -> liftIO $ sendTextData conn $ WSServerMessage rMsg
+                                    Left lString -> liftIO $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Remove client from 'Clients' after the given action in 'IO' ends. Exceptions in 'IO', will be
 -- caught by this function.
