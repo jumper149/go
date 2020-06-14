@@ -10,6 +10,7 @@ module ServerState ( MonadServerState (..)
                    , readServerGameState
                    , writeServerClients
                    , writeServerGameState
+                   , serverAddClient
                    , serverRemoveClient
                    , serverUpdateGameState
                    , serverUpdatePlayer
@@ -19,6 +20,7 @@ import Control.Monad.Reader
 import Data.Default.Class
 import GHC.Conc
 import GHC.Generics
+import Network.WebSockets (Connection)
 
 import Client
 
@@ -86,6 +88,16 @@ mapServerStateT :: (m1 a1 -> m2 a2)
                 -> ServerStateT b c n m2 a2
 mapServerStateT f = ServerStateT . mapReaderT f . unwrapServerStateT
 
+-- | Create a new client in 'Clients' with the given 'Connection'.
+serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)
+                => Connection
+                -> t STM ClientId
+serverAddClient conn = do clients <- readServerClients
+                          let client = newClient conn clients
+                          writeServerClients $ addClient client clients
+                          return $ identification client
+
+-- | Remove a client from 'Clients'.
 serverRemoveClient :: (MonadServerState b c n (t STM), MonadTrans t)
                    => ClientId
                    -> t STM ()

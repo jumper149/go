@@ -32,6 +32,20 @@ handleConnection pendingConn = do conn <- liftIO $ acceptRequest pendingConn
                                           serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
                                           serverLoopGame key
 
+-- | A loop, that receives messages via the websocket and also answers back, while progressing the
+-- 'GameState'.
+serverLoopGame :: forall b c m n. (JSONGame b c n, MonadIO m)
+               => ClientId
+               -> ServerStateT b c n m ()
+serverLoopGame key = do msg <- serverReceiveMessage key
+                        liftIO . BS.putStrLn $ encode msg -- TODO: remove?
+                        case msg of
+                          ClientMessageFail _ -> liftIO $ putStrLn "failed to do action" -- TODO: server side error log would be better
+                          ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
+                          ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> serverUpdatePlayer key mbP
+                                                      in serverSendMessage key msg
+                        serverLoopGame key
+
 -- | Read a message from the websocket.
 serverReceiveMessage :: (JSONGame b c n, MonadIO m)
                      => ClientId
@@ -65,26 +79,3 @@ serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT (
                                        case msg of
                                          Right rMsg -> traverse_ (\ c -> liftIO . sendTextData c $ WSServerMessage rMsg) conns
                                          Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
-
--- | Add a new client to 'Clients' with the given 'Connection'.
-serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)
-                => Connection
-                -> t STM ClientId
-serverAddClient conn = do clients <- readServerClients
-                          let client = newClient conn clients
-                          writeServerClients $ addClient client clients
-                          return $ identification client
-
--- | A loop, that receives messages via the websocket and also answers back, while progressing the
--- 'GameState'.
-serverLoopGame :: forall b c m n. (JSONGame b c n, MonadIO m)
-               => ClientId
-               -> ServerStateT b c n m ()
-serverLoopGame key = do msg <- serverReceiveMessage key
-                        liftIO . BS.putStrLn $ encode msg -- TODO: remove?
-                        case msg of
-                          ClientMessageFail _ -> liftIO $ putStrLn "failed to do action" -- TODO: server side error log would be better
-                          ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
-                          ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> serverUpdatePlayer key mbP
-                                                      in serverSendMessage key msg
-                        serverLoopGame key
