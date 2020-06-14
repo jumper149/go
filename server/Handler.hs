@@ -56,9 +56,12 @@ handleWSConnection pendingConn = do csTVar <- serverClients
                                     conn <- liftIO $ acceptRequest pendingConn
                                     key <- mapServerStateT (liftIO . atomically) $ serverAddClient conn
 
-                                    liftIO $ removeClientAfter csTVar key $ do
-                                        sendMessage csTVar key $ Right . ServerMessageGameState <$> readTVar gsTVar
-                                        loopGame gsTVar gameConfig csTVar key
+                                    ss <- serverState
+
+                                    liftIO $ flip finally (atomically . evalServerStateT ss $ serverRemoveClient key) $ -- TODO: only works, because it's MonadReader in disguise
+                                        evalServerStateT ss $ do -- TODO: only works, because it's MonadReader in disguise
+                                            serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
+                                            serverLoopGame key
 
 serverAddClient :: Connection -> ServerStateT b c n STM ClientId
 serverAddClient conn = do clients <- readServerClients
@@ -83,15 +86,15 @@ serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ d
                                     Right rMsg -> liftIO $ sendTextData conn $ WSServerMessage rMsg
                                     Left lString -> liftIO $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
-serverBroadcastMessage :: forall b c n. JSONGame b c n => TVar (Clients n) -> ClientId -> ServerStateT b c n STM (Either String (ServerMessage b c n)) -> ServerStateT b c n IO ()
-serverBroadcastMessage csTVar key msgSTM = do (conns , msg , conn) <- mapServerStateT atomically $ do
-                                                conns <- map (connection . snd) . toClientList <$> readServerClients
-                                                msg <- msgSTM
-                                                conn <- connection . getClient key <$> readServerClients
-                                                return (conns , msg , conn)
-                                              case msg of
-                                                Right rMsg -> traverse_ (\ c -> liftIO . sendTextData c $ WSServerMessage rMsg) conns
-                                                Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
+serverBroadcastMessage :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n STM (Either String (ServerMessage b c n)) -> ServerStateT b c n IO ()
+serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT atomically $ do
+                                         conns <- map (connection . snd) . toClientList <$> readServerClients
+                                         msg <- msgSTM
+                                         conn <- connection . getClient key <$> readServerClients
+                                         return (conns , msg , conn)
+                                       case msg of
+                                         Right rMsg -> traverse_ (\ c -> liftIO . sendTextData c $ WSServerMessage rMsg) conns
+                                         Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 serverUpdateGameState :: Game b c n => ClientId -> Action c -> ServerStateT b c n STM (Either String (GameState b c n))
 serverUpdateGameState key action = do clientIsCurrent <- serverIsCurrentPlayer key
@@ -113,6 +116,16 @@ serverIsCurrentPlayer key = do client <- getClient key <$> readServerClients
                                case maybePlayer client of
                                  Nothing -> return False
                                  Just p -> return $ p == currentPlayer gs
+
+serverLoopGame :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n IO ()
+serverLoopGame key = do msg <- serverReceiveMessage key
+                        liftIO . BS.putStrLn $ encode msg -- TODO: remove?
+                        case msg of
+                          ClientMessageFail _ -> liftIO $ putStrLn "failed to do action"
+                          ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
+                          ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> serverUpdatePlayer key mbP
+                                                      in serverSendMessage key msg
+                        serverLoopGame key
 
 -- | Remove client from 'Clients' after the given action in 'IO' ends. Exceptions in 'IO', will be
 -- caught by this function.
