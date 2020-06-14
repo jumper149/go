@@ -13,7 +13,6 @@ import Network.Wai (responseLBS)
 import Network.Wai.Handler.WebSockets (websocketsOr)
 import Network.WebSockets
 import Servant
-import System.Directory (listDirectory)
 
 import API
 import Client
@@ -42,12 +41,10 @@ handler path = gameH :<|> wssH :<|> publicH
         publicH = serveDirectoryWebApp path
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleWSConnection :: (JSONGame b c n, MonadIO m) => PendingConnection -> ServerStateT b c n m ()
-handleWSConnection pendingConn = do csTVar <- serverClients
-                                    gsTVar <- serverGameState
-                                    gameConfig <- serverGameConfig
-
-                                    conn <- liftIO $ acceptRequest pendingConn
+handleWSConnection :: (JSONGame b c n, MonadIO m)
+                   => PendingConnection
+                   -> ServerStateT b c n m ()
+handleWSConnection pendingConn = do conn <- liftIO $ acceptRequest pendingConn
                                     key <- mapServerStateT (liftIO . atomically) $ serverAddClient conn
 
                                     ss <- serverState
@@ -58,12 +55,17 @@ handleWSConnection pendingConn = do csTVar <- serverClients
                                             serverLoopGame key
 
 -- | Read a message from the websocket.
-serverReceiveMessage :: JSONGame b c n => ClientId -> ServerStateT b c n IO (ClientMessage b c n)
+serverReceiveMessage :: JSONGame b c n
+                     => ClientId
+                     -> ServerStateT b c n IO (ClientMessage b c n)
 serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT atomically readServerClients
                               unwrapWSClientMessage <$> liftIO (receiveData conn)
 
 -- | Send a message via the websocket.
-serverSendMessage :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n STM (Either String (ServerMessage b c n)) -> ServerStateT b c n IO ()
+serverSendMessage :: forall b c n. JSONGame b c n
+                  => ClientId
+                  -> ServerStateT b c n STM (Either String (ServerMessage b c n))
+                  -> ServerStateT b c n IO ()
 serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ do
                                     conn <- connection . getClient key <$> readServerClients
                                     msg <- msgSTM
@@ -73,7 +75,10 @@ serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ d
                                     Left lString -> liftIO $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
-serverBroadcastMessage :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n STM (Either String (ServerMessage b c n)) -> ServerStateT b c n IO ()
+serverBroadcastMessage :: forall b c n. JSONGame b c n
+                       => ClientId
+                       -> ServerStateT b c n STM (Either String (ServerMessage b c n))
+                       -> ServerStateT b c n IO ()
 serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT atomically $ do
                                          conns <- map (connection . snd) . toClientList <$> readServerClients
                                          msg <- msgSTM
@@ -84,7 +89,8 @@ serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT a
                                          Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Add a new client to 'Clients' with the given 'Connection'.
-serverAddClient :: Connection -> ServerStateT b c n STM ClientId
+serverAddClient :: Connection
+                -> ServerStateT b c n STM ClientId
 serverAddClient conn = do clients <- readServerClients
                           let client = newClient conn clients
                           writeServerClients $ addClient client clients
@@ -92,7 +98,9 @@ serverAddClient conn = do clients <- readServerClients
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
-serverLoopGame :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n IO ()
+serverLoopGame :: forall b c n. JSONGame b c n
+               => ClientId
+               -> ServerStateT b c n IO ()
 serverLoopGame key = do msg <- serverReceiveMessage key
                         liftIO . BS.putStrLn $ encode msg -- TODO: remove?
                         case msg of
