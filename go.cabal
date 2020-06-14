@@ -66,6 +66,7 @@ executable server
                        , servant-rawm
                        , servant-server
                        , text
+                       , transformers
                        , wai
                        , wai-extra
                        , wai-websockets

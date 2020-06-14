@@ -2,8 +2,9 @@
 
 module Handler where
 
-import Control.Monad.IO.Class
 import Control.Exception (finally)
+import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Foldable (traverse_)
@@ -37,10 +38,9 @@ handler path = gameH :<|> wssH :<|> publicH
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
         wssH :: (MonadIO m, MonadServerState b c n m) => m Application
-        wssH = do gs <- serverGameState
-                  gc <- serverGameConfig
-                  cs <- serverClients
-                  return $ websocketsOr defaultConnectionOptions (handleWSConnection gs gc cs) backupApp
+        wssH = do ss <- serverState
+                  let hoistedConnector conn = evalServerStateT ss $ handleWSConnection conn
+                  return $ websocketsOr defaultConnectionOptions hoistedConnector backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
@@ -48,16 +48,27 @@ handler path = gameH :<|> wssH :<|> publicH
         publicH = serveDirectoryWebApp path
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleWSConnection :: forall b c n. JSONGame b c n => TVar (GameState b c n) -> Config -> TVar (Clients n) -> PendingConnection -> IO ()
-handleWSConnection gsTVar config csTVar pendingConn = do conn <- acceptRequest pendingConn
-                                                         key <- atomically $ do
-                                                           clients <- readTVar csTVar
-                                                           let client = newClient conn clients
-                                                           writeTVar csTVar $ addClient client clients
-                                                           return $ identification client
-                                                         removeClientAfter csTVar key $ do
-                                                           sendMessage csTVar key $ Right . ServerMessageGameState <$> readTVar gsTVar
-                                                           loopGame gsTVar config csTVar key
+handleWSConnection :: JSONGame b c n => PendingConnection -> ServerStateT b c n IO ()
+handleWSConnection pendingConn = do csTVar <- serverClients
+                                    gsTVar <- serverGameState
+                                    gameConfig <- serverGameConfig
+
+                                    conn <- liftIO $ acceptRequest pendingConn
+                                    key <- mapServerStateT atomically $ serverAddClient conn
+
+                                    liftIO $ removeClientAfter csTVar key $ do
+                                        sendMessage csTVar key $ Right . ServerMessageGameState <$> readTVar gsTVar
+                                        loopGame gsTVar gameConfig csTVar key
+
+serverAddClient :: Connection -> ServerStateT b c n STM ClientId
+serverAddClient conn = do clients <- readServerClients
+                          let client = newClient conn clients
+                          writeServerClients $ addClient client clients
+                          return $ identification client
+
+serverRemoveClient :: ClientId -> ServerStateT b c n STM ()
+serverRemoveClient key = do clients <- readServerClients
+                            writeServerClients $ removeClient key clients
 
 -- | Remove client from 'Clients' after the given action in 'IO' ends. Exceptions in 'IO', will be
 -- caught by this function.
