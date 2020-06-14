@@ -3,6 +3,7 @@ module WebSocket ( handleConnection
 
 import Control.Exception (finally)
 import Control.Monad.IO.Class
+import Control.Monad.Trans.Class
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Foldable (traverse_)
@@ -32,18 +33,18 @@ handleConnection pendingConn = do conn <- liftIO $ acceptRequest pendingConn
                                           serverLoopGame key
 
 -- | Read a message from the websocket.
-serverReceiveMessage :: JSONGame b c n
+serverReceiveMessage :: (JSONGame b c n, MonadIO m)
                      => ClientId
-                     -> ServerStateT b c n IO (ClientMessage b c n)
-serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT atomically readServerClients
+                     -> ServerStateT b c n m (ClientMessage b c n)
+serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT (liftIO . atomically) readServerClients
                               unwrapWSClientMessage <$> liftIO (receiveData conn)
 
 -- | Send a message via the websocket.
-serverSendMessage :: forall b c n. JSONGame b c n
+serverSendMessage :: forall b c m n. (JSONGame b c n, MonadIO m)
                   => ClientId
                   -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                  -> ServerStateT b c n IO ()
-serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ do
+                  -> ServerStateT b c n m ()
+serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT (liftIO . atomically) $ do
                                     conn <- connection . getClient key <$> readServerClients
                                     msg <- msgSTM
                                     return (conn , msg)
@@ -52,11 +53,11 @@ serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT atomically $ d
                                     Left lString -> liftIO $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
-serverBroadcastMessage :: forall b c n. JSONGame b c n
+serverBroadcastMessage :: forall b c m n. (JSONGame b c n, MonadIO m)
                        => ClientId
                        -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                       -> ServerStateT b c n IO ()
-serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT atomically $ do
+                       -> ServerStateT b c n m ()
+serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT (liftIO . atomically) $ do
                                          conns <- map (connection . snd) . toClientList <$> readServerClients
                                          msg <- msgSTM
                                          conn <- connection . getClient key <$> readServerClients
@@ -66,8 +67,9 @@ serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT a
                                          Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Add a new client to 'Clients' with the given 'Connection'.
-serverAddClient :: Connection
-                -> ServerStateT b c n STM ClientId
+serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)
+                => Connection
+                -> t STM ClientId
 serverAddClient conn = do clients <- readServerClients
                           let client = newClient conn clients
                           writeServerClients $ addClient client clients
@@ -75,9 +77,9 @@ serverAddClient conn = do clients <- readServerClients
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
-serverLoopGame :: forall b c n. JSONGame b c n
+serverLoopGame :: forall b c m n. (JSONGame b c n, MonadIO m)
                => ClientId
-               -> ServerStateT b c n IO ()
+               -> ServerStateT b c n m ()
 serverLoopGame key = do msg <- serverReceiveMessage key
                         liftIO . BS.putStrLn $ encode msg -- TODO: remove?
                         case msg of
