@@ -96,7 +96,7 @@ serverLoopGame :: forall b c n. JSONGame b c n => ClientId -> ServerStateT b c n
 serverLoopGame key = do msg <- serverReceiveMessage key
                         liftIO . BS.putStrLn $ encode msg -- TODO: remove?
                         case msg of
-                          ClientMessageFail _ -> liftIO $ putStrLn "failed to do action"
+                          ClientMessageFail _ -> liftIO $ putStrLn "failed to do action" -- TODO: server side error log would be better
                           ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
                           ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> serverUpdatePlayer key mbP
                                                       in serverSendMessage key msg
