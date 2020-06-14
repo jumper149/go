@@ -32,11 +32,23 @@ class Monad m => MonadServerState b c n m | m -> b c n where
 
   serverState :: m (ServerState b c n)
 
-serverClients :: MonadServerState b c n m => m (TVar (Clients n))
-serverClients = clientsTVar <$> serverState
+readServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
+                  => t STM (Clients n)
+readServerClients = lift . readTVar . clientsTVar =<< serverState
 
-serverGameState :: MonadServerState b c n m => m (TVar (GameState b c n))
-serverGameState = gameStateTVar <$> serverState
+readServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
+                    => t STM (GameState b c n)
+readServerGameState = lift . readTVar . gameStateTVar =<< serverState
+
+writeServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
+                   => Clients n
+                   -> t STM ()
+writeServerClients cs = lift . flip writeTVar cs . clientsTVar =<< serverState
+
+writeServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
+                     => GameState b c n
+                     -> t STM ()
+writeServerGameState gs = lift . flip writeTVar gs . gameStateTVar =<< serverState
 
 serverGameConfig :: MonadServerState b c n m => m Config
 serverGameConfig = gameConfig <$> serverState
@@ -56,7 +68,7 @@ instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
 evalServerStateT :: ServerState b c n
                  -> ServerStateT b c n m a
                  -> m a
-evalServerStateT ss sst = flip runReaderT ss $ unwrapServerStateT sst
+evalServerStateT ss = flip runReaderT ss . unwrapServerStateT
 
 -- TODO: add exec-, eval- and with-functions
 runNewServerStateT :: (Game b c n, MonadIO m)
@@ -72,25 +84,7 @@ runNewServerStateT gameConfig sst = do gameStateTVar <- liftIO . newTVarIO $ eit
 mapServerStateT :: (m1 a1 -> m2 a2)
                 -> ServerStateT b c n m1 a1
                 -> ServerStateT b c n m2 a2
-mapServerStateT f sst = ServerStateT . mapReaderT f $ unwrapServerStateT sst
-
-readServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
-                  => t STM (Clients n)
-readServerClients = lift . readTVar =<< serverClients
-
-readServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
-                    => t STM (GameState b c n)
-readServerGameState = lift . readTVar =<< serverGameState
-
-writeServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
-                   => Clients n
-                   -> t STM ()
-writeServerClients cs = lift . flip writeTVar cs =<< serverClients
-
-writeServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
-                     => GameState b c n
-                     -> t STM ()
-writeServerGameState gs = lift . flip writeTVar gs =<< serverGameState
+mapServerStateT f = ServerStateT . mapReaderT f . unwrapServerStateT
 
 serverRemoveClient :: (MonadServerState b c n (t STM), MonadTrans t)
                    => ClientId
