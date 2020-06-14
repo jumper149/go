@@ -4,7 +4,6 @@ module Handler where
 
 import Control.Exception (finally)
 import Control.Monad.IO.Class
-import Control.Monad.Trans.Class
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Foldable (traverse_)
@@ -22,11 +21,6 @@ import Html
 import Message
 import ServerState
 
-import Go.Game.Config
-import Go.Game.Game
-import Go.Game.Player
-import Go.Game.Playing
-import Go.Game.State
 import Go.Run.JSON
 
 type ServerStateHandler b c n = ServerStateT b c n Handler
@@ -63,16 +57,6 @@ handleWSConnection pendingConn = do csTVar <- serverClients
                                             serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
                                             serverLoopGame key
 
-serverAddClient :: Connection -> ServerStateT b c n STM ClientId
-serverAddClient conn = do clients <- readServerClients
-                          let client = newClient conn clients
-                          writeServerClients $ addClient client clients
-                          return $ identification client
-
-serverRemoveClient :: ClientId -> ServerStateT b c n STM ()
-serverRemoveClient key = do clients <- readServerClients
-                            writeServerClients $ removeClient key clients
-
 -- | Read a message from the websocket.
 serverReceiveMessage :: JSONGame b c n => ClientId -> ServerStateT b c n IO (ClientMessage b c n)
 serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT atomically readServerClients
@@ -99,29 +83,12 @@ serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT a
                                          Right rMsg -> traverse_ (\ c -> liftIO . sendTextData c $ WSServerMessage rMsg) conns
                                          Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
--- | Update the 'GameState' in 'STM'.
-serverUpdateGameState :: Game b c n => ClientId -> Action c -> ServerStateT b c n STM (Either String (GameState b c n))
-serverUpdateGameState key action = do clientIsCurrent <- serverIsCurrentPlayer key
-                                      if clientIsCurrent
-                                         then do gs <- doTurn <$> (rules <$> serverGameConfig) <*> pure action <*> readServerGameState
-                                                 writeServerGameState gs
-                                                 return $ Right gs
-                                         else return $ Left "it's not your turn"
-
--- | Update the 'maybePlayer' of a specific 'Client' in 'STM'.
-serverUpdatePlayer :: ClientId -> Maybe (PlayerN n) -> ServerStateT b c n STM (Maybe (PlayerN n))
-serverUpdatePlayer key mbP = do clients <- readServerClients
-                                let client = getClient key clients
-                                writeServerClients $ addClient client { maybePlayer = mbP } clients
-                                maybePlayer . getClient key <$> readServerClients -- TODO: This is the same as 'return mbP'. Change?
-
--- | Check if given 'ClientId' is the 'currentPlayer'.
-serverIsCurrentPlayer :: ClientId -> ServerStateT b c n STM Bool
-serverIsCurrentPlayer key = do client <- getClient key <$> readServerClients
-                               gs <- readServerGameState
-                               case maybePlayer client of
-                                 Nothing -> return False
-                                 Just p -> return $ p == currentPlayer gs
+-- | Add a new client to 'Clients' with the given 'Connection'.
+serverAddClient :: Connection -> ServerStateT b c n STM ClientId
+serverAddClient conn = do clients <- readServerClients
+                          let client = newClient conn clients
+                          writeServerClients $ addClient client clients
+                          return $ identification client
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.

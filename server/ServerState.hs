@@ -1,13 +1,20 @@
 {-# LANGUAGE FunctionalDependencies, RecordWildCards #-}
 
---module ServerState ( MonadServerState (..)
---                   , ServerState
---                   , ServerStateT
---                   , evalServerStateT
---                   , runNewServerStateT
---                   , mapServerStateT
---                   ) where
-module ServerState where
+module ServerState ( MonadServerState (..)
+                   , ServerState
+                   , ServerStateT
+                   , evalServerStateT
+                   , runNewServerStateT
+                   , mapServerStateT
+                   , readServerClients
+                   , readServerGameState
+                   , writeServerClients
+                   , writeServerGameState
+                   , serverRemoveClient
+                   , serverUpdateGameState
+                   , serverUpdatePlayer
+                   , serverIsCurrentPlayer
+                   ) where
 
 import Control.Monad.Reader
 import Data.Default.Class
@@ -18,6 +25,8 @@ import Client
 
 import Go.Game.Config
 import Go.Game.Game
+import Go.Game.Player
+import Go.Game.Playing
 import Go.Game.State
 
 class Monad m => MonadServerState b c n m | m -> b c n where
@@ -70,3 +79,31 @@ writeServerClients cs = lift . flip writeTVar cs =<< serverClients
 
 writeServerGameState :: GameState b c n -> ServerStateT b c n STM ()
 writeServerGameState gs = lift . flip writeTVar gs =<< serverGameState
+
+serverRemoveClient :: ClientId -> ServerStateT b c n STM ()
+serverRemoveClient key = do clients <- readServerClients
+                            writeServerClients $ removeClient key clients
+
+-- | Update the 'GameState' in 'STM'.
+serverUpdateGameState :: Game b c n => ClientId -> Action c -> ServerStateT b c n STM (Either String (GameState b c n))
+serverUpdateGameState key action = do clientIsCurrent <- serverIsCurrentPlayer key
+                                      if clientIsCurrent
+                                         then do gs <- doTurn <$> (rules <$> serverGameConfig) <*> pure action <*> readServerGameState
+                                                 writeServerGameState gs
+                                                 return $ Right gs
+                                         else return $ Left "it's not your turn"
+
+-- | Update the 'maybePlayer' of a specific 'Client' in 'STM'.
+serverUpdatePlayer :: ClientId -> Maybe (PlayerN n) -> ServerStateT b c n STM (Maybe (PlayerN n))
+serverUpdatePlayer key mbP = do clients <- readServerClients
+                                let client = getClient key clients
+                                writeServerClients $ addClient client { maybePlayer = mbP } clients
+                                maybePlayer . getClient key <$> readServerClients -- TODO: This is the same as 'return mbP'. Change?
+
+-- | Check if given 'ClientId' is the 'currentPlayer'.
+serverIsCurrentPlayer :: ClientId -> ServerStateT b c n STM Bool
+serverIsCurrentPlayer key = do client <- getClient key <$> readServerClients
+                               gs <- readServerGameState
+                               case maybePlayer client of
+                                 Nothing -> return False
+                                 Just p -> return $ p == currentPlayer gs
