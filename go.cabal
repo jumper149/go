@@ -53,6 +53,7 @@ executable server
                          Message
                          Server
                          ServerState
+                         WebSocket
     build-depends:       base
                        , go
                        , aeson
