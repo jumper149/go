@@ -20,8 +20,8 @@ import Go.Run.JSON
 
 -- TODO: maybe ping every 30 seconds to keep alive?
 handleConnection :: (JSONGame b c n, MonadIO m)
-                   => PendingConnection
-                   -> ServerStateT b c n m ()
+                 => PendingConnection
+                 -> ServerStateT b c n m ()
 handleConnection pendingConn = do conn <- liftIO $ acceptRequest pendingConn
                                   key <- mapServerStateT (liftIO . atomically) $ serverAddClient conn
 
