@@ -2,6 +2,7 @@
 
 module Server where
 
+import Control.Monad.IO.Class
 import Data.Default.Class
 import Data.Proxy
 import GHC.Conc
@@ -22,7 +23,8 @@ server :: forall b c n. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
 server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
-                        let hoistHandler = fmap fst . runNewServerStateT config
-                            app = serve api $ hoistServer api hoistHandler (handler path :: ServerT API (ServerStateHandler b c n))
-                        run port app
-  where config = def
+                        fmap fst $ runNewServerStateT def $ do
+                          ss <- serverState
+                          let hoistHandler = evalServerStateT ss
+                              app = serve api . hoistServer api hoistHandler $ handler path
+                          liftIO $ run port app :: ServerStateT b c n IO ()
