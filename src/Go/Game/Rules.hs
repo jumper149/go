@@ -36,10 +36,7 @@ instance Default Rules where
               }
 
 newtype RulesetEnvT m a = RulesetEnvT { unwrapRulesetEnvT :: ReaderT Rules m a }
-  deriving (Functor, Applicative, Monad, MonadReader Rules)
-
-instance MonadTrans RulesetEnvT where
-  lift = RulesetEnvT . lift
+  deriving (Functor, Applicative, Monad, MonadReader Rules, MonadTrans)
 
 -- | Evaluate a computation with exposure to the given 'Rules'.
 runRulesetEnvT :: Rules -> RulesetEnvT m a -> m a
