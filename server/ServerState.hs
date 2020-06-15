@@ -5,7 +5,8 @@ module ServerState ( MonadServerState (..)
                    , ServerStateT
                    , evalServerStateT
                    , runNewServerStateT
-                   , mapServerStateT
+                   , mapServerStateT -- TODO: needed?
+                   , transact
                    , readServerClients
                    , readServerGameState
                    , writeServerClients
@@ -91,6 +92,11 @@ mapServerStateT :: (m1 a1 -> m2 a2)
                 -> ServerStateT b c n m1 a1
                 -> ServerStateT b c n m2 a2
 mapServerStateT f = ServerStateT . mapReaderT f . unwrapServerStateT
+
+transact :: MonadIO m
+         => ServerStateT b c n STM a
+         -> ServerStateT b c n m a
+transact = mapServerStateT $ liftIO . atomically
 
 -- | Create a new client in 'Clients' with the given 'Connection'.
 serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)

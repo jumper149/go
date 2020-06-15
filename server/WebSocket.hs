@@ -25,10 +25,10 @@ handleConnection :: (JSONGame b c n, MonadIO m, MonadUnliftIO m)
                  -> ServerStateT b c n m ()
 handleConnection pendingConn = liftedBracket connect disconnect hold
     where connect = do conn <- liftIO $ acceptRequest pendingConn
-                       mapServerStateT (liftIO . atomically) $ serverAddClient conn
+                       transact $ serverAddClient conn
           hold key = do serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
                         serverLoopGame key
-          disconnect key = mapServerStateT (liftIO . atomically) $ serverRemoveClient key
+          disconnect key = transact $ serverRemoveClient key
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
@@ -48,7 +48,7 @@ serverLoopGame key = do msg <- serverReceiveMessage key
 serverReceiveMessage :: (JSONGame b c n, MonadIO m)
                      => ClientId
                      -> ServerStateT b c n m (ClientMessage b c n)
-serverReceiveMessage key = do conn <- connection . getClient key <$> mapServerStateT (liftIO . atomically) readServerClients
+serverReceiveMessage key = do conn <- connection . getClient key <$> transact readServerClients
                               unwrapWSClientMessage <$> liftIO (receiveData conn)
 
 -- | Send a message via the websocket.
@@ -56,7 +56,7 @@ serverSendMessage :: forall b c m n. (JSONGame b c n, MonadIO m)
                   => ClientId
                   -> ServerStateT b c n STM (Either String (ServerMessage b c n))
                   -> ServerStateT b c n m ()
-serverSendMessage key msgSTM = do (conn , msg) <- mapServerStateT (liftIO . atomically) $ do
+serverSendMessage key msgSTM = do (conn , msg) <- transact $ do
                                     conn <- connection . getClient key <$> readServerClients
                                     msg <- msgSTM
                                     return (conn , msg)
@@ -69,7 +69,7 @@ serverBroadcastMessage :: forall b c m n. (JSONGame b c n, MonadIO m)
                        => ClientId
                        -> ServerStateT b c n STM (Either String (ServerMessage b c n))
                        -> ServerStateT b c n m ()
-serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT (liftIO . atomically) $ do
+serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- transact $ do
                                          conns <- map (connection . snd) . toClientList <$> readServerClients
                                          msg <- msgSTM
                                          conn <- connection . getClient key <$> readServerClients
