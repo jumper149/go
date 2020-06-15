@@ -16,6 +16,7 @@ module ServerState ( MonadServerState (..)
                    , serverUpdatePlayer
                    ) where
 
+import Control.Monad.IO.Unlift
 import Control.Monad.Reader
 import Data.Default.Class
 import GHC.Conc
@@ -63,6 +64,9 @@ data ServerState b c n = ServerState { clientsTVar :: TVar (Clients n)
 
 newtype ServerStateT b c n m a = ServerStateT { unwrapServerStateT :: ReaderT (ServerState b c n) m a }
   deriving (Applicative, Functor, Generic, Monad, MonadIO, MonadTrans)
+
+instance MonadUnliftIO m => MonadUnliftIO (ServerStateT b c n m) where
+  withRunInIO inner = ServerStateT $ withRunInIO $ \ run -> inner (run . unwrapServerStateT)
 
 instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
   serverState = ServerStateT ask

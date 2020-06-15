@@ -1,7 +1,8 @@
 module WebSocket ( handleConnection
                  ) where
 
-import Control.Exception (finally)
+import Control.Monad.IO.Unlift
+import Control.Exception (finally, bracket)
 import Control.Monad.IO.Class
 import Control.Monad.Trans.Class
 import Data.Aeson
@@ -19,18 +20,15 @@ import ServerState
 import Go.Run.JSON
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleConnection :: (JSONGame b c n, MonadIO m)
+handleConnection :: (JSONGame b c n, MonadIO m, MonadUnliftIO m)
                  => PendingConnection
                  -> ServerStateT b c n m ()
-handleConnection pendingConn = do conn <- liftIO $ acceptRequest pendingConn
-                                  key <- mapServerStateT (liftIO . atomically) $ serverAddClient conn
-
-                                  ss <- serverState
-
-                                  liftIO $ flip finally (atomically . evalServerStateT ss $ serverRemoveClient key) $ -- TODO: only works, because it's MonadReader in disguise
-                                      evalServerStateT ss $ do -- TODO: only works, because it's MonadReader in disguise
-                                          serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
-                                          serverLoopGame key
+handleConnection pendingConn = liftedBracket connect disconnect hold
+    where connect = do conn <- liftIO $ acceptRequest pendingConn
+                       mapServerStateT (liftIO . atomically) $ serverAddClient conn
+          hold key = do serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
+                        serverLoopGame key
+          disconnect key = mapServerStateT (liftIO . atomically) $ serverRemoveClient key
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
@@ -79,3 +77,10 @@ serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- mapServerStateT (
                                        case msg of
                                          Right rMsg -> traverse_ (\ c -> liftIO . sendTextData c $ WSServerMessage rMsg) conns
                                          Left lString -> liftIO . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
+
+liftedBracket :: MonadUnliftIO m
+              => m a
+              -> (a -> m b)
+              -> (a -> m c)
+              -> m c
+liftedBracket before after body = withRunInIO $ \ run -> bracket (run before) (run . after) (run . body)
