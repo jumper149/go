@@ -63,13 +63,14 @@ executable server
                        , directory
                        , http-types
                        , lucid
+                       , monad-control
                        , mtl
                        , servant-lucid
                        , servant-rawm
                        , servant-server
                        , text
                        , transformers
-                       , unliftio-core
+                       , transformers-base
                        , wai
                        , wai-extra
                        , wai-websockets

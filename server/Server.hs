@@ -2,7 +2,7 @@
 
 module Server where
 
-import Control.Monad.IO.Class
+import Control.Monad.Base
 import Data.Default.Class
 import Data.Proxy
 import GHC.Conc
@@ -27,4 +27,4 @@ server port path _ = do putStrLn $ "Port is: " <> show port
                           ss <- serverState
                           let hoistHandler = evalServerStateT ss
                               app = serve api . hoistServer api hoistHandler $ handler path
-                          liftIO $ run port app :: ServerStateT b c n IO ()
+                          liftBase $ run port app :: ServerStateT b c n IO ()

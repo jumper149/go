@@ -1,4 +1,4 @@
-{-# LANGUAGE FunctionalDependencies, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, FunctionalDependencies, RecordWildCards, TypeFamilies, UndecidableInstances #-}
 
 module ServerState ( MonadServerState (..)
                    , ServerState
@@ -17,8 +17,9 @@ module ServerState ( MonadServerState (..)
                    , serverUpdatePlayer
                    ) where
 
-import Control.Monad.IO.Unlift
+import Control.Monad.Base
 import Control.Monad.Reader
+import Control.Monad.Trans.Control
 import Data.Default.Class
 import GHC.Conc
 import GHC.Generics
@@ -64,10 +65,15 @@ data ServerState b c n = ServerState { clientsTVar :: TVar (Clients n)
   deriving (Eq, Generic)
 
 newtype ServerStateT b c n m a = ServerStateT { unwrapServerStateT :: ReaderT (ServerState b c n) m a }
-  deriving (Applicative, Functor, Generic, Monad, MonadIO, MonadTrans)
+  deriving (Applicative, Functor, Generic, Monad, MonadTrans, MonadTransControl)
 
-instance MonadUnliftIO m => MonadUnliftIO (ServerStateT b c n m) where
-  withRunInIO inner = ServerStateT $ withRunInIO $ \ run -> inner (run . unwrapServerStateT)
+instance MonadBase base m => MonadBase base (ServerStateT b c n m) where
+  liftBase = liftBaseDefault
+
+instance MonadBaseControl base m => MonadBaseControl base (ServerStateT b c n m) where
+  type StM (ServerStateT b c n m) a = ComposeSt (ServerStateT b c n) m a
+  liftBaseWith = defaultLiftBaseWith
+  restoreM = defaultRestoreM
 
 instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
   serverState = ServerStateT ask
@@ -78,14 +84,14 @@ evalServerStateT :: ServerState b c n
 evalServerStateT ss = flip runReaderT ss . unwrapServerStateT
 
 -- TODO: add exec-, eval- and with-functions
-runNewServerStateT :: (Game b c n, MonadIO m)
+runNewServerStateT :: (Game b c n, MonadBase IO m)
                    => Config
                    -> ServerStateT b c n m a
                    -> m (a, GameState b c n)
-runNewServerStateT gameConfig sst = do gameStateTVar <- liftIO . newTVarIO $ either undefined id $ configure gameConfig initState -- TODO: Use RulesetEnvT
-                                       clientsTVar <- liftIO $ newTVarIO mempty
+runNewServerStateT gameConfig sst = do gameStateTVar <- liftBase . newTVarIO $ either undefined id $ configure gameConfig initState -- TODO: Use RulesetEnvT
+                                       clientsTVar <- liftBase $ newTVarIO mempty
                                        val <- evalServerStateT ServerState {..} sst
-                                       gs <- liftIO $ readTVarIO gameStateTVar
+                                       gs <- liftBase $ readTVarIO gameStateTVar
                                        return (val , gs)
 
 mapServerStateT :: (m1 a1 -> m2 a2)
@@ -93,10 +99,10 @@ mapServerStateT :: (m1 a1 -> m2 a2)
                 -> ServerStateT b c n m2 a2
 mapServerStateT f = ServerStateT . mapReaderT f . unwrapServerStateT
 
-transact :: MonadIO m
+transact :: MonadBase IO m
          => ServerStateT b c n STM a
          -> ServerStateT b c n m a
-transact = mapServerStateT $ liftIO . atomically
+transact = mapServerStateT $ liftBase . atomically
 
 -- | Create a new client in 'Clients' with the given 'Connection'.
 serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)
