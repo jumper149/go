@@ -1,61 +1,39 @@
 {-# LANGUAGE FlexibleContexts , Rank2Types #-}
 
--- TODO: credit wai-transformers
+-- TODO: credit wai-transformers: https://github.com/athanclark/wai-transformers
 
 module Network.Wai.Trans where
 
-import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Isomorphic
-import Network.Wai (Application, Middleware, Request, Response, ResponseReceived)
+import Control.Monad.Base
+import Control.Monad.Trans.Control.Identity
+import Network.Wai
 
--- | Isomorphic to @Kleisli (ContT ResponseReceived m) Request Response@
 type ApplicationT m = Request -> (Response -> m ResponseReceived) -> m ResponseReceived
 type MiddlewareT m = ApplicationT m -> ApplicationT m
 
-liftApplication :: MonadBaseControlIsomorphic IO m
-                => Application -- ^ To lift
+liftApplication :: MonadBaseControlIdentity IO m
+                => Application
                 -> ApplicationT m
-liftApplication app request respond = withRunInBase $ \ run ->
-  app request $ \ response -> run $ respond response
+liftApplication app request respond = liftBaseWithIdentity $ \ run ->
+  app request $ \ response -> run $ respond response -- TODO simpler
 
-liftMiddleware :: MonadBaseControl IO m stM
-               => Extractable stM
-               => Middleware -- ^ To lift
+liftMiddleware :: MonadBaseControlIdentity IO m
+               => Middleware
                -> MiddlewareT m
-liftMiddleware mid app req respond = do
+liftMiddleware mid app request respond = do
   app' <- runApplicationT app
-  liftBaseWith (\runInBase -> mid app' req (fmap runSingleton . runInBase . respond))
+  liftBaseWithIdentity $ \ run -> mid app' request $ run . respond
 
---runApplicationT :: MonadBaseControl IO m stM
---                => Extractable stM
---                => ApplicationT m -- ^ To run
---                -> m Application
---runApplicationT app = liftBaseWith $ \runInBase ->
---  pure $ \req respond -> fmap runSingleton $ runInBase $ app req (\x -> liftBaseWith (\_ -> respond x))
---
---runMiddlewareT :: MonadBaseControl IO m stM
---               => Extractable stM
---               => MiddlewareT m -- ^ To run
---               -> m Middleware
---runMiddlewareT mid = liftBaseWith $ \runInBase ->
---  pure $ \app req respond -> do
---    app' <- fmap runSingleton $ runInBase $ runApplicationT (mid (liftApplication app))
---    app' req respond
---
---hoistApplicationT :: Monad m
---                  => Monad n
---                  => (forall a. m a -> n a) -- ^ To
---                  -> (forall a. n a -> m a) -- ^ From
---                  -> ApplicationT m
---                  -> ApplicationT n
---hoistApplicationT to from app req resp =
---  to $ app req (from . resp)
---
---hoistMiddlewareT :: Monad m
---                 => Monad n
---                 => (forall a. m a -> n a) -- ^ To
---                 -> (forall a. n a -> m a) -- ^ From
---                 -> MiddlewareT m
---                 -> MiddlewareT n
---hoistMiddlewareT to from mid =
---  hoistApplicationT to from . mid . hoistApplicationT from to
+runApplicationT :: MonadBaseControlIdentity IO m
+                => ApplicationT m
+                -> m Application
+runApplicationT app = liftBaseWithIdentity $ \ run ->
+  return $ \ request respond -> run $ app request $ liftBase . respond
+
+runMiddlewareT :: MonadBaseControlIdentity IO m
+               => MiddlewareT m
+               -> m Middleware
+runMiddlewareT mid = liftBaseWithIdentity $ \ run ->
+  return $ \ app request respond -> do
+    app' <- run $ runApplicationT $ mid $ liftApplication app
+    app' request respond

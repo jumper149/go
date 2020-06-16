@@ -95,6 +95,7 @@ library wai-transformers
     build-depends:       base
                        , monad-control
                        , transformers
+                       , transformers-base
                        , wai
                        , wai-websockets
                        , websockets
