@@ -31,4 +31,4 @@ hoistRun :: ((forall a. ServerStateT b c n Handler a -> Handler a) -> IO ()) -> 
 hoistRun runToHoist = liftBaseWithIdentity $ \ runInBaseId ->
     runToHoist $ \ ssTH ->
         (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-            runInBaseId . mapServerStateT runInBase $ ssTH
+            runInBaseId . mapT runInBase $ ssTH
