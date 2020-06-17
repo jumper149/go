@@ -20,7 +20,7 @@ module ServerState ( MonadServerState (..)
 import Control.Monad.Base
 import Control.Monad.Reader
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Isomorphic
+import Control.Monad.Trans.Control.Identity
 import Data.Default.Class
 import GHC.Conc
 import GHC.Generics
@@ -76,8 +76,8 @@ instance MonadBaseControl base m => MonadBaseControl base (ServerStateT b c n m)
   liftBaseWith = defaultLiftBaseWith
   restoreM = defaultRestoreM
 
-instance MonadBaseControlIsomorphic base m => MonadBaseControlIsomorphic base (ServerStateT b c n m) where
-  withRunInBase inner = ServerStateT $ withRunInBase $ \ run -> inner $ run . unwrapServerStateT
+instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (ServerStateT b c n m) where
+  liftBaseWithIdentity inner = ServerStateT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapServerStateT
 
 instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
   serverState = ServerStateT ask
