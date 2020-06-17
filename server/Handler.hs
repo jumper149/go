@@ -17,9 +17,7 @@ import WebSocket
 
 import Go.Run.JSON
 
-type ServerStateHandler b c n = ServerStateT b c n Handler
-
-handler :: forall b c n. JSONGame b c n => FilePath -> ServerT API (ServerStateHandler b c n)
+handler :: forall b c n. JSONGame b c n => FilePath -> ServerT API (ServerStateT b c n Handler)
 handler path = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => m GameHtml
         gameH = return GameHtml {..}
