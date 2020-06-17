@@ -1,8 +1,9 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings, RankNTypes, RecordWildCards #-}
 
 module Server where
 
-import Control.Monad.Base
+import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Identity
 import Data.Default.Class
 import Data.Proxy
 import GHC.Conc
@@ -19,12 +20,15 @@ import Go.Game.End
 import Go.Game.State
 import Go.Run.JSON
 
-server :: forall b c n. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
+server :: forall b c n a. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
 server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
                         fmap fst $ runNewServerStateT def $ do
-                          ss <- serverState
-                          let hoistHandler = evalServerStateT ss
-                              app = serve api . hoistServer api hoistHandler $ handler path
-                          liftBase $ run port app :: ServerStateT b c n IO ()
+                          (hoistRun $ \ x -> run port $ serve api $ hoistServer api x $ handler path) :: ServerStateT b c n IO ()
+
+hoistRun :: ((forall a. ServerStateT b c n Handler a -> Handler a) -> IO ()) -> ServerStateT b c n IO ()
+hoistRun runToHoist = liftBaseWithIdentity $ \ runInBaseId ->
+    runToHoist $ \ ssTH ->
+        (=<<) restoreM $ liftBaseWith $ \ runInBase ->
+            runInBaseId . mapServerStateT runInBase $ ssTH
