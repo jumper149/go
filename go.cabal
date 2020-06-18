@@ -53,6 +53,7 @@ executable server
                          Message
                          Server
                          ServerState
+                         ServerState.Class
                          WebSocket
     build-depends:       base
                        , go
