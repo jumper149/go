@@ -89,6 +89,6 @@ liftedBracket :: MonadBaseControl IO m
               -> (a -> m c)
               -> m c
 liftedBracket before after body = control $ \ runInBase ->
-    bracket (runInBase before)
-    (\ saved -> runInBase (after =<< restoreM saved))
-    (\ saved -> runInBase (body =<< restoreM saved))
+                                    bracket (runInBase before)
+                                    (\ saved -> runInBase (after =<< restoreM saved))
+                                    (\ saved -> runInBase (body =<< restoreM saved))
