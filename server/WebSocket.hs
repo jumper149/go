@@ -23,13 +23,14 @@ import Go.Run.JSON
 
 websocketMiddleware :: (JSONGame b c n, MonadBaseControlIdentity IO m)
                     => MiddlewareT (ServerStateT b c n m)
-websocketMiddleware = websocketsOrT defaultConnectionOptions clientApp
+websocketMiddleware = websocketsOrT defaultConnectionOptions serverApp
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-clientApp :: (JSONGame b c n, MonadBaseControl IO m)
+-- TODO: clientApp rename to serverApp
+serverApp :: (JSONGame b c n, MonadBaseControl IO m)
           => ServerAppT (ServerStateT b c n m)
-clientApp pendingConn = liftedBracket connect disconnect hold
-    where connect = do conn <- liftBase $ acceptRequest pendingConn
+serverApp pendingConnection = liftedBracket connect disconnect hold
+    where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ serverAddClient conn
           hold key = do serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
                         serverLoopGame key
