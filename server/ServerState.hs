@@ -17,10 +17,10 @@ module ServerState ( MonadServerState (..)
                    ) where
 
 import Control.Monad.Base
-import Control.Monad.Reader
+import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
-import Data.Default.Class
+import Control.Monad.Trans.Reader
 import GHC.Conc
 import GHC.Generics
 import Network.WebSockets (Connection)

@@ -30,12 +30,12 @@ server port path _ = do putStrLn $ "Port is: " <> show port
                           liftBase $ run port $ serve api hoistedServer :: ServerStateT b c n IO ()
 
 hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
-              => Proxy api
-              -> ServerT api (t Handler)
-              -> t IO (ServerT api Handler)
+                 => Proxy api
+                 -> ServerT api (t Handler)
+                 -> t IO (ServerT api Handler)
 hoistServerTrans a st = liftWithIdentity $ \ runId ->
-    return $ hoistServer' $ \ th ->
-        (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-            runId . mapT runInBase $ th
+  return $ hoistServer' $ \ th ->
+    (=<<) restoreM $ liftBaseWith $ \ runInBase ->
+      runId . mapT runInBase $ th
   where hoistServer' :: (forall a. t Handler a -> Handler a) -> ServerT api Handler
         hoistServer' hoist = hoistServer a hoist st
