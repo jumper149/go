@@ -24,23 +24,22 @@ runServerAppT :: MonadBaseControlIdentity IO m
 runServerAppT server = liftBaseWithIdentity $ \ run ->
   return $ \ pending -> run $ server pending
 
---type ClientAppT m a = Connection -> m a
---
---liftClientApp :: MonadIO m
---              => ClientApp a -- ^ To lift
---              -> ClientAppT m a
---liftClientApp c = liftIO . c
---
---runClientAppT :: MonadBaseControl IO m stM
---              => Extractable stM
---              => ClientAppT m a -- ^ To run
---              -> m (ClientApp a)
---runClientAppT c = liftBaseWith $ \runInBase ->
---  pure $ \conn -> runSingleton <$> runInBase (c conn)
+type ClientAppT m a = Connection -> m a
+
+liftClientApp :: MonadBase IO m
+              => ClientApp a
+              -> ClientAppT m a
+liftClientApp clientApp = liftBase . clientApp
+
+runClientAppT :: MonadBaseControlIdentity IO m
+              => ClientAppT m a
+              -> m (ClientApp a)
+runClientAppT clientApp = liftBaseWithIdentity $ \ run ->
+  return $ run . clientApp
 
 websocketsOrT :: MonadBaseControlIdentity IO m
               => ConnectionOptions
-              -> ServerAppT m -- ^ Server
+              -> ServerAppT m
               -> MiddlewareT m
 websocketsOrT options server app request respond = do
   server' <- runServerAppT server
