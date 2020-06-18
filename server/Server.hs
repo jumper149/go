@@ -1,7 +1,8 @@
-{-# LANGUAGE OverloadedStrings, RankNTypes, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RankNTypes, RecordWildCards #-}
 
 module Server where
 
+import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
 import Data.Default.Class
@@ -25,10 +26,16 @@ server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
                         fmap fst $ runNewServerStateT def $ do
-                          (hoistRun $ \ x -> run port $ serve api $ hoistServer api x $ handler path) :: ServerStateT b c n IO ()
+                          hoistedServer <- hoistServerTrans api $ handler path :: ServerStateT b c n IO (ServerT API Handler)
+                          liftBase $ run port $ serve api hoistedServer
 
-hoistRun :: ((forall a. ServerStateT b c n Handler a -> Handler a) -> IO ()) -> ServerStateT b c n IO ()
-hoistRun runToHoist = liftBaseWithIdentity $ \ runInBaseId ->
-    runToHoist $ \ ssTH ->
+hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
+              => Proxy api
+              -> ServerT api (t Handler)
+              -> t IO (ServerT api Handler)
+hoistServerTrans a st = liftWithIdentity $ \ runId ->
+    return $ hoistServer' $ \ th ->
         (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-            runInBaseId . mapT runInBase $ ssTH
+            runId . mapT runInBase $ th
+  where hoistServer' :: (forall a. t Handler a -> Handler a) -> ServerT api Handler
+        hoistServer' hoist = hoistServer a hoist st
