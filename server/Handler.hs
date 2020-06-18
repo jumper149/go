@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, OverloadedStrings, RecordWildCards #-}
 
 module Handler where
 
@@ -27,12 +27,17 @@ handler path = gameH :<|> wssH :<|> publicH
         gameH = return GameHtml {..}
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
-        wssH :: ServerStateT b c n Handler Application
-        wssH = (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-                 runInBase $ mapT liftBase $ runApplicationT $
-                     websocketsOrT defaultConnectionOptions handleConnection $ liftApplication backupApp
+        wssH :: MonadBaseControl IO m => ServerStateT b c n m Application
+        wssH = liftTrans $ runApplicationT $
+                 websocketsOrT defaultConnectionOptions handleConnection $ liftApplication backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
         publicH :: ServerT Raw m
         publicH = serveDirectoryWebApp path
+
+liftTrans :: (MonadBaseControl b m, MonadBaseControl b (t m), MonadTransFunctor t)
+          => t b a
+          -> t m a
+liftTrans a = (=<<) restoreM $ liftBaseWith $ \ runInBase ->
+                runInBase $ mapT liftBase $ a
