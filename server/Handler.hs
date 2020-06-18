@@ -35,9 +35,3 @@ handler path = gameH :<|> wssH :<|> publicH
 
         publicH :: ServerT Raw m
         publicH = serveDirectoryWebApp path
-
-liftTrans :: (MonadBaseControl b m, MonadBaseControl b (t m), MonadTransFunctor t)
-          => t b a
-          -> t m a
-liftTrans a = (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-                runInBase $ mapT liftBase $ a
