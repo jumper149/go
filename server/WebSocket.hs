@@ -1,30 +1,34 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module WebSocket ( handleConnection
+module WebSocket ( websocketMiddleware
                  ) where
 
-import Control.Exception (finally, bracket)
+import Control.Exception (bracket)
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Identity
 import Data.Aeson
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString.Lazy.Char8 as C8 (putStrLn)
 import Data.Foldable (traverse_)
 import GHC.Conc
 import Network.WebSockets
+import Network.Wai.Handler.WebSockets.Trans
+import Network.Wai.Trans (MiddlewareT)
 
-import API
 import Client
-import Html
 import Message
 import ServerState
 
 import Go.Run.JSON
 
+websocketMiddleware :: (JSONGame b c n, MonadBaseControlIdentity IO m)
+                    => MiddlewareT (ServerStateT b c n m)
+websocketMiddleware = websocketsOrT defaultConnectionOptions clientApp
+
 -- TODO: maybe ping every 30 seconds to keep alive?
-handleConnection :: (JSONGame b c n, MonadBase IO m, MonadBaseControl IO m)
-                 => PendingConnection
-                 -> ServerStateT b c n m ()
-handleConnection pendingConn = liftedBracket connect disconnect hold
+clientApp :: (JSONGame b c n, MonadBaseControl IO m)
+          => ServerAppT (ServerStateT b c n m)
+clientApp pendingConn = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConn
                        transact $ serverAddClient conn
           hold key = do serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
@@ -37,7 +41,7 @@ serverLoopGame :: forall b c m n. (JSONGame b c n, MonadBase IO m)
                => ClientId
                -> ServerStateT b c n m ()
 serverLoopGame key = do msg <- serverReceiveMessage key
-                        liftBase . BS.putStrLn $ encode msg -- TODO: remove?
+                        liftBase . C8.putStrLn $ encode msg -- TODO: remove?
                         case msg of
                           ClientMessageFail _ -> liftBase $ putStrLn "failed to do action" -- TODO: server side error log would be better
                           ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
