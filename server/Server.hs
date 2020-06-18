@@ -13,7 +13,6 @@ import Servant
 import System.Directory (listDirectory)
 
 import API
-import Handler
 import ServerState
 
 import Go.Run.JSON
