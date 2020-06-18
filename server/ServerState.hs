@@ -5,7 +5,6 @@ module ServerState ( MonadServerState (..)
                    , ServerStateT
                    , evalServerStateT
                    , runNewServerStateT
-                   , mapServerStateT -- TODO: needed?
                    , transact
                    , readServerClients
                    , readServerGameState
@@ -18,9 +17,10 @@ module ServerState ( MonadServerState (..)
                    ) where
 
 import Control.Monad.Base
-import Control.Monad.Reader
+import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Data.Default.Class
+import Control.Monad.Trans.Control.Identity
+import Control.Monad.Trans.Reader
 import GHC.Conc
 import GHC.Generics
 import Network.WebSockets (Connection)
@@ -65,7 +65,7 @@ data ServerState b c n = ServerState { clientsTVar :: TVar (Clients n)
   deriving (Eq, Generic)
 
 newtype ServerStateT b c n m a = ServerStateT { unwrapServerStateT :: ReaderT (ServerState b c n) m a }
-  deriving (Applicative, Functor, Generic, Monad, MonadTrans, MonadTransControl)
+  deriving (Applicative, Functor, Generic, Monad, MonadTrans, MonadTransControl, MonadTransControlIdentity, MonadTransFunctor)
 
 instance MonadBase base m => MonadBase base (ServerStateT b c n m) where
   liftBase = liftBaseDefault
@@ -74,6 +74,9 @@ instance MonadBaseControl base m => MonadBaseControl base (ServerStateT b c n m)
   type StM (ServerStateT b c n m) a = ComposeSt (ServerStateT b c n) m a
   liftBaseWith = defaultLiftBaseWith
   restoreM = defaultRestoreM
+
+instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (ServerStateT b c n m) where
+  liftBaseWithIdentity inner = ServerStateT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapServerStateT
 
 instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
   serverState = ServerStateT ask
@@ -94,15 +97,10 @@ runNewServerStateT gameConfig sst = do gameStateTVar <- liftBase . newTVarIO $ e
                                        gs <- liftBase $ readTVarIO gameStateTVar
                                        return (val , gs)
 
-mapServerStateT :: (m1 a1 -> m2 a2)
-                -> ServerStateT b c n m1 a1
-                -> ServerStateT b c n m2 a2
-mapServerStateT f = ServerStateT . mapReaderT f . unwrapServerStateT
-
-transact :: MonadBase IO m
-         => ServerStateT b c n STM a
-         -> ServerStateT b c n m a
-transact = mapServerStateT $ liftBase . atomically
+transact :: (MonadBase IO m, MonadTransFunctor t)
+         => t STM a
+         -> t m a
+transact = mapT $ liftBase . atomically
 
 -- | Create a new client in 'Clients' with the given 'Connection'.
 serverAddClient :: (MonadServerState b c n (t STM), MonadTrans t)

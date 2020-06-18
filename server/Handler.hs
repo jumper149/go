@@ -3,10 +3,14 @@
 module Handler where
 
 import Control.Monad.Base
+import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Identity
 import Data.Foldable (traverse_)
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
-import Network.Wai.Handler.WebSockets (websocketsOr)
+import Network.Wai.Handler.WebSockets.Trans
+import Network.Wai.Handler.WebSockets
+import Network.Wai.Trans
 import Network.WebSockets (defaultConnectionOptions)
 import Servant
 
@@ -23,10 +27,9 @@ handler path = gameH :<|> wssH :<|> publicH
         gameH = return GameHtml {..}
           where jsAppPath = "public/all.js" -- TODO: Use path instead of hardcoded
 
-        wssH :: (MonadBase IO m, MonadServerState b c n m) => m Application
-        wssH = do ss <- serverState
-                  let hoistedConnector conn = evalServerStateT ss $ handleConnection conn -- TODO: only works, because it's MonadReader in disguise
-                  return $ websocketsOr defaultConnectionOptions hoistedConnector backupApp
+        wssH :: MonadBaseControl IO m => ServerStateT b c n m Application
+        wssH = liftTrans $ runApplicationT $
+                 websocketsOrT defaultConnectionOptions handleConnection $ liftApplication backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
