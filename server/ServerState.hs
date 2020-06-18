@@ -1,7 +1,6 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, TypeFamilies, UndecidableInstances #-}
 
 module ServerState ( MonadServerState (..)
-                   , ServerState
                    , ServerStateT
                    , evalServerStateT
                    , runNewServerStateT
@@ -34,6 +33,12 @@ import Go.Game.Player
 import Go.Game.Playing
 import Go.Game.State
 
+data ServerState b c n = ServerState { clientsTVar' :: TVar (Clients n)
+                                     , gameStateTVar' :: TVar (GameState b c n)
+                                     , gameConfig' :: Config
+                                     }
+  deriving (Eq, Generic)
+
 newtype ServerStateT b c n m a = ServerStateT { unwrapServerStateT :: ReaderT (ServerState b c n) m a }
   deriving (Applicative, Functor, Generic, Monad, MonadTrans, MonadTransControl, MonadTransControlIdentity, MonadTransFunctor)
 
@@ -49,7 +54,9 @@ instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (Serve
   liftBaseWithIdentity inner = ServerStateT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapServerStateT
 
 instance Monad m => MonadServerState b c n (ServerStateT b c n m) where
-  serverState = ServerStateT ask
+  clientsTVar = ServerStateT $ reader clientsTVar'
+  gameStateTVar = ServerStateT $ reader gameStateTVar'
+  gameConfig = ServerStateT $ reader gameConfig'
 
 evalServerStateT :: ServerState b c n
                  -> ServerStateT b c n m a
@@ -61,8 +68,12 @@ runNewServerStateT :: (Game b c n, MonadBase IO m)
                    => Config
                    -> ServerStateT b c n m a
                    -> m (a, GameState b c n)
-runNewServerStateT gameConfig sst = do gameStateTVar <- liftBase . newTVarIO $ either undefined id $ configure gameConfig initState -- TODO: Use RulesetEnvT
-                                       clientsTVar <- liftBase $ newTVarIO mempty
-                                       val <- evalServerStateT ServerState {..} sst
-                                       gs <- liftBase $ readTVarIO gameStateTVar
-                                       return (val , gs)
+runNewServerStateT config sst = do clientsTVar' <- liftBase $ newTVarIO mempty
+                                   gameStateTVar' <- liftBase . newTVarIO $ either undefined id $ configure config initState -- TODO: Use RulesetEnvT
+                                   let ss = ServerState { clientsTVar' = clientsTVar'
+                                                        , gameStateTVar' = gameStateTVar'
+                                                        , gameConfig' = config
+                                                        }
+                                   val <- evalServerStateT ss sst
+                                   gs <- liftBase $ readTVarIO gameStateTVar'
+                                   return (val , gs)

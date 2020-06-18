@@ -1,7 +1,6 @@
 {-# LANGUAGE FlexibleContexts, FunctionalDependencies #-}
 
 module ServerState.Class ( MonadServerState (..)
-                         , ServerState (..)
                          , transact
                          , readServerClients
                          , readServerGameState
@@ -31,34 +30,32 @@ import Go.Game.State
 
 class Monad m => MonadServerState b c n m | m -> b c n where
 
-  serverState :: m (ServerState b c n)
+  clientsTVar :: m (TVar (Clients n))
+
+  gameStateTVar :: m (TVar (GameState b c n))
+
+  gameConfig :: m Config
 
 readServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
                   => t STM (Clients n)
-readServerClients = lift . readTVar . clientsTVar =<< serverState
+readServerClients = lift . readTVar =<< clientsTVar
 
 readServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
                     => t STM (GameState b c n)
-readServerGameState = lift . readTVar . gameStateTVar =<< serverState
+readServerGameState = lift . readTVar =<< gameStateTVar
 
 writeServerClients :: (MonadServerState b c n (t STM), MonadTrans t)
                    => Clients n
                    -> t STM ()
-writeServerClients cs = lift . flip writeTVar cs . clientsTVar =<< serverState
+writeServerClients cs = lift . flip writeTVar cs =<< clientsTVar
 
 writeServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
                      => GameState b c n
                      -> t STM ()
-writeServerGameState gs = lift . flip writeTVar gs . gameStateTVar =<< serverState
+writeServerGameState gs = lift . flip writeTVar gs =<< gameStateTVar
 
 serverGameConfig :: MonadServerState b c n m => m Config
-serverGameConfig = gameConfig <$> serverState
-
-data ServerState b c n = ServerState { clientsTVar :: TVar (Clients n)
-                                     , gameStateTVar :: TVar (GameState b c n)
-                                     , gameConfig :: Config
-                                     }
-  deriving (Eq, Generic)
+serverGameConfig = gameConfig
 
 transact :: (MonadBase IO m, MonadTransFunctor t)
          => t STM a
