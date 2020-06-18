@@ -1,7 +1,12 @@
 {-# LANGUAGE FlexibleInstances, FunctionalDependencies, RankNTypes, UndecidableInstances #-}
 
-module Control.Monad.Trans.Control.Identity where
+module Control.Monad.Trans.Control.Identity ( MonadTransControlIdentity (..)
+                                            , MonadBaseControlIdentity (..)
+                                            , MonadTransFunctor (..)
+                                            , liftTrans
+                                            ) where
 
+import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Identity
 import Control.Monad.Trans.Reader
@@ -31,7 +36,7 @@ instance MonadBaseControlIdentity b m => MonadBaseControlIdentity b (ReaderT r m
     liftBaseWithIdentity $ \ run ->
       inner $ run . flip runReaderT r
 
-class MonadTransControlIdentity t => MonadTransFunctor t where
+class MonadTransControlIdentity t => MonadTransFunctor t where -- TODO: does the superclass here really make sense
   mapT :: (m a -> n b) -> t m a -> t n b
 
 instance MonadTransFunctor IdentityT where
@@ -39,3 +44,9 @@ instance MonadTransFunctor IdentityT where
 
 instance MonadTransFunctor (ReaderT r) where
   mapT f m = ReaderT $ f . runReaderT m
+
+liftTrans :: (MonadBaseControl b m, MonadBaseControl b (t m), MonadTransFunctor t)
+          => t b a
+          -> t m a
+liftTrans a = (=<<) restoreM $ liftBaseWith $ \ runInBase ->
+                runInBase $ mapT liftBase $ a
