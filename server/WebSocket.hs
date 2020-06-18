@@ -6,6 +6,7 @@ module WebSocket ( handleConnection
 import Control.Exception (finally, bracket)
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Identity
 import Data.Aeson
 import qualified Data.ByteString.Lazy as BS
 import Data.Foldable (traverse_)
@@ -33,9 +34,9 @@ handleConnection pendingConn = liftedBracket connect disconnect hold
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
-serverLoopGame :: forall b c m n. (JSONGame b c n, MonadBase IO m)
+serverLoopGame :: forall b c m n t. (JSONGame b c n, MonadBase IO m, MonadBase IO (t m), MonadServerState b c n (t m), MonadServerState b c n (t STM), MonadTransFunctor t)
                => ClientId
-               -> ServerStateT b c n m ()
+               -> t m ()
 serverLoopGame key = do msg <- serverReceiveMessage key
                         liftBase . BS.putStrLn $ encode msg -- TODO: remove?
                         case msg of
@@ -46,17 +47,17 @@ serverLoopGame key = do msg <- serverReceiveMessage key
                         serverLoopGame key
 
 -- | Read a message from the websocket.
-serverReceiveMessage :: (JSONGame b c n, MonadBase IO m)
+serverReceiveMessage :: (JSONGame b c n, MonadBase IO m, MonadBase IO (t m), MonadServerState b c n (t m), MonadServerState b c n (t STM), MonadTransFunctor t)
                      => ClientId
-                     -> ServerStateT b c n m (ClientMessage b c n)
+                     -> t m (ClientMessage b c n)
 serverReceiveMessage key = do conn <- connection . getClient key <$> transact readServerClients
                               unwrapWSClientMessage <$> liftBase (receiveData conn)
 
 -- | Send a message via the websocket.
-serverSendMessage :: forall b c m n. (JSONGame b c n, MonadBase IO m)
+serverSendMessage :: forall b c m n t. (JSONGame b c n, MonadBase IO m, MonadBase IO (t m), MonadServerState b c n (t STM), MonadTransFunctor t)
                   => ClientId
-                  -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                  -> ServerStateT b c n m ()
+                  -> t STM (Either String (ServerMessage b c n))
+                  -> t m ()
 serverSendMessage key msgSTM = do (conn , msg) <- transact $ do
                                     conn <- connection . getClient key <$> readServerClients
                                     msg <- msgSTM
@@ -66,10 +67,10 @@ serverSendMessage key msgSTM = do (conn , msg) <- transact $ do
                                     Left lString -> liftBase $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
-serverBroadcastMessage :: forall b c m n. (JSONGame b c n, MonadBase IO m)
+serverBroadcastMessage :: forall b c m n t. (JSONGame b c n, MonadBase IO m, MonadBase IO (t m), MonadServerState b c n (t STM), MonadTransFunctor t)
                        => ClientId
-                       -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                       -> ServerStateT b c n m ()
+                       -> t STM (Either String (ServerMessage b c n))
+                       -> t m ()
 serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- transact $ do
                                          conns <- map (connection . snd) . toClientList <$> readServerClients
                                          msg <- msgSTM
