@@ -26,8 +26,8 @@ server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
                         fmap fst $ runNewServerStateT def $ do
-                          hoistedServer <- hoistServerTrans api $ handler path :: ServerStateT b c n IO (ServerT API Handler)
-                          liftBase $ run port $ serve api hoistedServer
+                          hoistedServer <- hoistServerTrans api $ handler path
+                          liftBase $ run port $ serve api hoistedServer :: ServerStateT b c n IO ()
 
 hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
               => Proxy api
