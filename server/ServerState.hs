@@ -97,9 +97,9 @@ runNewServerStateT gameConfig sst = do gameStateTVar <- liftBase . newTVarIO $ e
                                        gs <- liftBase $ readTVarIO gameStateTVar
                                        return (val , gs)
 
-transact :: MonadBase IO m
-         => ServerStateT b c n STM a
-         -> ServerStateT b c n m a
+transact :: (MonadBase IO m, MonadTransFunctor t)
+         => t STM a
+         -> t m a
 transact = mapT $ liftBase . atomically
 
 -- | Create a new client in 'Clients' with the given 'Connection'.
