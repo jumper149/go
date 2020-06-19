@@ -26,7 +26,6 @@ websocketMiddleware :: (JSONGame b c n, MonadBaseControlIdentity IO m)
 websocketMiddleware = websocketsOrT defaultConnectionOptions serverApp
 
 -- TODO: maybe ping every 30 seconds to keep alive?
--- TODO: clientApp rename to serverApp
 serverApp :: (JSONGame b c n, MonadBaseControl IO m)
           => ServerAppT (ServerStateT b c n m)
 serverApp pendingConnection = liftedBracket connect disconnect hold
