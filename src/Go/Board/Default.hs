@@ -1,7 +1,7 @@
 {-# LANGUAGE KindSignatures #-}
 
 module Go.Board.Default ( Board (..)
-                        , Coord (..) -- TODO: read-only?
+                        , Coord (..)
                         , packCoord
                         , getCoord
                         ) where
@@ -19,7 +19,6 @@ import GHC.TypeLits
 import Go.Game.Game
 import Go.Game.Player
 import Go.Run.JSON
-import Go.Run.Term
 
 -- | Represents the coordinates of a point on the board. Holds the x- and y-coordinate.
 -- Coordinates are integers in the interval [0, i).
@@ -60,19 +59,6 @@ instance (KnownNat n, ToJSON a) => ToJSON (V.Vector n a) where
 instance (KnownNat i, KnownNat n) => FromJSON (Board i n) where
 instance (KnownNat i, KnownNat n) => ToJSON (Board i n) where
 
-ppFull :: forall i n. (KnownNat i, KnownNat n) => Board i n -> String
-ppFull (Board vec) = decNumbers ++ numbers ++ bStr
-  where bStr = unlines $ zipWith (:) alphabet $ (lines . ppRaw) (Board vec :: Board i n)
-        numbers = " " ++ concatMap (show . (`mod` 10)) [ 1 .. s ] ++ "\n"
-        decNumbers = if s >= 10 then decNumbersRaw else ""
-        decNumbersRaw = " " ++ concatMap ((++ "         ") . show) [ 0 .. s `div` 10 ] ++ "\n"
-        alphabet = map ((toEnum :: Int -> Char) . (+ 96))  [ 1 .. s ]
-        s = fromEnum $ natVal (Proxy :: Proxy i)
-
-ppRaw :: forall i n. (KnownNat i, KnownNat n) => Board i n -> String
-ppRaw (Board grid) = concatMap ppRow grid
-  where ppRow = (++ "\n") . V.toList . V.map renderStone
-
 instance KnownNat i => GameCoord (Coord i) where
   libertyCoords c = mapMaybe packCoord unsafeLibertyCoords
     where unsafeLibertyCoords = [ (cx-1 , cy  )
@@ -92,27 +78,5 @@ instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
     where newGrid = grid V.// [(y , newRow)]
           newRow = row V.// [(x , stone)]
           row = V.index grid y
-
-instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
-  renderBoard = ppFull
-
-  readCoord _ str = if length wrds == 2
-                    && charsInRange 48 57 x
-                    && charsInRange 97 122 y
-                    && length y == 1
-                    then let coord = Coord xInt yInt
-                         in if coord `elem` coords
-                            then Just coord
-                            else Nothing
-                    else Nothing
-    where wrds = words str
-          x = head wrds
-          y = head $ tail wrds
-          xInt = toEnum $ read x - 1
-          yInt = toEnum $ fromEnum (head y) - fromEnum 'a'
-          charsInRange :: Int -> Int -> String -> Bool
-          charsInRange lo hi st = and bools
-            where nums = map fromEnum st
-                  bools = map (\ i -> i >= lo && i <= hi) nums
 
 instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n

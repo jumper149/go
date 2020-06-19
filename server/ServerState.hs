@@ -30,7 +30,6 @@ import ServerState.Class
 import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
-import Go.Game.Playing
 import Go.Game.State
 
 data ServerState b c n = ServerState { clientsTVar' :: TVar (Clients n)

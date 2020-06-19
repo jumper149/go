@@ -24,14 +24,14 @@ configure config configured = runIdentity $ runConfiguredT config configured
 
 -- | The configuration of a game.
 data Config = Config { players :: Int
-                     , rules :: Rules
+                     , ruleset :: Rules
                      , size  :: Int
                      }
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Config where
   def = Config { players = 2
-               , rules = def
+               , ruleset = def
                , size = 19
                }
 

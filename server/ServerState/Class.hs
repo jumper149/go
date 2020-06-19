@@ -25,7 +25,7 @@ import Client
 import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
-import Go.Game.Playing
+import Go.Game.Rules
 import Go.Game.State
 
 class Monad m => MonadServerState b c n m | m -> b c n where
@@ -85,9 +85,11 @@ serverUpdateGameState :: (Game b c n, MonadServerState b c n (t STM), MonadTrans
                       -> t STM (Either String (GameState b c n))
 serverUpdateGameState key action = do clientIsCurrent <- serverIsCurrentPlayer key
                                       if clientIsCurrent
-                                         then do gs <- doTurn <$> (rules <$> serverGameConfig) <*> pure action <*> readServerGameState
-                                                 writeServerGameState gs
-                                                 return $ Right gs
+                                         then do eithGs <- act <$> (ruleset <$> gameConfig) <*> pure action <*> readServerGameState
+                                                 case eithGs of
+                                                   Right gs -> do writeServerGameState gs
+                                                                  return $ Right gs
+                                                   Left ex  -> return $ Left $ show ex
                                          else return $ Left "it's not your turn"
 
 -- | Update the 'maybePlayer' of a specific 'Client' in 'STM'.

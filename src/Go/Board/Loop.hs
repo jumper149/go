@@ -13,7 +13,6 @@ import GHC.TypeLits
 import qualified Go.Board.Default as D
 import Go.Game.Game
 import Go.Run.JSON
-import Go.Run.Term
 
 newtype Board i n = Board (D.Board i n)
   deriving (Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
@@ -38,10 +37,5 @@ instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
   getStone (Board board) (Coord coord) = getStone board coord
 
   putStone (Board board) (Coord coord) stone = Board $ putStone board coord stone
-
-instance (KnownNat i, KnownNat n) => TermGame (Board i n) (Coord i) n where
-  renderBoard (Board board) = renderBoard board
-
-  readCoord (Board board) = fmap Coord . readCoord board
 
 instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n

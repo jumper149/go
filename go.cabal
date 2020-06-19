@@ -19,11 +19,9 @@ library
                          Go.Game.End
                          Go.Game.Game
                          Go.Game.Player
-                         Go.Game.Playing
                          Go.Game.Rules
                          Go.Game.State
                          Go.Run.JSON
-                         Go.Run.Term
     build-depends:       base
                        , aeson
                        , containers
@@ -132,24 +130,6 @@ executable client
                        , OverloadedStrings
     default-language:    Haskell2010
     ghcjs-options:       -Wall -dedupe
-
-executable term
-  main-is:             Main.hs
-  if impl(ghcjs)
-    buildable: False
-  else
-    hs-source-dirs:      term
-    build-depends:       base
-                       , go
-                       , data-default-class
-    default-extensions:  DataKinds
-                       , DeriveGeneric
-                       , FlexibleInstances
-                       , GeneralizedNewtypeDeriving
-                       , MultiParamTypeClasses
-                       , ScopedTypeVariables
-    default-language:    Haskell2010
-    ghc-options:         -Wall
 
 test-suite test
   main-is:             Main.hs
