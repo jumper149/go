@@ -1,7 +1,6 @@
 {-# LANGUAGE KindSignatures #-}
 
 module Go.Game.Player ( PlayerN
-                      , countPlayers
                       , next
                       ) where
 

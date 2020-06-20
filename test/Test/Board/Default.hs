@@ -8,6 +8,7 @@ import Data.Either (fromRight, isLeft, isRight)
 import GHC.TypeLits
 
 import Go.Board.Default
+import Go.Game.Act
 import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player

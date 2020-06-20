@@ -22,6 +22,7 @@ import Network.WebSockets (Connection)
 
 import Client
 
+import Go.Game.Act
 import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player

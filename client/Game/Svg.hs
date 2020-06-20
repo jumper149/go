@@ -3,6 +3,7 @@ module Game.Svg ( viewPassButton
                 ) where
 
 import qualified Data.Map as M
+import Data.Proxy
 import GHC.TypeLits
 import qualified Miso.Html as Html
 import Miso.String (ms)
@@ -70,7 +71,7 @@ viewPlayer p = rect_ [ fill_ . ms $ colorize p
                      , onClick $ SubmitPlayer $ Just p
                      ] []
   where width = 80 / count
-        count = toEnum $ G.countPlayers (toEnum 0 :: G.PlayerN n) :: Double
+        count = fromIntegral $ natVal (Proxy :: Proxy n) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count
 
 hintPlayer :: forall b c n. KnownNat n => Maybe (G.PlayerN n) -> Html.View (GameOperation b c n)
@@ -84,5 +85,5 @@ hintPlayer (Just p) = circle_ [ fill_ "red"
                               , cy_ "32.5"
                               , r_ "5"
                               ] []
-  where count = toEnum $ G.countPlayers (toEnum 0 :: G.PlayerN n) :: Double
+  where count = fromIntegral $ natVal (Proxy :: Proxy n) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count + 80 / (2 * count)
