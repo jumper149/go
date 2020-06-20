@@ -1,6 +1,5 @@
 name:                go
 version:             0.1.0.0
-synopsis:            Go, the abstract strategy board game but with an extended ruleset
 homepage:            https://github.com/jumper149/go
 license:             BSD3
 license-file:        LICENSE
