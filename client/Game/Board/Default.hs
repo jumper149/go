@@ -1,7 +1,7 @@
-module Board.Default ( D.Board
-                     , D.Coord
-                     , viewBoard
-                     ) where
+module Game.Board.Default ( D.Board
+                          , D.Coord
+                          , viewBoard
+                          ) where
 
 import Data.Bifunctor
 import qualified Data.Map as M
@@ -18,10 +18,10 @@ import qualified Go.Game.Game as G
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
 
-import Operation
-import Player
+import Game.Operation
+import Game.Player
 
-viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.Board i n -> Maybe (D.Coord i) -> Html.View (Operation (D.Board i n) (D.Coord i) n)
+viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.Board i n -> Maybe (D.Coord i) -> Html.View (GameOperation (D.Board i n) (D.Coord i) n)
 viewBoard (D.Board grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                              , ("width","50%")
                                                              ]
@@ -53,7 +53,7 @@ viewCoordIndicator = []
 viewStone :: forall i n. (KnownNat i, KnownNat n)
           => D.Coord i             -- ^ index of stone in board
           -> G.Stone (G.PlayerN n)
-          -> Html.View (Operation (D.Board i n) (D.Coord i) n)
+          -> Html.View (GameOperation (D.Board i n) (D.Coord i) n)
 viewStone c stone = case stone of
                       G.Free -> rect_ [ x_ . ms $ x - 0.5
                                       , y_ . ms $ y - 0.5
@@ -61,7 +61,7 @@ viewStone c stone = case stone of
                                       , height_ "1"
                                       , fillOpacity_ "0"
                                       , onMouseOver $ UpdateAction $ G.Place <$> Just c
-                                      , onClick SubmitAction
+                                      , onClick $ SubmitAction
                                       ] []
                       G.Stone p -> circle_ [ fill_ (ms $ colorize p)
                                            , cx_ $ ms x

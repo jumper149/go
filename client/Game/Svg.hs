@@ -1,6 +1,6 @@
-module Svg ( viewPassButton
-           , viewPlayerChoice
-           ) where
+module Game.Svg ( viewPassButton
+                , viewPlayerChoice
+                ) where
 
 import qualified Data.Map as M
 import GHC.TypeLits
@@ -11,10 +11,10 @@ import Miso.Svg
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
 
-import Operation
-import Player
+import Game.Operation
+import Game.Player
 
-viewPassButton :: Maybe (G.Action c) -> Html.View (Operation b c n)
+viewPassButton :: Maybe (G.Action c) -> Html.View (GameOperation b c n)
 viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                      , ("width","50%")
                                                      ]
@@ -37,7 +37,7 @@ viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey
                                       ]
                             , rect_ ([ fillOpacity_ "0"
                                      , onMouseOver $ UpdateAction $ Just G.Pass
-                                     , onClick SubmitAction
+                                     , onClick $ SubmitAction
                                      ] <> rectSizeAttrs) []
                             ]
   where rectSizeAttrs = [ x_ "10"
@@ -46,7 +46,7 @@ viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey
                         , height_ "30"
                         ]
 
-viewPlayerChoice :: KnownNat n => Maybe (G.PlayerN n) -> Html.View (Operation b c n)
+viewPlayerChoice :: KnownNat n => Maybe (G.PlayerN n) -> Html.View (GameOperation b c n)
 viewPlayerChoice mbP = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                        , ("width","20%")
                                                        ]
@@ -61,7 +61,7 @@ viewPlayerChoice mbP = svg_ [ Html.style_ $ M.fromList [ ("background-color","gr
                                ] <> map viewPlayer [ minBound .. maxBound ]
                                  <> [ hintPlayer mbP ])
 
-viewPlayer :: forall b c n. KnownNat n => G.PlayerN n -> Html.View (Operation b c n)
+viewPlayer :: forall b c n. KnownNat n => G.PlayerN n -> Html.View (GameOperation b c n)
 viewPlayer p = rect_ [ fill_ . ms $ colorize p
                      , x_ $ ms x
                      , y_ "25"
@@ -73,7 +73,7 @@ viewPlayer p = rect_ [ fill_ . ms $ colorize p
         count = toEnum $ G.countPlayers (toEnum 0 :: G.PlayerN n) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count
 
-hintPlayer :: forall b c n. KnownNat n => Maybe (G.PlayerN n) -> Html.View (Operation b c n)
+hintPlayer :: forall b c n. KnownNat n => Maybe (G.PlayerN n) -> Html.View (GameOperation b c n)
 hintPlayer Nothing = circle_ [ fill_ "black"
                              , cx_ "82.5"
                              , cy_ "17.5"

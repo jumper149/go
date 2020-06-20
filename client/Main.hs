@@ -6,12 +6,11 @@ import Data.Default.Class
 import Data.Proxy
 import Miso
 
-import qualified Board.Default as D
-import Game
-import Operation
+import qualified Game.Board.Default as D
+import Game.Run
+import Message
 import Model
-
-import qualified Go.Run.JSON as G
+import Operation
 
 main :: IO ()
 main = run (Proxy :: Proxy (D.Board 19 2))
@@ -26,6 +25,6 @@ run _ = startApp App {..}
     events = defaultEvents
     subs   = let url = URL "ws://local.felixspringer.xyz:8022/wss"
                  protocols = Protocols []
-                 handler = handleWS :: WebSocket (G.ServerMessage b c n) -> Operation b c n
+                 handler = handleWS
              in [ websocketSub url protocols handler ]
     mountPoint = Nothing

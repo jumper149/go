@@ -8,59 +8,49 @@ import GHC.Generics
 import Miso.Effect
 import Miso.Html
 import Miso.String (ms)
-import Miso.Subscription.WebSocket
 
-import qualified Go.Game.Config as G
 import qualified Go.Game.Game as G
-import qualified Go.Game.Player as G
-import qualified Go.Game.State as G
 import qualified Go.Run.JSON as G
 
-import Game
+import Game.Model
+import Game.Run
 import Operation
-import Svg
 
-data Model b c n = Model { gameState  :: G.GameState b c n
-                         , gameAction :: Maybe (G.Action c)
-                         , chosenPlayer :: Maybe (G.PlayerN n)
-                         , errorLog :: String
+data Model b c n = GameM (GameModel b c n)
+                 | Lobby { availableGames :: String
                          }
   deriving (Eq, Ord, Generic, Read, Show)
 
 instance G.Game b c n => Default (Model b c n) where
-  def = Model { gameState = either undefined id $ G.configure def G.initState
-              , gameAction = Nothing
-              , chosenPlayer = Nothing
-              , errorLog = mempty
-              }
+  def = GameM def
 
 updateModel :: forall b c n. G.JSONGame b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
-updateModel action model =
-  case action of
-    NoOp -> noEff model
-    QueueOp as -> foldl (\ m a -> updateModel a =<< m) (noEff model) as
-    WriteErrorLog msg -> noEff $ model { errorLog = errorLog model <> msg }
-    UpdateAction mbAct -> noEff $ model { gameAction = mbAct }
-    SubmitAction -> case gameAction model of
-                      Nothing -> noEff $ model { gameAction = Nothing } -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> model <# (send (G.ClientMessageAction a :: G.ClientMessage b c n) >> return NoOp)
-    SetState gs -> noEff $ model { gameState = gs
-                                 , gameAction = Nothing
-                                 }
-    SubmitPlayer mbP -> model <# (send (G.ClientMessagePlayer mbP :: G.ClientMessage b c n) >> return NoOp)
-    SetPlayer mbP -> noEff $ model { chosenPlayer = mbP }
+updateModel operation model = case operation of
+                                NoOp -> noEff model
+                                QueueOp ops -> foldl (\ m a -> updateModel a =<< m) (noEff model) ops
+                                GameOp op -> case model of
+                                               GameM m -> mapEffect id GameM $ updateGameModel op m
+                                               _ -> undefined -- TODO: just return safely?
+                                LobbyOp op -> case op of
+                                             AskAvailableGames -> model <# undefined
+                                             JoinGame _ -> model <# undefined
+                                WriteErrorLog msg -> undefined -- TODO --noEff $ model { errorLog = errorLog model <> msg }
 
 viewModel :: MisoGame b c n => Model b c n -> View (Operation b c n)
-viewModel model =
+viewModel (GameM model) = fmap GameOp $ viewGameModel model
+viewModel Lobby { availableGames = availableGames } =
   div_ [
-       ] [ viewBoard (G.currentBoard $ gameState model) coord
-         , viewPassButton $ gameAction model
-         , viewPlayerChoice $ chosenPlayer model
-         , viewErrorLog $ errorLog model
+       ] [ viewGames availableGames
          ]
-  where coord = case gameAction model of
-                  Just (G.Place c) -> Just c
-                  _ -> Nothing
 
 viewErrorLog :: String -> View a
 viewErrorLog errLog = p_ [] [ text $ ms errLog ]
+
+viewGames :: b -> View a
+viewGames _ = p_ [] [ text $ ms ("asdasd" :: String) ]
+
+mapEffect :: (a1 -> a2)
+          -> (m1 -> m2)
+          -> Effect a1 m1
+          -> Effect a2 m2
+mapEffect fa fm (Effect model subs) = Effect (fm model) $ map (mapSub fa) subs

@@ -108,12 +108,15 @@ executable client
     buildable: False
   else
     hs-source-dirs:      client
-    other-modules:       Board.Default
-                         Game
+    other-modules:       Game.Board.Default
+                         Game.Model
+                         Game.Operation
+                         Game.Player
+                         Game.Run
+                         Game.Svg
+                         Message
                          Model
                          Operation
-                         Player
-                         Svg
     build-depends:       base
                        , go
                        , miso

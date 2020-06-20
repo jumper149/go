@@ -1,6 +1,6 @@
-module Player ( Color (..)
-              , colorize
-              ) where
+module Game.Player ( Color (..)
+                   , colorize
+                   ) where
 
 import Data.Char (isLower, toLower, toUpper)
 import qualified Data.Map as M
