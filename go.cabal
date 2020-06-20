@@ -46,7 +46,9 @@ executable server
   else
     hs-source-dirs:      server
     other-modules:       API
-                         Client
+                         Clients
+                         Clients.Class
+                         Clients.Internal
                          Html
                          Message
                          Server

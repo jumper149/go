@@ -22,9 +22,10 @@ server :: forall b c n a. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
 server port path _ = do putStrLn $ "Port is: " <> show port
                         putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
-                        fmap fst $ runNewServerStateT def $ do
+                        (unit,_,_) <- runNewServerStateT def $ do
                           hoistedServer <- hoistServerTrans api $ handler path
                           liftBase $ run port $ serve api hoistedServer :: ServerStateT b c n IO ()
+                        return unit
 
 hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
                  => Proxy api
