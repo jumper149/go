@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
-module Html where
+module Html ( GameHtml (..)
+            ) where
 
 import GHC.Generics
 import qualified Lucid as L

@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, Rank2Types #-}
 
-module Server where
+module Server ( server
+              ) where
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control

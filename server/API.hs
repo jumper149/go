@@ -1,6 +1,9 @@
 {-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeOperators #-}
 
-module API where
+module API ( API
+           , api
+           , handler
+           ) where
 
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
