@@ -11,9 +11,9 @@ import Go.Game.State
 -- | Holds informaion for the endscreen.
 data EndScreen b n = EndScreen { lastBoard :: b
                                , winner :: PlayerN n
-                               , points :: [(PlayerN n,Int)]
-                               , stonesOnBoard :: [(PlayerN n,Int)]
-                               , turns :: Int
+                               , points :: [(PlayerN n,Integer)]
+                               , stonesOnBoard :: [(PlayerN n,Integer)]
+                               , turns :: Integer
                                }
   deriving (Eq, Generic, Ord, Read, Show)
 
@@ -27,6 +27,6 @@ finalizeState gs = EndScreen { lastBoard = currentBoard gs
                              }
 
 -- | Count the number of stones a player has on the board. Helper function for 'finalizeState'.
-countStones :: forall b c n. Game b c n => b -> PlayerN n -> Int
-countStones board player = length $ filter hasPlayerStone coords
+countStones :: forall b c n. Game b c n => b -> PlayerN n -> Integer
+countStones board player = toEnum . length $ filter hasPlayerStone coords -- TODO: toEnum, makes Integer useless
   where hasPlayerStone coord = getStone board coord == Stone player

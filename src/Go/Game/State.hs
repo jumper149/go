@@ -10,6 +10,7 @@ module Go.Game.State ( GameState (..)
 import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Proxy
 import GHC.Generics (Generic)
 import GHC.TypeLits
 
@@ -24,8 +25,8 @@ data GameState b c n = GState { currentBoard :: b
                               , currentPlayer :: PlayerN n
                               , lastAction :: Action c
                               , previousBoards :: [b]
-                              , consecutivePasses :: Int
-                              , countTurns :: Int
+                              , consecutivePasses :: Integer
+                              , countTurns :: Integer
                               }
   deriving (Eq, Generic, Ord, Read, Show)
 
@@ -96,11 +97,11 @@ checkFree = do GState {..} <- ask
                               _ -> return ()
 
 -- | Check if the number of consecutive passes is below the number of players.
-checkPassing :: (Game b c n, MonadError Exception m, MonadReader (GameState b c n) m, MonadRules m) => m ()
+checkPassing :: forall b c m n. (Game b c n, MonadError Exception m, MonadReader (GameState b c n) m, MonadRules m) => m ()
 checkPassing = do GState {..} <- ask
                   rPassing <- passing <$> rules
                   case rPassing of
-                    Allowed -> when (consecutivePasses >= countPlayers (currentPlayer)) $
+                    Allowed -> when (consecutivePasses >= natVal (Proxy :: Proxy n)) $
                                  throwError ExceptEnd
                     Forbidden -> when (lastAction == Pass) $
                                    throwError ExceptPassing
