@@ -4,14 +4,13 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Default.Class
-import Data.Either (fromRight)
+import Data.Either (fromRight, isLeft, isRight)
 import GHC.TypeLits
 
 import Go.Board.Default
 import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
-import Go.Game.Playing
 import Go.Game.State
 
 runTests :: IO ()
@@ -55,7 +54,7 @@ prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
         newBoard = updateBoard surrounded black
 
 prop_ko :: Bool
-prop_ko = currentBoard beforeKoState == currentBoard afterKoState -- equal, when ko rule kicked in
+prop_ko = isRight beforeKoState && isLeft afterKoState
   where initalState = fromRight undefined $ configure def initState :: GameState (Board 13 2) (Coord 13) 2
         turns = [ Place $ Coord 3 2
                 , Place $ Coord 2 2
@@ -67,8 +66,8 @@ prop_ko = currentBoard beforeKoState == currentBoard afterKoState -- equal, when
                 , Place $ Coord 3 3
                 ]
         koTurn = Place $ Coord 2 3
-        beforeKoState = foldl (flip $ doTurn def) initalState turns
-        afterKoState = doTurn def koTurn beforeKoState
+        beforeKoState = foldl (\ s t -> act def t =<< s) (pure initalState) turns
+        afterKoState = act def koTurn =<< beforeKoState
 
 
 white :: KnownNat i => PlayerN i
