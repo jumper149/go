@@ -1,4 +1,5 @@
-module Test.Board.Default where
+module Test.Board.Default ( runTests
+                          ) where
 
 import Test.Hspec
 import Test.QuickCheck
