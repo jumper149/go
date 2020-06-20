@@ -86,24 +86,6 @@ executable server
     default-language:    Haskell2010
     ghcjs-options:       -Wall
 
-library wai-transformers
-  if impl(ghcjs)
-    buildable: False
-  else
-    hs-source-dirs:      wai-transformers
-    exposed-modules:     Control.Monad.Trans.Control.Identity
-                         Network.Wai.Trans
-                         Network.Wai.Handler.WebSockets.Trans
-    build-depends:       base
-                       , monad-control
-                       , transformers
-                       , transformers-base
-                       , wai
-                       , wai-websockets
-                       , websockets
-    default-language:    Haskell2010
-    ghc-options:         -Wall
-
 executable client
   main-is:             Main.hs
   if !impl(ghcjs)
@@ -155,5 +137,23 @@ test-suite test
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+    default-language:    Haskell2010
+    ghc-options:         -Wall
+
+library wai-transformers
+  if impl(ghcjs)
+    buildable: False
+  else
+    hs-source-dirs:      wai-transformers
+    exposed-modules:     Control.Monad.Trans.Control.Identity
+                         Network.Wai.Trans
+                         Network.Wai.Handler.WebSockets.Trans
+    build-depends:       base
+                       , monad-control
+                       , transformers
+                       , transformers-base
+                       , wai
+                       , wai-websockets
+                       , websockets
     default-language:    Haskell2010
     ghc-options:         -Wall
