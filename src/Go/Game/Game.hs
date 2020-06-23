@@ -1,6 +1,8 @@
-{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts, TypeFamilies #-}
 
 module Go.Game.Game ( Game (..)
+                    , AssociatedPlayer
+                    , AssociatedStone
                     , updateBoard
                     , GameCoord (..)
                     , Stone (..)
@@ -49,51 +51,59 @@ class (Bounded c, Enum c, Eq c, Ord c) => GameCoord c where
   -- | Return a list of all adjacent coordinates.
   libertyCoords :: c -> [c]
 
-class (Eq b, GameCoord c, KnownNat n) => Game b c n | b -> c n where
+class (Eq b, GameCoord (AssociatedCoord b), KnownNat (AssociatedPlayerCount b)) => Game b where
+
+  type AssociatedCoord b
+
+  type AssociatedPlayerCount b :: Nat
 
   -- | Return an empty board.
   empty :: b
 
   -- | Returns the stone.
-  getStone :: b -> c -> Stone (PlayerN n)
+  getStone :: b -> AssociatedCoord b -> Stone (PlayerN (AssociatedPlayerCount b))
 
   -- | Places a stone on a coordinate and returns the board.
-  putStone :: b -> c -> Stone (PlayerN n) -> b
+  putStone :: b -> AssociatedCoord b -> Stone (PlayerN (AssociatedPlayerCount b)) -> b
 
-accChain :: forall b c n. Game b c n => b -> Stone (PlayerN n) -> c -> S.Set c -> S.Set c
+type AssociatedPlayer b = PlayerN (AssociatedPlayerCount b)
+
+type AssociatedStone b = Stone (AssociatedPlayer b)
+
+accChain :: forall b. Game b => b -> AssociatedStone b -> AssociatedCoord b -> S.Set (AssociatedCoord b) -> S.Set (AssociatedCoord b)
 accChain board stone coord acc = foldr (accChain board stone) newAcc neededSames
   where newAcc = acc `S.union` sames
         neededSames = sames `S.difference` acc
         sames = S.filter ((== stone) . getStone board) libs
         libs = S.fromList $ libertyCoords coord
 
-chain :: forall b c n. Game b c n => b -> c -> Chain (PlayerN n) c
+chain :: forall b. Game b => b -> AssociatedCoord b -> Chain (AssociatedPlayer b) (AssociatedCoord b)
 chain board coord = Chain stone crds
   where stone = getStone board coord
         crds = accChain board stone coord acc
         acc = S.singleton coord
 
-accChains :: forall b c n. Game b c n => b -> S.Set (Chain (PlayerN n) c)
+accChains :: forall b. Game b => b -> S.Set (Chain (AssociatedPlayer b) (AssociatedCoord b))
 accChains board = foldr addCoord S.empty coords -- TODO: only occurence of 'coords', maybe remove that method completely?
   where addCoord crd chns = if any (partOfChain crd) chns
                                then chns
                                else chain board crd `S.insert` chns
 
-hasLiberty :: forall b c n. Game b c n => b -> Chain (PlayerN n) c -> Bool
+hasLiberty :: forall b. Game b => b -> Chain (AssociatedPlayer b) (AssociatedCoord b) -> Bool
 hasLiberty board (Chain _ crds) = or bools
-  where bools = S.map ((== Free) . (getStone board :: c -> Stone (PlayerN n))) libs
+  where bools = S.map ((== Free) . (getStone board :: (AssociatedCoord b -> AssociatedStone b))) libs
         libs = S.unions $ S.map (S.fromList . libertyCoords) crds
 
-removeChain :: forall b c n. Game b c n => b -> Chain (PlayerN n) c -> b
+removeChain :: forall b. Game b => b -> Chain (AssociatedPlayer b) (AssociatedCoord b) -> b
 removeChain board (Chain _ crds) = foldl putFree board crds
   where putFree brd crd = putStone brd crd Free
 
-removeSurrounded :: forall b c n. Game b c n => b -> Chain (PlayerN n) c -> b
+removeSurrounded :: forall b. Game b => b -> Chain (AssociatedPlayer b) (AssociatedCoord b) -> b
 removeSurrounded brd chn = if hasLiberty brd chn
                               then brd
                               else removeChain brd chn
 
 -- | Remove chains without liberties. Give player as an argument to solve atari. Return board.
-updateBoard :: forall b c n. Game b c n => b -> PlayerN n -> b
+updateBoard :: forall b. Game b => b -> AssociatedPlayer b -> b
 updateBoard board player = foldl removeSurrounded board chains
   where chains = prepChains player $ accChains board

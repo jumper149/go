@@ -17,17 +17,17 @@ import Go.Game.Player
 
 -- | This data type contains the current board, the current player, the previous board and the
 -- number of consecutive passes.
-data GameState b c n = GState { currentBoard :: b
-                              , currentPlayer :: PlayerN n
-                              , lastAction :: Action c
-                              , previousBoards :: [b]
-                              , consecutivePasses :: Integer
-                              , countTurns :: Integer
-                              }
+data GameState b = GState { currentBoard :: b
+                          , currentPlayer :: AssociatedPlayer b
+                          , lastAction :: AssociatedAction b
+                          , previousBoards :: [b]
+                          , consecutivePasses :: Integer
+                          , countTurns :: Integer
+                          }
   deriving (Eq, Generic, Ord, Read, Show)
 
-instance (KnownNat n, Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
-instance (KnownNat n, Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
+instance (Game b, KnownNat (AssociatedPlayerCount b), Generic b, Generic (AssociatedCoord b), FromJSON b, FromJSON (AssociatedCoord b)) => FromJSON (GameState b)
+instance (Game b, KnownNat (AssociatedPlayerCount b), Generic b, Generic (AssociatedCoord b), ToJSON b, ToJSON (AssociatedCoord b)) => ToJSON (GameState b c n)
 
 initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
           => m (GameState b c n)
@@ -43,6 +43,8 @@ initState = return $ GState {..}
 data Action c = Pass
               | Place c
   deriving (Eq, Generic, Ord, Read, Show)
+
+type AssociatedAction b = Action (AssociatedCoord b)
 
 instance (Generic c, FromJSON c) => FromJSON (Action c)
 instance (Generic c, ToJSON c) => ToJSON (Action c)
