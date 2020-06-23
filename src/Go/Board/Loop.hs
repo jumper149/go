@@ -1,7 +1,7 @@
 module Go.Board.Loop ( Board (..)
-                     , D.Coord (..)
-                     , D.packCoord
-                     , D.getCoord
+                     , Coord (..)
+                     , packCoord
+                     , getCoord
                      ) where
 
 import Data.Aeson (FromJSON, ToJSON)
@@ -14,11 +14,17 @@ import qualified Go.Board.Default as D
 import Go.Game.Game
 import Go.Run.JSON
 
-newtype Board i n = Board (D.Board i n)
-  deriving (Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
-
 newtype Coord i = Coord (D.Coord i)
   deriving (Bounded, Enum, Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
+
+packCoord :: KnownNat i => (Integer,Integer) -> Maybe (Coord i)
+packCoord = fmap Coord . D.packCoord
+
+getCoord :: KnownNat i => Coord i -> (Integer,Integer)
+getCoord (Coord coord) = D.getCoord coord
+
+newtype Board i n = Board (D.Board i n)
+  deriving (Eq, FromJSON, Generic, Ord, Read, Show, ToJSON)
 
 instance KnownNat i => GameCoord (Coord i) where
   libertyCoords (Coord coord) = Coord <$> mapMaybe (D.packCoord . wrapX) unsafeLibertyCoords
