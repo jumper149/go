@@ -70,7 +70,7 @@ runNewServerStateT :: (Game b c n, MonadBase IO m)
                    => Config
                    -> ServerStateT b c n m a
                    -> m (a, Clients n, GameState b c n)
-runNewServerStateT config sst = do gameStateTVar' <- liftBase . newTVarIO $ either undefined id $ configure config initState -- TODO: Use RulesetEnvT
+runNewServerStateT config sst = do gameStateTVar' <- liftBase $ newTVarIO initState
                                    let ss = ServerState { gameStateTVar' = gameStateTVar'
                                                         , gameConfig' = config
                                                         }

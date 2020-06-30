@@ -5,13 +5,10 @@ module Go.Game.State ( GameState (..)
                      , initState
                      ) where
 
-import Control.Monad.Except
-import Control.Monad.Reader
 import Data.Aeson (FromJSON, ToJSON)
 import GHC.Generics
 import GHC.TypeLits
 
-import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
 
@@ -29,9 +26,8 @@ data GameState b c n = GState { currentBoard :: b
 instance (KnownNat n, Generic b, Generic c, FromJSON b, FromJSON c) => FromJSON (GameState b c n)
 instance (KnownNat n, Generic b, Generic c, ToJSON b, ToJSON c) => ToJSON (GameState b c n)
 
-initState :: (Game b c n, Monad m, MonadError Malconfig m, MonadReader Config m)
-          => m (GameState b c n)
-initState = return $ GState {..}
+initState :: Game b c n => GameState b c n
+initState = GState {..}
   where currentBoard = empty
         currentPlayer = minBound
         lastAction = Pass

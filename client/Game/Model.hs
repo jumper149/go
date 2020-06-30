@@ -11,7 +11,6 @@ import Miso.Effect
 import Miso.Html
 import Miso.Subscription.WebSocket
 
-import qualified Go.Game.Config as G
 import qualified Go.Game.Game as G
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
@@ -30,7 +29,7 @@ data GameModel b c n = GameModel { gameState :: G.GameState b c n
   deriving (Eq, Ord, Generic, Read, Show)
 
 instance G.Game b c n => Default (GameModel b c n) where
-  def = GameModel { gameState = either undefined id $ G.configure def G.initState
+  def = GameModel { gameState = G.initState
                   , gameAction = Nothing
                   , chosenPlayer = Nothing
                   , errorLog = mempty
