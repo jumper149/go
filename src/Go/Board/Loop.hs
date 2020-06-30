@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Go.Board.Loop ( Board (..)
                      , Coord (..)
                      , packCoord
@@ -37,11 +39,14 @@ instance KnownNat i => GameCoord (Coord i) where
           s = natVal (Proxy :: Proxy i)
           (cx,cy) = D.getCoord coord
 
-instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
+instance (KnownNat i, KnownNat n) => Game (Board i n) where
+  type AssociatedCoord (Board i n) = Coord i
+  type AssociatedPlayerCount (Board i n) = n
+
   empty = Board empty
 
   getStone (Board board) (Coord coord) = getStone board coord
 
   putStone (Board board) (Coord coord) stone = Board $ putStone board coord stone
 
-instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n
+instance (KnownNat i, KnownNat n) => JSONGame (Board i n)
