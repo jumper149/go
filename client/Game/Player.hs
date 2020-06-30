@@ -23,13 +23,6 @@ data Color = Black
 instance ToMisoString Color where
     toMisoString = toMisoString . fmap toLower . show
 
-    -- TODO: Unnecessary function
-    fromMisoString mstr = case fromMisoString mstr of
-                            "" -> undefined
-                            c:cs -> if isLower c
-                                       then read $ toUpper c : cs
-                                       else undefined
-
 -- | Give a color to a player.
 colorize :: forall n. KnownNat n => PlayerN n -> Color
 colorize p = fromJust . M.lookup p . M.fromList $ zip players cycledColors
