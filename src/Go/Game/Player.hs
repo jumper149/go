@@ -1,5 +1,3 @@
-{-# LANGUAGE KindSignatures #-}
-
 module Go.Game.Player ( PlayerN
                       , next
                       ) where
@@ -10,7 +8,7 @@ import GHC.Generics
 import GHC.TypeLits
 
 -- | A parametrized data type holding n players.
-newtype PlayerN (n :: Nat) = PlayerN { playerNo :: Finite n }
+newtype PlayerN n = PlayerN { playerNo :: Finite n }
   deriving (Bounded, Enum, Eq, Ord, Generic, Read, Show)
 
 instance KnownNat n => FromJSON (PlayerN n) where
