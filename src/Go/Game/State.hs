@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, StandaloneDeriving, UndecidableInstances #-}
 
 module Go.Game.State ( GameState (..)
                      , Action (..)
@@ -10,7 +10,6 @@ import GHC.Generics
 import GHC.TypeLits
 
 import Go.Game.Game
-import Go.Game.Player
 
 -- | This data type contains the current board, the current player, the previous board and the
 -- number of consecutive passes.
@@ -21,12 +20,16 @@ data GameState b = GState { currentBoard :: b
                           , consecutivePasses :: Integer
                           , countTurns :: Integer
                           }
-  deriving (Eq, Generic, Ord, Read, Show)
+  deriving Generic
+deriving instance (KnownNat (AssociatedPlayerCount b), Eq b, Eq (AssociatedCoord b)) => Eq (GameState b)
+deriving instance (KnownNat (AssociatedPlayerCount b), Ord b, Ord (AssociatedCoord b)) => Ord (GameState b)
+deriving instance (KnownNat (AssociatedPlayerCount b), Read b, Read (AssociatedCoord b)) => Read (GameState b)
+deriving instance (KnownNat (AssociatedPlayerCount b), Show b, Show (AssociatedCoord b)) => Show (GameState b)
 
 instance (Game b, KnownNat (AssociatedPlayerCount b), Generic b, Generic (AssociatedCoord b), FromJSON b, FromJSON (AssociatedCoord b)) => FromJSON (GameState b)
-instance (Game b, KnownNat (AssociatedPlayerCount b), Generic b, Generic (AssociatedCoord b), ToJSON b, ToJSON (AssociatedCoord b)) => ToJSON (GameState b c n)
+instance (Game b, KnownNat (AssociatedPlayerCount b), Generic b, Generic (AssociatedCoord b), ToJSON b, ToJSON (AssociatedCoord b)) => ToJSON (GameState b)
 
-initState :: Game b c n => GameState b c n
+initState :: Game b => GameState b
 initState = GState {..}
   where currentBoard = empty
         currentPlayer = minBound
