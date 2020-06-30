@@ -14,6 +14,7 @@ library
     hs-source-dirs:      src
     exposed-modules:     Go.Board.Default
                          Go.Board.Loop
+                         Go.Board
                          Go.Game.Act
                          Go.Game.Config
                          Go.Game.End
