@@ -1,5 +1,5 @@
-module Message ( WSServerMessage (..)
-               , WSClientMessage (..)
+module Message ( WSServerMessageRep (..)
+               , WSClientMessageRep (..)
                ) where
 
 import Data.Aeson
@@ -7,22 +7,22 @@ import Data.Maybe (fromMaybe)
 import GHC.Generics
 import Network.WebSockets
 
-import Go.Run.JSON
+import Go.Message
 
-newtype WSServerMessage b c n = WSServerMessage { unwrapWSServerMessage :: ServerMessage b c n }
+newtype WSServerMessageRep = WSServerMessageRep { unwrapWSServerMessageRep :: ServerMessageRep }
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: instance only covers text, not binary!
-instance JSONGame b c n => WebSocketsData (WSServerMessage b c n) where
+instance WebSocketsData WSServerMessageRep where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSServerMessage . fromMaybe (ServerMessageFail mempty) . decode
-  toLazyByteString = encode . unwrapWSServerMessage
+  fromLazyByteString = WSServerMessageRep . fromMaybe (ServerMessageRepFail mempty) . decode
+  toLazyByteString = encode . unwrapWSServerMessageRep
 
-newtype WSClientMessage b c n = WSClientMessage { unwrapWSClientMessage :: ClientMessage b c n }
+newtype WSClientMessageRep = WSClientMessageRep { unwrapWSClientMessageRep :: ClientMessageRep }
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: instance only covers text, not binary!
-instance JSONGame b c n => WebSocketsData (WSClientMessage b c n) where
+instance WebSocketsData WSClientMessageRep where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSClientMessage . fromMaybe (ClientMessageFail mempty) . decode
-  toLazyByteString = encode . unwrapWSClientMessage
+  fromLazyByteString = WSClientMessageRep . fromMaybe (ClientMessageRepFail mempty) . decode
+  toLazyByteString = encode . unwrapWSClientMessageRep
