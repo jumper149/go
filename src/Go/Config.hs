@@ -2,10 +2,12 @@
 
 module Go.Config ( MonadConfig (..)
                  , Config (..)
+                 , BoardName (..)
                  , BadConfig (..)
                  , ConfigT
                  , runConfigT
                  , configure
+                 , embedRuleViolation
                  ) where
 
 import Control.Monad.Except
@@ -17,15 +19,21 @@ import GHC.Generics
 import Go.Game.Act
 import Go.Game.Rules
 
+data BoardName = Default
+               | Loop
+  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
+
 -- | The configuration of a game.
-data Config = Config { players :: Int
+data Config = Config { board :: BoardName
+                     , players :: Integer
                      , ruleset :: Rules
-                     , size  :: Int
+                     , size  :: Integer
                      }
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Config where
-  def = Config { players = 2
+  def = Config { board = Default
+               , players = 2
                , ruleset = def
                , size = 19
                }
@@ -44,7 +52,9 @@ configure :: Config -> ConfigT Identity a -> Either BadConfig a
 configure c = runIdentity . runConfigT c
 
 -- | Exceptions that can be thrown if configuration with 'Config' doesn't work.
-data BadConfig = BadConfigPlayers
+data BadConfig = BadConfigActionMismatch
+               | BadConfigBoard
+               | BadConfigPlayers
                | BadConfigRuleset RuleViolation
                | BadConfigSize
   deriving (Eq, Generic, Ord, Read, Show)
@@ -54,3 +64,7 @@ class MonadError BadConfig m => MonadConfig m where
 
 instance Monad m => MonadConfig (ConfigT m) where
   config = ConfigT $ lift ask
+
+embedRuleViolation :: MonadConfig m => Either RuleViolation a -> m a
+embedRuleViolation (Left r) = throwError $ BadConfigRuleset r
+embedRuleViolation (Right a) = return a
