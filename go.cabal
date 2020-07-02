@@ -12,7 +12,8 @@ cabal-version:       >=1.10
 
 library
     hs-source-dirs:      src
-    exposed-modules:     Go.Board.Default
+    exposed-modules:     Go.Board
+                         Go.Board.Default
                          Go.Board.Loop
                          Go.Config
                          Go.Game
@@ -22,6 +23,7 @@ library
                          Go.Game.Player
                          Go.Game.Rules
                          Go.Game.State
+                         Go.Message
                          Go.Run.JSON
     build-depends:       base
                        , aeson

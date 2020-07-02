@@ -16,7 +16,6 @@ class (Game b, Generic b, Generic (AssociatedCoord b), FromJSON b, FromJSON (Ass
 
 data ServerMessage b = ServerMessageGameState (AssociatedGameState b)
                      | ServerMessagePlayer (Maybe (AssociatedPlayer b))
-                     | ServerMessageFail String
   deriving Generic
 deriving instance (Eq b, Eq (AssociatedCoord b)) => Eq (ServerMessage b)
 deriving instance (Ord b, Ord (AssociatedCoord b)) => Ord (ServerMessage b)
@@ -28,7 +27,6 @@ instance JSONGame b => ToJSON (ServerMessage b) where
 
 data ClientMessage b = ClientMessageAction (AssociatedAction b)
                      | ClientMessagePlayer (Maybe (AssociatedPlayer b))
-                     | ClientMessageFail String
   deriving Generic
 deriving instance (Eq b, Eq (AssociatedCoord b)) => Eq (ClientMessage b)
 deriving instance (Ord b, Ord (AssociatedCoord b)) => Ord (ClientMessage b)

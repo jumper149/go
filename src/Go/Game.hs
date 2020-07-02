@@ -14,10 +14,6 @@ import Go.Config
 import Go.Game.Act
 import Go.Game.State
 
-data BoardRep = BoardD_9_2 (D.Board 9 2)
-              | BoardD_13_2 (D.Board 13 2)
-  deriving Generic
-
 data ActionRep = ActionD_9_2 (AssociatedAction (D.Board 9 2))
                | ActionD_13_2 (AssociatedAction (D.Board 13 2))
   deriving Generic
