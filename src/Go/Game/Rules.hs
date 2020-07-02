@@ -1,15 +1,17 @@
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
 
 module Go.Game.Rules ( MonadRules (..)
-                     , RulesetEnvT
-                     , runRulesetEnvT
+                     , RulesT
+                     , runRulesT
                      , Rules (..)
                      , Permission (..)
                      , KoRule (..)
+                     , RuleViolation (..)
                      ) where
 
-import Control.Monad.Except
+import Control.Monad.Except -- TODO: use Control.Monad.Throw?
 import Control.Monad.Reader
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Default.Class
 import GHC.Generics
 
@@ -46,18 +48,36 @@ instance MonadReader r m => MonadReader r (RulesetEnvT m) where
   ask = lift ask
   local f = RulesetEnvT . mapReaderT (local f) . unwrapRulesetEnvT
 
--- | Evaluate a computation with exposure to the given 'Rules'.
 runRulesetEnvT :: Rules -> RulesetEnvT m a -> m a
 runRulesetEnvT r rulesetEnv = runReaderT (unwrapRulesetEnvT rulesetEnv) r
 
-class Monad m => MonadRules m where
+-- | A data type representing exceptions, that may occur when checking rules
+data RuleViolation = ExceptionEnd
+                   | RuleViolationPassing
+                   | RuleViolationNotFree
+                   | RuleViolationSuicide
+                   | RuleViolationKo
+  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
+
+instance FromJSON RuleViolation
+instance ToJSON RuleViolation
+
+newtype RulesT m a = RulesT { unwrapRulesT :: ExceptT RuleViolation (RulesetEnvT m) a }
+  deriving (Functor, Applicative, Monad, MonadError RuleViolation, MonadReader r)
+
+-- | Evaluate a computation with exposure to the given 'Rules' and
+-- handling exceptions with 'RuleViolation'.
+runRulesT :: Rules -> RulesT m a -> m (Either RuleViolation a)
+runRulesT r = runRulesetEnvT r . runExceptT . unwrapRulesT
+
+instance MonadTrans RulesT where
+  lift = RulesT . lift . lift
+
+class MonadError RuleViolation m => MonadRules m where
   rules :: m Rules
 
-instance Monad m => MonadRules (RulesetEnvT m) where
-  rules = RulesetEnvT $ ask
-
-instance MonadRules m => MonadRules (ExceptT e m) where
-  rules = lift rules
+instance Monad m => MonadRules (RulesT m) where
+  rules = RulesT . lift . RulesetEnvT $ ask
 
 instance MonadRules m => MonadRules (ReaderT e m) where -- TODO: more instances?
   rules = lift rules
