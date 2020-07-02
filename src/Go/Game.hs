@@ -1,11 +1,10 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Go.Board ( BoardRep (..)
-                , ActionRep (..)
-                , GameStateRep (..)
-                , actRep
-                , initBoardRep
-                ) where
+module Go.Game ( GameStateRep (..)
+               , ActionRep (..)
+               , actRep
+               , initStateRep
+               ) where
 
 import Control.Monad.Except
 import GHC.Generics
@@ -34,8 +33,8 @@ actRep action gamestate = do Config {..} <- config
                                (ActionD_13_2 a , GameStateD_13_2 gs) -> GameStateD_13_2 <$> (embedRuleViolation $ act ruleset a gs)
                                _ -> throwError BadConfigActionMismatch
 
-initBoardRep :: MonadConfig m => m GameStateRep
-initBoardRep = do Config {..} <- config
+initStateRep :: MonadConfig m => m GameStateRep
+initStateRep = do Config {..} <- config
                   case board of
                     Default -> case size of
                                  9 -> return $ GameStateD_9_2 initState
