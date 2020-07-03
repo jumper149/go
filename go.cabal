@@ -53,6 +53,7 @@ executable server
                          Clients.Class
                          Clients.Internal
                          GameSet.Internal
+                         GameSet.Internal.Identification
                          Html
                          Message
                          Server

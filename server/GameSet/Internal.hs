@@ -3,7 +3,7 @@ module GameSet.Internal ( GameSets
                         , GameSet (..) -- TODO: limit access
                         , addPlayerTo
                         , removePlayerFrom
-                        , updateGameSet
+                        , actGameSet
                         , GameId
                         , BadConfigServer (..)
                         ) where
@@ -12,19 +12,17 @@ import GHC.Generics
 import qualified Data.Map as M
 
 import Clients.Class (ClientId)
+import GameSet.Internal.Identification
 
 import Go.Config
 import Go.Game
 import Go.Player
 
-newtype GameId = GameId { unwrapGameId :: Integer }
-  deriving (Enum, Eq, Generic, Ord, Read, Show)
-
 newtype Players = Players { unwrapPlayers :: M.Map ClientId PlayerRep }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
 data GameSet = GameSet { gameConfig :: Config
-                       , gameId :: GameId
+                       , gameIdentification :: GameId
                        , gamePlayers :: Players
                        , gameState :: GameStateRep
                        }
@@ -40,11 +38,11 @@ updateGameSets :: (GameSet -> Either BadConfigServer GameSet)
 updateGameSets f k (GameSets gss) = do gs <- maybe (Left BadConfigMismatch) f $ M.lookup k gss
                                        return . GameSets $ M.insert k gs gss
 
-updateGameSet :: ClientId
-              -> ActionRep
-              -> GameSet
-              -> Either BadConfigServer GameSet
-updateGameSet k a gs = if isCurrentPlayer k gs
+actGameSet :: ClientId
+           -> ActionRep
+           -> GameSet
+           -> Either BadConfigServer GameSet
+actGameSet k a gs = if isCurrentPlayer k gs
                           then fmap (updateGameState gs) . embedBadConfig . configure (gameConfig gs) . actRep a $ gameState gs
                           else Left BadConfigMismatch
   where updateGameState set state = set { gameState = state }
