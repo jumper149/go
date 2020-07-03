@@ -2,7 +2,6 @@
 
 module Clients ( ClientsT
                , runClientsT
-               , runNewClientsT
                ) where
 
 import Control.Monad.Base
@@ -36,11 +35,3 @@ runClientsT :: TVar Clients
             -> ClientsT m a
             -> m a
 runClientsT cs = flip runReaderT cs . unwrapClientsT
-
-runNewClientsT :: MonadBase IO m
-               => ClientsT m a
-               -> m (a, Clients)
-runNewClientsT ct = do clientsTVar' <- liftBase $ newTVarIO mempty
-                       val <- runClientsT clientsTVar' ct
-                       cs <- liftBase $ readTVarIO clientsTVar'
-                       return (val , cs)

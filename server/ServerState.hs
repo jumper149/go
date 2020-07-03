@@ -63,7 +63,9 @@ runServerStateT cs ss = runClientsT cs . flip runReaderT ss . unwrapServerStateT
 runNewServerStateT :: MonadBase IO m
                    => ServerStateT m a
                    -> m (a, Clients, GameSets)
-runNewServerStateT sst = do gameSetsTVar' <- liftBase $ newTVarIO mempty
-                            (val,cs) <- runNewClientsT . flip runReaderT gameSetsTVar' $ unwrapServerStateT sst
+runNewServerStateT sst = do clientsTVar' <- liftBase $ newTVarIO mempty
+                            gameSetsTVar' <- liftBase $ newTVarIO mempty
+                            val <- runServerStateT clientsTVar' gameSetsTVar' sst
+                            cs <- liftBase $ readTVarIO clientsTVar'
                             gss <- liftBase $ readTVarIO gameSetsTVar'
                             return (val,cs,gss)
