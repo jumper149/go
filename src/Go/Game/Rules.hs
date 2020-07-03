@@ -19,21 +19,33 @@ data Permission = Allowed
                 | Forbidden
   deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
 
+instance FromJSON Permission
+instance ToJSON Permission
+
 -- TODO change?
 data KoRule = Ko Permission
             | SuperKo
   deriving (Eq, Generic, Ord, Read, Show)
+
+instance FromJSON KoRule
+instance ToJSON KoRule
 
 -- TODO improve
 data Komi = Integral Int
           | PlusHalf Int
   deriving (Eq, Generic, Ord, Read, Show)
 
+instance FromJSON Komi
+instance ToJSON Komi
+
 data Rules = Rules { passing :: Permission
                    , ko      :: KoRule
                    , suicide :: Permission
                    }
   deriving (Eq, Generic, Ord, Read, Show)
+
+instance FromJSON Rules
+instance ToJSON Rules
 
 instance Default Rules where
   def = Rules { passing = Allowed

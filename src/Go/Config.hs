@@ -13,6 +13,7 @@ module Go.Config ( MonadConfig (..)
 import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
+import Data.Aeson (FromJSON, ToJSON)
 import Data.Default.Class
 import GHC.Generics
 
@@ -23,6 +24,9 @@ data BoardName = Default
                | Loop
   deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
 
+instance FromJSON BoardName
+instance ToJSON BoardName
+
 -- | The configuration of a game.
 data Config = Config { board :: BoardName
                      , players :: Integer
@@ -30,6 +34,9 @@ data Config = Config { board :: BoardName
                      , size  :: Integer
                      }
   deriving (Eq, Generic, Ord, Read, Show)
+
+instance FromJSON Config
+instance ToJSON Config
 
 instance Default Config where
   def = Config { board = Default
