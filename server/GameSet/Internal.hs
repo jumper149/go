@@ -35,7 +35,7 @@ addPlayerTo :: ClientId -> PlayerRep -> GameSet -> Either BadConfigServer GameSe
 addPlayerTo c p gs = if correctPlayerRep -- TODO: very maybe this sanity checking could be done by the typechecker instead
                         then Right $ gs { gamePlayers = Players . M.insert c p . unwrapPlayers $ gamePlayers gs }
                         else Left BadConfigMismatch
-    where correctPlayerRep = matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
+  where correctPlayerRep = matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
 
 -- | Remove a player from a 'GameSet'. Acts like 'id' when no player is found.
 removePlayerFrom :: ClientId -> GameSet -> GameSet
