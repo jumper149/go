@@ -29,7 +29,7 @@ data GameSet = GameSet { gameConfig :: Config
   deriving (Eq, Generic, Ord, Read, Show)
 
 newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
-  deriving (Eq, Generic, Ord, Read, Show)
+  deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
 updateGameSets :: (GameSet -> Either BadConfigServer GameSet)
                -> GameId
