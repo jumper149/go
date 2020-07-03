@@ -4,6 +4,7 @@ module Go.Game ( GameStateRep (..)
                , ActionRep (..)
                , actRep
                , initStateRep
+               , getCurrentPlayerRep
                ) where
 
 import Control.Monad.Except
@@ -14,6 +15,7 @@ import qualified Go.Board.Default as D
 import Go.Config
 import Go.Game.Act
 import Go.Game.State
+import Go.Player
 
 data ActionRep = ActionD_9_2 (AssociatedAction (D.Board 9 2))
                | ActionD_13_2 (AssociatedAction (D.Board 13 2))
@@ -24,7 +26,12 @@ instance ToJSON ActionRep
 
 data GameStateRep = GameStateD_9_2 (AssociatedGameState (D.Board 9 2))
                   | GameStateD_13_2 (AssociatedGameState (D.Board 13 2))
-  deriving Generic
+  deriving (Eq, Generic, Ord, Read, Show)
+
+getCurrentPlayerRep :: GameStateRep -> PlayerRep
+getCurrentPlayerRep gsr = case gsr of
+                            GameStateD_9_2 gs -> PlayerD_9_2 $ currentPlayer gs
+                            GameStateD_13_2 gs -> PlayerD_13_2 $ currentPlayer gs
 
 instance FromJSON GameStateRep -- TODO: not necessary
 instance ToJSON GameStateRep -- TODO: not necessary

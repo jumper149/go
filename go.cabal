@@ -24,6 +24,7 @@ library
                          Go.Game.Rules
                          Go.Game.State
                          Go.Message
+                         Go.Player
                          Go.Run.JSON
     build-depends:       base
                        , aeson
@@ -51,6 +52,7 @@ executable server
                          Clients
                          Clients.Class
                          Clients.Internal
+                         GameSet.Internal
                          Html
                          Message
                          Server
