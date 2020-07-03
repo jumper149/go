@@ -1,10 +1,11 @@
-{-# LANGUAGE FlexibleContexts #-}
-
-module GameSet.Internal ( GameSet (..) -- TODO: limit access
-                        , BadConfigServer (..)
+module GameSet.Internal ( GameSets
+                        , updateGameSets
+                        , GameSet (..) -- TODO: limit access
                         , addPlayerTo
                         , removePlayerFrom
                         , updateGameSet
+                        , GameId
+                        , BadConfigServer (..)
                         ) where
 
 import GHC.Generics
@@ -16,33 +17,11 @@ import Go.Config
 import Go.Game
 import Go.Player
 
-data BadConfigServer = BadConfigInternal BadConfig
-                     | BadConfigMismatch
-  deriving (Eq, Generic, Ord, Read, Show)
-
-embedBadConfig :: Either BadConfig a -> Either BadConfigServer a
-embedBadConfig (Left bc) = Left $ BadConfigInternal bc
-embedBadConfig (Right a) = Right a
+newtype GameId = GameId { unwrapGameId :: Integer }
+  deriving (Enum, Eq, Generic, Ord, Read, Show)
 
 newtype Players = Players { unwrapPlayers :: M.Map ClientId PlayerRep }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
-
-getPlayerFrom :: ClientId -> GameSet -> Maybe PlayerRep
-getPlayerFrom k = M.lookup k . unwrapPlayers . gamePlayers
-
--- | Add a 'PlayerRep' to a 'GameSet', but only if it fits the 'AssociatedPlayer'.
-addPlayerTo :: ClientId -> PlayerRep -> GameSet -> Either BadConfigServer GameSet
-addPlayerTo c p gs = if correctPlayerRep -- TODO: very maybe this sanity checking could be done by the typechecker instead
-                        then Right $ gs { gamePlayers = Players . M.insert c p . unwrapPlayers $ gamePlayers gs }
-                        else Left BadConfigMismatch
-  where correctPlayerRep = matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
-
--- | Remove a player from a 'GameSet'. Acts like 'id' when no player is found.
-removePlayerFrom :: ClientId -> GameSet -> GameSet
-removePlayerFrom c gs = gs { gamePlayers = Players . M.delete c . unwrapPlayers $ gamePlayers gs } -- TODO: keep no sanity checks?
-
-newtype GameId = GameId { unwrapGameId :: Integer }
-  deriving (Enum, Eq, Generic, Ord, Read, Show)
 
 data GameSet = GameSet { gameConfig :: Config
                        , gameId :: GameId
@@ -50,6 +29,16 @@ data GameSet = GameSet { gameConfig :: Config
                        , gameState :: GameStateRep
                        }
   deriving (Eq, Generic, Ord, Read, Show)
+
+newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
+  deriving (Eq, Generic, Ord, Read, Show)
+
+updateGameSets :: (GameSet -> Either BadConfigServer GameSet)
+               -> GameId
+               -> GameSets
+               -> Either BadConfigServer GameSets
+updateGameSets f k (GameSets gss) = do gs <- maybe (Left BadConfigMismatch) f $ M.lookup k gss
+                                       return . GameSets $ M.insert k gs gss
 
 updateGameSet :: ClientId
               -> ActionRep
@@ -67,3 +56,28 @@ isCurrentPlayer :: ClientId
 isCurrentPlayer key gs = any (currentPlayer ==) clientPlayer
   where currentPlayer = getCurrentPlayerRep $ gameState gs
         clientPlayer = getPlayerFrom key gs
+
+getPlayerFrom :: ClientId -> GameSet -> Maybe PlayerRep
+getPlayerFrom k = M.lookup k . unwrapPlayers . gamePlayers
+
+-- | Add a 'PlayerRep' to a 'GameSet', but only if it fits the 'AssociatedPlayer'.
+addPlayerTo :: ClientId
+            -> PlayerRep
+            -> GameSet
+            -> Either BadConfigServer GameSet
+addPlayerTo c p gs = if correctPlayerRep -- TODO: very maybe this sanity checking could be done by the typechecker instead
+                        then Right $ gs { gamePlayers = Players . M.insert c p . unwrapPlayers $ gamePlayers gs }
+                        else Left BadConfigMismatch
+  where correctPlayerRep = matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
+
+-- | Remove a player from a 'GameSet'. Acts like 'id' when no player is found.
+removePlayerFrom :: ClientId -> GameSet -> GameSet
+removePlayerFrom c gs = gs { gamePlayers = Players . M.delete c . unwrapPlayers $ gamePlayers gs } -- TODO: keep no sanity checks?
+
+data BadConfigServer = BadConfigInternal BadConfig
+                     | BadConfigMismatch
+  deriving (Eq, Generic, Ord, Read, Show)
+
+embedBadConfig :: Either BadConfig a -> Either BadConfigServer a
+embedBadConfig (Left bc) = Left $ BadConfigInternal bc
+embedBadConfig (Right a) = Right a
