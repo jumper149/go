@@ -14,11 +14,10 @@ import Servant
 import Servant.HTML.Lucid (HTML)
 import Servant.RawM (RawM)
 
+import GameSet.Class
 import Html
 import ServerState
 import WebSocket
-
-import Go.Run.JSON
 
 type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
       :<|> "wss"    :> Capture "gameId" GameId :> RawM
@@ -27,7 +26,7 @@ type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
 api :: Proxy API
 api = Proxy
 
-handler :: => FilePath -> ServerT API (ServerStateT Handler)
+handler :: FilePath -> ServerT API (ServerStateT Handler)
 handler path = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => GameId -> m GameHtml
         gameH _ = return GameHtml { jsAppPath = "public/all.js" } -- TODO: Use path instead of hardcoded

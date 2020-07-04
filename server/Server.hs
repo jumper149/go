@@ -18,14 +18,14 @@ import ServerState
 
 import Go.Run.JSON
 
-server :: forall b c n a. JSONGame b c n => Port -> FilePath -> Proxy b -> IO ()
-server port path _ = do putStrLn $ "Port is: " <> show port
-                        putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
+server :: Port -> FilePath -> IO ()
+server port path = do putStrLn $ "Port is: " <> show port
+                      putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
 
-                        (unit,_,_) <- runNewServerStateT def $ do
-                          hoistedServer <- hoistServerTrans api $ handler path
-                          liftBase $ run port $ serve api hoistedServer :: ServerStateT b c n IO ()
-                        return unit
+                      (unit,_,_) <- runNewServerStateT $ do
+                        hoistedServer <- hoistServerTrans api $ handler path
+                        liftBase $ run port $ serve api hoistedServer :: ServerStateT IO ()
+                      return unit
 
 hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
                  => Proxy api

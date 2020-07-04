@@ -14,6 +14,7 @@ module GameSet.Internal ( GameSets
 import qualified Data.Map as M
 import Data.Maybe (fromMaybe)
 import GHC.Generics
+import Servant (FromHttpApiData, ToHttpApiData) -- TODO: maybe write these instances manually?
 
 import Clients.Class (ClientId)
 
@@ -22,7 +23,7 @@ import Go.Game
 import Go.Player
 
 newtype GameId = GameId { unwrapGameId :: Integer }
-  deriving (Enum, Eq, Generic, Ord, Read, Show)
+  deriving (Enum, Eq, Generic, Ord, Read, Show, FromHttpApiData, ToHttpApiData)
 
 newtype Players = Players { unwrapPlayers :: M.Map ClientId (Maybe PlayerRep) }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
