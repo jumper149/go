@@ -1,12 +1,16 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module ServerState.Message ( serverReceiveMessage
+                           , Recipients
+                           , recipients
                            , serverSendMessage
-                           , serverBroadcastMessage
                            ) where
 
 import Control.Monad.Base
+import Data.Foldable (traverse_)
 import GHC.Conc
+import GHC.Generics
+import Network.WebSockets
 
 import Clients.Class
 import Message
@@ -15,36 +19,31 @@ import ServerState
 
 import Go.Message
 
--- | Read a message from the websocket.
-serverReceiveMessage :: (MonadBase IO m, MonadServerState m)
-                     => ClientId
-                     -> m ClientMessageRep
-serverReceiveMessage key = do conn <- connection <$> transact (getClient key)
-                              unwrapWSClientMessage <$> liftBase (receiveData conn)
+data Recipients = Recipients { mainRecipient :: Client
+                             , allRecipients :: [Client] -- including the main recipient!
+                             }
+  deriving Generic
 
--- | Send a message via the websocket.
-serverSendMessage :: MonadBase IO m
-                  => ClientId
-                  -> ServerStateT STM (Either String ServerMessageRep)
-                  -> ServerStateT m ()
-serverSendMessage key msgSTM = do (conn , msg) <- transact $ do
-                                    conn <- connection <$> getClient key
-                                    msg <- msgSTM
-                                    return (conn , msg)
-                                  case msg of
-                                    Right rMsg -> liftBase $ sendTextData conn $ WSServerMessage rMsg
-                                    Left lString -> liftBase $ sendTextData conn $ WSServerMessage $ ServerMessageFail lString
+recipients :: Client -> [Client] -> Recipients
+recipients c cs = if idC `elem` idCs
+                     then Recipients c cs
+                     else Recipients c $ c:cs
+  where idC = identification c
+        idCs = map identification cs
+
+-- | Read a message from the websocket.
+serverReceiveMessage :: MonadBase IO m
+                     => Client
+                     -> m ClientMessageRep
+serverReceiveMessage c = unwrapWSClientMessageRep <$> liftBase (receiveData $ connection c)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
-serverBroadcastMessage :: MonadBase IO m
-                       => [ClientId]
-                       -> ServerStateT STM (Either String ServerMessageRep)
-                       -> ServerStateT m ()
-serverBroadcastMessage keys msgSTM = do (conns , msg , conn) <- transact $ do
-                                          conns <- map (connection . snd) <$> clientList
-                                          msg <- msgSTM
-                                          conn <- connection <$> getClient key
-                                          return (conns , msg , conn)
-                                        case msg of
-                                          Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessage rMsg) conns
-                                          Left lString -> liftBase . sendTextData conn $ WSServerMessage $ ServerMessageFail lString
+serverSendMessage :: MonadBase IO m
+                  => Recipients
+                  -> Either String ServerMessageRep
+                  -> m ()
+serverSendMessage rs msg = case msg of
+                             Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessageRep rMsg) conns
+                             Left lString -> liftBase . sendTextData conn $ WSServerMessageRep $ ServerMessageRepFail lString
+  where conn = connection $ mainRecipient rs
+        conns = connection <$> allRecipients rs
