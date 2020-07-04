@@ -22,7 +22,7 @@ import Go.Config
 import Go.Game
 import Go.Player
 
-newtype Players = Players { unwrapPlayers :: M.Map ClientId PlayerRep }
+newtype Players = Players { unwrapPlayers :: M.Map ClientId (Maybe PlayerRep) }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
 data GameSet = GameSet { gameConfig :: Config
@@ -54,25 +54,27 @@ actGameSet k a gs = if isCurrentPlayer k gs
 isCurrentPlayer :: ClientId
                 -> GameSet
                 -> Bool
-isCurrentPlayer key gs = any (currentPlayer ==) clientPlayer
+isCurrentPlayer key gs = Just (Just currentPlayer) == clientPlayer
   where currentPlayer = getCurrentPlayerRep $ gameState gs
         clientPlayer = M.lookup key . unwrapPlayers $ gamePlayers gs
 
--- | Add a 'PlayerRep' to a 'GameSet', but only if it fits the 'AssociatedPlayer'.
+-- | Add a 'Maybe PlayerRep' to a 'GameSet', but only if it fits the 'AssociatedPlayer'.
 addPlayerTo :: ClientId
-            -> PlayerRep
+            -> Maybe PlayerRep
             -> GameSet
             -> Either BadConfigServer GameSet
 addPlayerTo c p gs = if correctPlayerRep -- TODO: very maybe this sanity checking could be done by the typechecker instead
                         then Right $ gs { gamePlayers = Players . M.insert c p . unwrapPlayers $ gamePlayers gs }
                         else Left BadConfigMismatch
-  where correctPlayerRep = matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
+  where correctPlayerRep = case p of
+                             Nothing -> True
+                             Just p -> matchingPlayerRep p . getCurrentPlayerRep $ gameState gs
 
 -- | Remove a player from a 'GameSet'. Acts like 'id' when no player is found.
 removePlayerFrom :: ClientId -> GameSet -> GameSet
 removePlayerFrom c gs = gs { gamePlayers = Players . M.delete c . unwrapPlayers $ gamePlayers gs } -- TODO: keep no sanity checks?
 
-playerListFrom :: GameSet -> [(ClientId,PlayerRep)]
+playerListFrom :: GameSet -> [(ClientId, Maybe PlayerRep)]
 playerListFrom = M.toList . unwrapPlayers . gamePlayers
 
 data BadConfigServer = BadConfigInternal BadConfig

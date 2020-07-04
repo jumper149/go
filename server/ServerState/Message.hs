@@ -14,6 +14,7 @@ import Network.WebSockets
 
 import Clients.Class
 import Message
+import GameSet.Class
 import ServerState.Class
 import ServerState
 
@@ -40,10 +41,10 @@ serverReceiveMessage c = unwrapWSClientMessageRep <$> liftBase (receiveData $ co
 -- | Send a message to all clients in 'Clients' via the websocket.
 serverSendMessage :: MonadBase IO m
                   => Recipients
-                  -> Either String ServerMessageRep
+                  -> Either BadConfigServer ServerMessageRep
                   -> m ()
 serverSendMessage rs msg = case msg of
                              Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessageRep rMsg) conns
-                             Left lString -> liftBase . sendTextData conn $ WSServerMessageRep $ ServerMessageRepFail lString
+                             Left ex -> liftBase . sendTextData conn . WSServerMessageRep . ServerMessageRepFail $ show ex -- TODO: don't show, but have instance for message
   where conn = connection $ mainRecipient rs
         conns = connection <$> allRecipients rs

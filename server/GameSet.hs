@@ -61,7 +61,7 @@ instance MonadBase STM m => MonadGameSet (GameSetT m) where
   readPlayer = do c <- GameSetT $ reader clientId
                   GameSetT $ getClient c
   readPlayers = do cs <- playerListFrom <$> readGameSet
-                   GameSetT . lift $ traverse (getClient . fst) cs
+                   GameSetT . lift $ traverse (getClient . fst) cs -- TODO
   readGameSet = do gs <- GameSetT $ reader gameId
                    GameSetT $ getGameSetFrom gs <$> lift readGameSets -- TODO: remove lifts, by implementing MonadServerState instance for ReaderT
   writeGameSet gs = do gss <- GameSetT $ addGameSetTo gs <$> lift readGameSets -- TODO
