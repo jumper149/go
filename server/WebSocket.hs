@@ -36,8 +36,9 @@ serverApp :: MonadBaseControl IO m
 serverApp gameId pendingConnection = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ addClient conn
-          hold clientId = runGameSetT clientId gameId $ do initGame
-                                                           loopGame
+          hold clientId = runGameSetT clientId gameId $ do
+                            initGame
+                            loopGame
           disconnect clientId = transact $ removeClient clientId
 
 initGame :: MonadBase IO m
@@ -56,12 +57,16 @@ loopGame = do msg <- serverReceiveMessage =<< transact readPlayer
               liftBase . C8.putStrLn $ encode msg -- TODO: remove?
               case msg of
                 ClientMessageRepFail _ -> liftBase $ putStrLn "failed to do action" -- TODO: server side error log would be better
-                ClientMessageActionRep action -> let transaction = do rs <- recipients <$> readPlayer <*> readPlayers
-                                                                      gs <- actGame action
-                                                                      let answer = ServerMessageGameStateRep . gameState <$> gs
-                                                                      return (rs , answer)
-                                                 in uncurry serverSendMessage =<< transact transaction
-                ClientMessagePlayerRep mbP -> undefined
+                ClientMessageActionRep action -> (uncurry serverSendMessage =<<) . transact $ do
+                                                   rs <- recipients <$> readPlayer <*> readPlayers
+                                                   gs <- actGame action
+                                                   let answer = ServerMessageGameStateRep . gameState <$> gs
+                                                   return (rs , answer)
+                ClientMessagePlayerRep mbP -> (uncurry serverSendMessage =<<) . transact $ do
+                                                rs <- recipients <$> readPlayer <*> pure mempty
+                                                p <- updatePlayer mbP -- TODO: p should be equal to mbP, keep it like this?
+                                                let answer = ServerMessagePlayerRep <$> p
+                                                return (rs , answer)
               loopGame
 
 liftedBracket :: MonadBaseControl IO m
