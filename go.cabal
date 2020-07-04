@@ -52,6 +52,8 @@ executable server
                          Clients
                          Clients.Class
                          Clients.Internal
+                         GameSet
+                         GameSet.Class
                          GameSet.Internal
                          GameSet.Internal.Identification
                          Html
@@ -59,6 +61,7 @@ executable server
                          Server
                          ServerState
                          ServerState.Class
+                         ServerState.Message
                          WebSocket
     build-depends:       base
                        , go

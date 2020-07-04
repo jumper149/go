@@ -31,42 +31,42 @@ class Monad m => MonadClients m where
 instance MonadClients m => MonadClients (ReaderT r m) where
   clientsTVar = lift clientsTVar
 
-readClients :: (MonadClients (t STM), MonadTrans t)
-            => t STM Clients
-readClients = lift . readTVar =<< clientsTVar
+readClients :: (MonadBase STM m, MonadClients m)
+            => m Clients
+readClients = liftBase . readTVar =<< clientsTVar
 
-writeClients :: (MonadClients (t STM), MonadTrans t)
+writeClients :: (MonadBase STM m, MonadClients m)
              => Clients
-             -> t STM ()
-writeClients cs = lift . flip writeTVar cs =<< clientsTVar
-
-transact :: (MonadBase IO m, MonadTransFunctor t)
-         => t STM a
-         -> t m a
-transact = mapT $ liftBase . atomically
+             -> m ()
+writeClients cs = liftBase . flip writeTVar cs =<< clientsTVar
 
 -- | Create a new client in 'Clients' with the given 'Connection'.
-addClient :: (MonadClients (t STM), MonadTrans t)
+addClient :: (MonadBase STM m, MonadClients m)
           => Connection
-          -> t STM ClientId
+          -> m ClientId
 addClient conn = do clients <- readClients
                     let client = newClientFor conn clients
                     writeClients $ addClientTo client clients
                     return $ identification client
 
 -- | Read a specific 'Client' from 'Clients'.
-getClient :: (MonadClients (t STM), MonadTrans t)
+getClient :: (MonadBase STM m, MonadClients m)
           => ClientId
-          -> t STM Client
+          -> m Client
 getClient key = getClientFrom key <$> readClients
 
 -- | Remove a client from 'Clients'.
-removeClient :: (MonadClients (t STM), MonadTrans t)
+removeClient :: (MonadBase STM m, MonadClients m)
              => ClientId
-             -> t STM ()
+             -> m ()
 removeClient key = do clients <- readClients
                       writeClients $ removeClientFrom key clients
 
-clientList :: (MonadClients (t STM), MonadTrans t)
-           => t STM [(ClientId, Client)]
+clientList :: (MonadBase STM m, MonadClients m)
+           => m [(ClientId, Client)]
 clientList = clientListFrom <$> readClients
+
+transact :: (MonadBase IO m, MonadTransFunctor t)
+         => t STM a
+         -> t m a
+transact = mapT $ liftBase . atomically

@@ -1,15 +1,19 @@
 module GameSet.Internal ( GameSets
-                        , updateGameSets
-                        , GameSet (..) -- TODO: limit access
+                        , addGameSetTo
+                        , getGameSetFrom
+                        , GameSet (gameConfig, gameIdentification, gamePlayers, gameState) -- TODO: limit access
+                        , GameId
+                        , Players
+                        , actGameSet
                         , addPlayerTo
                         , removePlayerFrom
-                        , actGameSet
-                        , GameId
+                        , playerListFrom
                         , BadConfigServer (..)
                         ) where
 
-import GHC.Generics
 import qualified Data.Map as M
+import Data.Maybe (fromMaybe)
+import GHC.Generics
 
 import Clients.Class (ClientId)
 import GameSet.Internal.Identification
@@ -31,12 +35,11 @@ data GameSet = GameSet { gameConfig :: Config
 newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
-updateGameSets :: (GameSet -> Either BadConfigServer GameSet)
-               -> GameId
-               -> GameSets
-               -> Either BadConfigServer GameSets
-updateGameSets f k (GameSets gss) = do gs <- maybe (Left BadConfigMismatch) f $ M.lookup k gss
-                                       return . GameSets $ M.insert k gs gss
+getGameSetFrom :: GameId -> GameSets -> GameSet
+getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets
+
+addGameSetTo :: GameSet -> GameSets -> GameSets
+addGameSetTo gs = GameSets . M.insert (gameIdentification gs) gs . unwrapGameSets
 
 actGameSet :: ClientId
            -> ActionRep
@@ -53,10 +56,7 @@ isCurrentPlayer :: ClientId
                 -> Bool
 isCurrentPlayer key gs = any (currentPlayer ==) clientPlayer
   where currentPlayer = getCurrentPlayerRep $ gameState gs
-        clientPlayer = getPlayerFrom key gs
-
-getPlayerFrom :: ClientId -> GameSet -> Maybe PlayerRep
-getPlayerFrom k = M.lookup k . unwrapPlayers . gamePlayers
+        clientPlayer = M.lookup key . unwrapPlayers $ gamePlayers gs
 
 -- | Add a 'PlayerRep' to a 'GameSet', but only if it fits the 'AssociatedPlayer'.
 addPlayerTo :: ClientId
@@ -72,6 +72,9 @@ addPlayerTo c p gs = if correctPlayerRep -- TODO: very maybe this sanity checkin
 removePlayerFrom :: ClientId -> GameSet -> GameSet
 removePlayerFrom c gs = gs { gamePlayers = Players . M.delete c . unwrapPlayers $ gamePlayers gs } -- TODO: keep no sanity checks?
 
+playerListFrom :: GameSet -> [(ClientId,PlayerRep)]
+playerListFrom = M.toList . unwrapPlayers . gamePlayers
+
 data BadConfigServer = BadConfigInternal BadConfig
                      | BadConfigMismatch
   deriving (Eq, Generic, Ord, Read, Show)
@@ -79,3 +82,6 @@ data BadConfigServer = BadConfigInternal BadConfig
 embedBadConfig :: Either BadConfig a -> Either BadConfigServer a
 embedBadConfig (Left bc) = Left $ BadConfigInternal bc
 embedBadConfig (Right a) = Right a
+
+errorGameSetNotFound :: GameId -> a
+errorGameSetNotFound k = error $ "Can't find game with id: " <> show k
