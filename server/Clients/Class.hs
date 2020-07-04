@@ -2,7 +2,7 @@
 
 module Clients.Class ( MonadClients (..)
                      , Clients
-                     , Client (connection, identification, maybeGameId)
+                     , Client (connection, identification)
                      , ClientId
                      , transact
                      , readClients

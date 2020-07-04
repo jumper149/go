@@ -55,7 +55,6 @@ executable server
                          GameSet
                          GameSet.Class
                          GameSet.Internal
-                         GameSet.Internal.Identification
                          Html
                          Message
                          Server

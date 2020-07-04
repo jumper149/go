@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
 module Clients.Internal ( Clients
-                        , Client (connection, identification, maybeGameId)
+                        , Client (connection, identification)
                         , ClientId
                         , newClientFor
                         , addClientTo
@@ -16,7 +16,6 @@ import GHC.Generics
 import Network.WebSockets (Connection)
 
 import Message
-import GameSet.Internal.Identification (GameId)
 
 -- | An identifier for 'Client'.
 newtype ClientId = ClientId { unwrapClientId :: Integer }
@@ -25,7 +24,6 @@ newtype ClientId = ClientId { unwrapClientId :: Integer }
 -- | A data type, that holds information regarding a client.
 data Client = Client { connection :: Connection
                      , identification :: ClientId
-                     , maybeGameId :: Maybe GameId
                      }
   deriving Generic
 
