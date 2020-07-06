@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances #-}
+
 module Model ( Model
              , updateModel
              , viewModel
@@ -5,26 +7,32 @@ module Model ( Model
 
 import Data.Default.Class
 import GHC.Generics
+import GHC.TypeLits
 import Miso.Effect
 import Miso.Html
 import Miso.String (ms)
 
 import qualified Go.Game.Game as G
+import qualified Go.Representation as G
 import qualified Go.Run.JSON as G
 
 import Game.Model
 import Game.Run
 import Operation
 
-data Model b c n = GameM (GameModel b c n)
-                 | Lobby { availableGames :: String
-                         }
-  deriving (Eq, Ord, Generic, Read, Show)
+data Model b = GameM (GameModel b)
+             | Lobby { availableGames :: String
+                     }
+  deriving Generic
+deriving instance (Eq b, Eq (G.AssociatedCoord b)) => Eq (Model b)
+deriving instance (Ord b, Ord (G.AssociatedCoord b)) => Ord (Model b)
+deriving instance (Read b, Read (G.AssociatedCoord b), KnownNat (G.AssociatedPlayerCount b)) => Read (Model b)
+deriving instance (Show b, Show (G.AssociatedCoord b)) => Show (Model b)
 
-instance G.Game b c n => Default (Model b c n) where
-  def = GameM def
+instance G.Game b => Default (Model b) where
+  def = Lobby def
 
-updateModel :: forall b c n. G.JSONGame b c n => Operation b c n -> Model b c n -> Effect (Operation b c n) (Model b c n)
+updateModel :: forall b. (G.JSONGame b, G.RepresentableGame b) => Operation b -> Model b -> Effect (Operation b) (Model b)
 updateModel operation model = case operation of
                                 NoOp -> noEff model
                                 QueueOp ops -> foldl (\ m a -> updateModel a =<< m) (noEff model) ops
@@ -36,7 +44,7 @@ updateModel operation model = case operation of
                                              JoinGame _ -> model <# undefined
                                 WriteErrorLog msg -> undefined -- TODO --noEff $ model { errorLog = errorLog model <> msg }
 
-viewModel :: MisoGame b c n => Model b c n -> View (Operation b c n)
+viewModel :: MisoGame b => Model b -> View (Operation b)
 viewModel (GameM model) = fmap GameOp $ viewGameModel model
 viewModel Lobby { availableGames = availableGames } =
   div_ [

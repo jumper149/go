@@ -20,7 +20,7 @@ import ServerState
 import WebSocket
 
 type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
-      :<|> "wss"    :> Capture "gameId" GameId :> RawM
+      :<|> "ws"     :> Capture "gameId" GameId :> RawM
       :<|> "public" :> Raw
 
 api :: Proxy API
@@ -29,7 +29,7 @@ api = Proxy
 handler :: FilePath -> ServerT API (ServerStateT Handler)
 handler path = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => GameId -> m GameHtml
-        gameH _ = return GameHtml { jsAppPath = "public/all.js" } -- TODO: Use path instead of hardcoded
+        gameH _ = return GameHtml { jsAppPath = "../public/all.js" } -- TODO: Use path instead of hardcoded
         -- TODO: use argument to check if game exists
 
         wssH :: MonadBaseControl IO m => GameId -> ServerStateT m Application

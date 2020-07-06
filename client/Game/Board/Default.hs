@@ -21,7 +21,7 @@ import qualified Go.Game.State as G
 import Game.Operation
 import Game.Player
 
-viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.Board i n -> Maybe (D.Coord i) -> Html.View (GameOperation (D.Board i n) (D.Coord i) n)
+viewBoard :: forall i n. (KnownNat i, KnownNat n) => D.Board i n -> Maybe (D.Coord i) -> Html.View (GameOperation (D.Board i n))
 viewBoard (D.Board grid) c = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                              , ("width","50%")
                                                              ]
@@ -53,7 +53,7 @@ viewCoordIndicator = []
 viewStone :: forall i n. (KnownNat i, KnownNat n)
           => D.Coord i             -- ^ index of stone in board
           -> G.Stone (G.PlayerN n)
-          -> Html.View (GameOperation (D.Board i n) (D.Coord i) n)
+          -> Html.View (GameOperation (D.Board i n))
 viewStone c stone = case stone of
                       G.Free -> rect_ [ x_ . ms $ x - 0.5
                                       , y_ . ms $ y - 0.5

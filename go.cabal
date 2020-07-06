@@ -25,6 +25,7 @@ library
                          Go.Game.State
                          Go.Message
                          Go.Player
+                         Go.Representation
                          Go.Run.JSON
     build-depends:       base
                        , aeson

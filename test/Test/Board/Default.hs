@@ -5,12 +5,11 @@ import Test.Hspec
 import Test.QuickCheck
 
 import Data.Default.Class
-import Data.Either (fromRight, isLeft, isRight)
+import Data.Either (isLeft, isRight)
 import GHC.TypeLits
 
 import Go.Board.Default
 import Go.Game.Act
-import Go.Game.Config
 import Go.Game.Game
 import Go.Game.Player
 import Go.Game.State
@@ -57,7 +56,7 @@ prop_remove board (ArbCoord coord) = getStone newBoard coord == Free
 
 prop_ko :: Bool
 prop_ko = isRight beforeKoState && isLeft afterKoState
-  where initalState = fromRight undefined $ configure def initState :: GameState (Board 13 2) (Coord 13) 2
+  where initalState = initState :: GameState (Board 13 2) (Coord 13) 2
         turns = [ Place $ Coord 3 2
                 , Place $ Coord 2 2
                 , Place $ Coord 4 3

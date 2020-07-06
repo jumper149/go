@@ -2,7 +2,7 @@ module Game.Player ( Color (..)
                    , colorize
                    ) where
 
-import Data.Char (isLower, toLower, toUpper)
+import Data.Char (toLower)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
 import GHC.Generics
