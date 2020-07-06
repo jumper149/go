@@ -7,9 +7,7 @@ module Go.Game.Act ( RuleViolation (..)
 
 import Control.Monad.Except
 import Control.Monad.Reader
-import Data.Aeson (FromJSON, ToJSON)
 import Data.Proxy
-import GHC.Generics
 import GHC.TypeLits
 
 import Go.Game.Game
@@ -18,7 +16,7 @@ import Go.Game.Rules
 import Go.Game.State
 
 -- | Apply action to 'GameState' and handle all fields in 'GameState'. Doesn't check rules.
-act :: forall b c n. Game b c n => Rules -> Action c -> GameState b c n -> Either RuleViolation (GameState b c n)
+act :: forall b. Game b => Rules -> AssociatedAction b -> AssociatedGameState b -> Either RuleViolation (AssociatedGameState b)
 act rls action gs = checkRules rls $
   GState { currentBoard = case action of
                             Pass -> currentBoard gs
@@ -32,20 +30,9 @@ act rls action gs = checkRules rls $
          , countTurns = succ $ countTurns gs
          }
 
--- | A data type representing exceptions, that may occur in 'checkRules'.
-data RuleViolation = ExceptionEnd
-                   | RuleViolationPassing
-                   | RuleViolationNotFree
-                   | RuleViolationSuicide
-                   | RuleViolationKo
-  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
-
-instance FromJSON RuleViolation
-instance ToJSON RuleViolation
-
 -- | Check rules. This should be done after applying an 'Action' to the 'GameState' with 'act'.
-checkRules :: Game b c n => Rules -> GameState b c n -> Either RuleViolation (GameState b c n)
-checkRules rls gs = flip runReaderT gs . runRulesetEnvT rls $ do
+checkRules :: Game b => Rules -> AssociatedGameState b -> Either RuleViolation (AssociatedGameState b)
+checkRules rls gs = flip runReader gs . runRulesT rls $ do
   checkFree
   checkPassing
   checkSuicide
@@ -53,7 +40,7 @@ checkRules rls gs = flip runReaderT gs . runRulesetEnvT rls $ do
   return gs
 
 -- | Check that the last placed stone was placed on a free coordinate.
-checkFree :: (Game b c n, MonadError RuleViolation m, MonadReader (GameState b c n) m) => m ()
+checkFree :: (Game b, MonadError RuleViolation m, MonadReader (AssociatedGameState b) m) => m ()
 checkFree = do GState {..} <- ask
                case lastAction of
                  Pass -> return ()
@@ -63,17 +50,17 @@ checkFree = do GState {..} <- ask
                               _ -> return ()
 
 -- | Check if the number of consecutive passes is below the number of players.
-checkPassing :: forall b c m n. (Game b c n, MonadError RuleViolation m, MonadReader (GameState b c n) m, MonadRules m) => m ()
+checkPassing :: forall b m. (Game b, MonadReader (AssociatedGameState b) m, MonadRules m) => m ()
 checkPassing = do GState {..} <- ask
                   rPassing <- passing <$> rules
                   case rPassing of
-                    Allowed -> when (consecutivePasses >= natVal (Proxy :: Proxy n)) $
+                    Allowed -> when (consecutivePasses >= natVal (Proxy :: Proxy (AssociatedPlayerCount b))) $
                                  throwError ExceptionEnd
                     Forbidden -> when (lastAction == Pass) $
                                    throwError RuleViolationPassing
 
 -- | Check that the last placed stone wasn't removed right after, because it didn't have any liberties.
-checkSuicide :: (Game b c n, MonadError RuleViolation m, MonadReader (GameState b c n) m, MonadRules m) => m ()
+checkSuicide :: (Game b, MonadReader (AssociatedGameState b) m, MonadRules m) => m ()
 checkSuicide = do GState {..} <- ask
                   rSuicide <- suicide <$> rules
                   case rSuicide of
@@ -84,7 +71,7 @@ checkSuicide = do GState {..} <- ask
                                                 throwError RuleViolationSuicide
 
 -- | Check if the last applied action is correct regarding to the ko-rule 'ko'.
-checkKo :: (Game b c n, MonadError RuleViolation m, MonadReader (GameState b c n) m, MonadRules m) => m ()
+checkKo :: (Game b, MonadReader (AssociatedGameState b) m, MonadRules m) => m ()
 checkKo = do GState {..} <- ask
              rKo <- ko <$> rules
              case rKo of

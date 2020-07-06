@@ -14,26 +14,26 @@ import Servant
 import Servant.HTML.Lucid (HTML)
 import Servant.RawM (RawM)
 
+import GameSet.Class
 import Html
 import ServerState
 import WebSocket
 
-import Go.Run.JSON
-
-type API =             Get '[HTML] GameHtml
-      :<|> "wss"    :> RawM
+type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
+      :<|> "ws"     :> Capture "gameId" GameId :> RawM
       :<|> "public" :> Raw
 
 api :: Proxy API
 api = Proxy
 
-handler :: forall b c n. JSONGame b c n => FilePath -> ServerT API (ServerStateT b c n Handler)
+handler :: FilePath -> ServerT API (ServerStateT Handler)
 handler path = gameH :<|> wssH :<|> publicH
-  where gameH :: Monad m => m GameHtml
-        gameH = return GameHtml { jsAppPath = "public/all.js" } -- TODO: Use path instead of hardcoded
+  where gameH :: Monad m => GameId -> m GameHtml
+        gameH _ = return GameHtml { jsAppPath = "../public/all.js" } -- TODO: Use path instead of hardcoded
+        -- TODO: use argument to check if game exists
 
-        wssH :: MonadBaseControl IO m => ServerStateT b c n m Application
-        wssH = liftTrans $ runMiddlewareT websocketMiddleware <*> pure backupApp
+        wssH :: MonadBaseControl IO m => GameId -> ServerStateT m Application
+        wssH gameId = liftTrans $ runMiddlewareT (websocketMiddleware gameId) <*> pure backupApp
           where backupApp :: Application
                 backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 

@@ -9,13 +9,13 @@ import qualified Miso.Html as Html
 import Miso.String (ms)
 import Miso.Svg
 
-import qualified Go.Game.Player as G
+import qualified Go.Game.Game as G
 import qualified Go.Game.State as G
 
 import Game.Operation
 import Game.Player
 
-viewPassButton :: Maybe (G.Action c) -> Html.View (GameOperation b c n)
+viewPassButton :: Maybe (G.AssociatedAction b) -> Html.View (GameOperation b)
 viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                      , ("width","50%")
                                                      ]
@@ -47,7 +47,7 @@ viewPassButton mbA = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey
                         , height_ "30"
                         ]
 
-viewPlayerChoice :: KnownNat n => Maybe (G.PlayerN n) -> Html.View (GameOperation b c n)
+viewPlayerChoice :: G.Game b => Maybe (G.AssociatedPlayer b) -> Html.View (GameOperation b)
 viewPlayerChoice mbP = svg_ [ Html.style_ $ M.fromList [ ("background-color","grey")
                                                        , ("width","20%")
                                                        ]
@@ -62,7 +62,7 @@ viewPlayerChoice mbP = svg_ [ Html.style_ $ M.fromList [ ("background-color","gr
                                ] <> map viewPlayer [ minBound .. maxBound ]
                                  <> [ hintPlayer mbP ])
 
-viewPlayer :: forall b c n. KnownNat n => G.PlayerN n -> Html.View (GameOperation b c n)
+viewPlayer :: forall b. G.Game b => G.AssociatedPlayer b -> Html.View (GameOperation b)
 viewPlayer p = rect_ [ fill_ . ms $ colorize p
                      , x_ $ ms x
                      , y_ "25"
@@ -71,10 +71,10 @@ viewPlayer p = rect_ [ fill_ . ms $ colorize p
                      , onClick $ SubmitPlayer $ Just p
                      ] []
   where width = 80 / count
-        count = fromIntegral $ natVal (Proxy :: Proxy n) :: Double
+        count = fromIntegral $ natVal (Proxy :: Proxy (G.AssociatedPlayerCount b)) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count
 
-hintPlayer :: forall b c n. KnownNat n => Maybe (G.PlayerN n) -> Html.View (GameOperation b c n)
+hintPlayer :: forall b. G.Game b => Maybe (G.AssociatedPlayer b) -> Html.View (GameOperation b)
 hintPlayer Nothing = circle_ [ fill_ "black"
                              , cx_ "82.5"
                              , cy_ "17.5"
@@ -85,5 +85,5 @@ hintPlayer (Just p) = circle_ [ fill_ "red"
                               , cy_ "32.5"
                               , r_ "5"
                               ] []
-  where count = fromIntegral $ natVal (Proxy :: Proxy n) :: Double
+  where count = fromIntegral $ natVal (Proxy :: Proxy (G.AssociatedPlayerCount b)) :: Double
         x = 10 + 80 * (toEnum . fromEnum $ p :: Double) / count + 80 / (2 * count)

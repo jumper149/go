@@ -16,73 +16,58 @@ import Network.Wai.Handler.WebSockets.Trans
 import Network.Wai.Trans (MiddlewareT)
 
 import Clients.Class
+import GameSet
+import GameSet.Class
 import Message
 import ServerState
-import ServerState.Class
+import ServerState.Message
 
-import Go.Run.JSON
+import Go.Message
 
-websocketMiddleware :: (JSONGame b c n, MonadBaseControlIdentity IO m)
-                    => MiddlewareT (ServerStateT b c n m)
-websocketMiddleware = websocketsOrT defaultConnectionOptions serverApp
+websocketMiddleware :: MonadBaseControlIdentity IO m
+                    => GameId
+                    -> MiddlewareT (ServerStateT m)
+websocketMiddleware gameId = websocketsOrT defaultConnectionOptions $ serverApp gameId
 
 -- TODO: maybe ping every 30 seconds to keep alive?
-serverApp :: (JSONGame b c n, MonadBaseControl IO m)
-          => ServerAppT (ServerStateT b c n m)
-serverApp pendingConnection = liftedBracket connect disconnect hold
+serverApp :: MonadBaseControl IO m
+          => GameId
+          -> ServerAppT (ServerStateT m)
+serverApp gameId pendingConnection = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ addClient conn
-          hold key = do serverSendMessage key $ Right . ServerMessageGameState <$> readServerGameState
-                        serverLoopGame key
-          disconnect key = transact $ removeClient key
+          hold clientId = runGameSetT clientId gameId $ do
+                            initGame
+                            loopGame
+          disconnect clientId = transact $ removeClient clientId
+
+initGame :: MonadBase IO m
+         => GameSetT m ()
+initGame = (uncurry serverSendMessage =<<) . transact $ do
+             rs <- recipients <$> readPlayer <*> pure mempty
+             gs <- readGameSet
+             let msg = Right . ServerMessageGameStateRep $ gameState gs
+             return (rs , msg)
 
 -- | A loop, that receives messages via the websocket and also answers back, while progressing the
 -- 'GameState'.
-serverLoopGame :: forall b c m n. (JSONGame b c n, MonadBase IO m)
-               => ClientId
-               -> ServerStateT b c n m ()
-serverLoopGame key = do msg <- serverReceiveMessage key
-                        liftBase . C8.putStrLn $ encode msg -- TODO: remove?
-                        case msg of
-                          ClientMessageFail _ -> liftBase $ putStrLn "failed to do action" -- TODO: server side error log would be better
-                          ClientMessageAction action -> serverBroadcastMessage key $ fmap ServerMessageGameState <$> serverUpdateGameState key action
-                          ClientMessagePlayer mbP -> let msg = Right . ServerMessagePlayer <$> updatePlayer key mbP
-                                                      in serverSendMessage key msg
-                        serverLoopGame key
-
--- | Read a message from the websocket.
-serverReceiveMessage :: (JSONGame b c n, MonadBase IO m)
-                     => ClientId
-                     -> ServerStateT b c n m (ClientMessage b c n)
-serverReceiveMessage key = do conn <- connection <$> transact (getClient key)
-                              unwrapWSClientMessage <$> liftBase (receiveData conn)
-
--- | Send a message via the websocket.
-serverSendMessage :: forall b c m n. (JSONGame b c n, MonadBase IO m)
-                  => ClientId
-                  -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                  -> ServerStateT b c n m ()
-serverSendMessage key msgSTM = do (conn , msg) <- transact $ do
-                                    conn <- connection <$> getClient key
-                                    msg <- msgSTM
-                                    return (conn , msg)
-                                  case msg of
-                                    Right rMsg -> liftBase $ sendTextData conn $ WSServerMessage rMsg
-                                    Left lString -> liftBase $ sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
-
--- | Send a message to all clients in 'Clients' via the websocket.
-serverBroadcastMessage :: forall b c m n. (JSONGame b c n, MonadBase IO m)
-                       => ClientId
-                       -> ServerStateT b c n STM (Either String (ServerMessage b c n))
-                       -> ServerStateT b c n m ()
-serverBroadcastMessage key msgSTM = do (conns , msg , conn) <- transact $ do
-                                         conns <- map (connection . snd) <$> clientList
-                                         msg <- msgSTM
-                                         conn <- connection <$> getClient key
-                                         return (conns , msg , conn)
-                                       case msg of
-                                         Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessage rMsg) conns
-                                         Left lString -> liftBase . sendTextData conn $ WSServerMessage (ServerMessageFail lString :: ServerMessage b c n)
+loopGame :: MonadBase IO m
+         => GameSetT m ()
+loopGame = do msg <- serverReceiveMessage =<< transact readPlayer
+              liftBase . C8.putStrLn $ encode msg -- TODO: remove?
+              case msg of
+                ClientMessageRepFail _ -> liftBase $ putStrLn "failed to do action" -- TODO: server side error log would be better
+                ClientMessageActionRep action -> (uncurry serverSendMessage =<<) . transact $ do
+                                                   rs <- recipients <$> readPlayer <*> readPlayers
+                                                   gs <- actGame action
+                                                   let answer = ServerMessageGameStateRep . gameState <$> gs
+                                                   return (rs , answer)
+                ClientMessagePlayerRep mbP -> (uncurry serverSendMessage =<<) . transact $ do
+                                                rs <- recipients <$> readPlayer <*> pure mempty
+                                                p <- updatePlayer mbP -- TODO: p should be equal to mbP, keep it like this?
+                                                let answer = ServerMessagePlayerRep <$> p
+                                                return (rs , answer)
+              loopGame
 
 liftedBracket :: MonadBaseControl IO m
               => m a

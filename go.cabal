@@ -12,15 +12,20 @@ cabal-version:       >=1.10
 
 library
     hs-source-dirs:      src
-    exposed-modules:     Go.Board.Default
+    exposed-modules:     Go.Board
+                         Go.Board.Default
                          Go.Board.Loop
+                         Go.Config
+                         Go.Game
                          Go.Game.Act
-                         Go.Game.Config
                          Go.Game.End
                          Go.Game.Game
                          Go.Game.Player
                          Go.Game.Rules
                          Go.Game.State
+                         Go.Message
+                         Go.Player
+                         Go.Representation
                          Go.Run.JSON
     build-depends:       base
                        , aeson
@@ -48,11 +53,15 @@ executable server
                          Clients
                          Clients.Class
                          Clients.Internal
+                         GameSet
+                         GameSet.Class
+                         GameSet.Internal
                          Html
                          Message
                          Server
                          ServerState
                          ServerState.Class
+                         ServerState.Message
                          WebSocket
     build-depends:       base
                        , go

@@ -2,15 +2,11 @@ module Main ( main
             ) where
 
 import Data.Default.Class
-import Data.Proxy (Proxy)
 import GHC.Generics
 import Network.Wai.Handler.Warp (Port)
 import Servant
 import System.Console.GetOpt
 import System.Environment (getArgs)
-
-import qualified Go.Board.Default as D
-import qualified Go.Game.End as G
 
 import Server
 
@@ -45,4 +41,4 @@ main = do args <- getArgs
           let OptArgs { directory = directory
                       , port = port
                       } = opts
-          server port directory (Proxy :: Proxy (D.Board 19 2))
+          server port directory

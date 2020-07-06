@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FlexibleContexts, RecordWildCards, StandaloneDeriving, TypeApplications, UndecidableInstances #-}
 
 module Game.Model ( GameModel (..)
                   , updateGameModel
@@ -7,13 +7,15 @@ module Game.Model ( GameModel (..)
 
 import Data.Default.Class
 import GHC.Generics
+import GHC.TypeLits
 import Miso.Effect
 import Miso.Html
 import Miso.Subscription.WebSocket
 
 import qualified Go.Game.Game as G
-import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
+import qualified Go.Message as G
+import qualified Go.Representation as G
 import qualified Go.Run.JSON as G
 
 import Game.Operation
@@ -21,39 +23,43 @@ import Game.Run
 import Game.Svg
 import Operation
 
-data GameModel b c n = GameModel { gameState :: G.GameState b c n
-                                 , gameAction :: Maybe (G.Action c)
-                                 , chosenPlayer :: Maybe (G.PlayerN n)
-                                 , errorLog :: String
-                                 }
-  deriving (Eq, Ord, Generic, Read, Show)
+data GameModel b = GameModel { gameState :: G.AssociatedGameState b
+                             , gameAction :: Maybe (G.AssociatedAction b)
+                             , chosenPlayer :: Maybe (G.AssociatedPlayer b)
+                             , errorLog :: String
+                             }
+  deriving Generic
+deriving instance (Eq b, Eq (G.AssociatedCoord b)) => Eq (GameModel b)
+deriving instance (Ord b, Ord (G.AssociatedCoord b)) => Ord (GameModel b)
+deriving instance (Read b, Read (G.AssociatedCoord b), KnownNat (G.AssociatedPlayerCount b)) => Read (GameModel b)
+deriving instance (Show b, Show (G.AssociatedCoord b)) => Show (GameModel b)
 
-instance G.Game b c n => Default (GameModel b c n) where
+instance G.Game b => Default (GameModel b) where
   def = GameModel { gameState = G.initState
                   , gameAction = Nothing
                   , chosenPlayer = Nothing
                   , errorLog = mempty
                   }
 
-updateGameModel :: forall b c n. G.JSONGame b c n
-                => GameOperation b c n
-                -> GameModel b c n
-                -> Effect (Operation b c n) (GameModel b c n)
+updateGameModel :: forall b. (G.JSONGame b, G.RepresentableGame b)
+                => GameOperation b
+                -> GameModel b
+                -> Effect (Operation b) (GameModel b)
 updateGameModel operation GameModel {..} =
   case operation of
     UpdateAction gameAction -> noEff GameModel {..}
     SubmitAction -> case gameAction of
                       Nothing -> noEff GameModel {..} -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> GameModel {..} <# do send (G.ClientMessageAction a :: G.ClientMessage b c n)
+                      Just a -> GameModel {..} <# do send $ G.ClientMessageActionRep $ (G.toActionRep @b) a
                                                      return NoOp
     SetState gameState -> noEff $ GameModel { gameAction = Nothing, ..}
-    SubmitPlayer mbP -> GameModel {..} <# do send (G.ClientMessagePlayer mbP :: G.ClientMessage b c n)
+    SubmitPlayer mbP -> GameModel {..} <# do send $ G.ClientMessagePlayerRep $ (G.toPlayerRep @b) <$> mbP
                                              return NoOp
     SetPlayer chosenPlayer -> noEff $ GameModel {..}
 
-viewGameModel :: MisoGame b c n
-              => GameModel b c n
-              -> View (GameOperation b c n)
+viewGameModel :: MisoGame b
+              => GameModel b
+              -> View (GameOperation b)
 viewGameModel GameModel {..} =
   div_ [
        ] [ viewBoard (G.currentBoard gameState) coord

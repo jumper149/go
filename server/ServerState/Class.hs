@@ -1,64 +1,28 @@
-{-# LANGUAGE FlexibleContexts, FunctionalDependencies #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module ServerState.Class ( MonadServerState (..)
                          , transact
-                         , readServerGameState
-                         , writeServerGameState
-                         , serverUpdateGameState
+                         , readGameSets
+                         , writeGameSets
                          ) where
 
 import Control.Monad.Base
-import Control.Monad.Trans
-import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Identity
 import GHC.Conc
-import GHC.Generics
 
 import Clients.Class
+import GameSet.Internal
 
-import Go.Game.Act
-import Go.Game.Config
-import Go.Game.Game
-import Go.Game.State
+import Go.Game
 
-class MonadClients n m => MonadServerState b c n m | m -> b c n where
+class MonadClients m => MonadServerState m where
 
-  gameStateTVar :: m (TVar (GameState b c n))
+  gameSetsTVar :: m (TVar GameSets)
 
-  gameConfig :: m Config
+readGameSets :: (MonadBase STM m, MonadServerState m)
+             => m GameSets
+readGameSets = liftBase . readTVar =<< gameSetsTVar
 
-readServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
-                    => t STM (GameState b c n)
-readServerGameState = lift . readTVar =<< gameStateTVar
-
-writeServerGameState :: (MonadServerState b c n (t STM), MonadTrans t)
-                     => GameState b c n
-                     -> t STM ()
-writeServerGameState gs = lift . flip writeTVar gs =<< gameStateTVar
-
-serverGameConfig :: MonadServerState b c n m => m Config
-serverGameConfig = gameConfig
-
--- | Update the 'GameState' in 'STM' and return the new 'GameState'.
-serverUpdateGameState :: (Game b c n, MonadServerState b c n (t STM), MonadTrans t)
-                      => ClientId
-                      -> Action c
-                      -> t STM (Either String (GameState b c n))
-serverUpdateGameState key action = do clientIsCurrent <- serverIsCurrentPlayer key
-                                      if clientIsCurrent
-                                         then do eithGs <- act <$> (ruleset <$> gameConfig) <*> pure action <*> readServerGameState
-                                                 case eithGs of
-                                                   Right gs -> do writeServerGameState gs
-                                                                  return $ Right gs
-                                                   Left ex  -> return $ Left $ show ex
-                                         else return $ Left "it's not your turn"
-
--- | Check if given 'ClientId' is the 'currentPlayer'. Helper function for 'serverUpdateGameState'.
-serverIsCurrentPlayer :: (MonadServerState b c n (t STM), MonadTrans t)
-                      => ClientId
-                      -> t STM Bool
-serverIsCurrentPlayer key = do client <- getClient key
-                               gs <- readServerGameState
-                               case maybePlayer client of
-                                 Nothing -> return False
-                                 Just p -> return $ p == currentPlayer gs
+writeGameSets :: (MonadBase STM m, MonadServerState m)
+              => GameSets
+              -> m ()
+writeGameSets gs = liftBase . flip writeTVar gs =<< gameSetsTVar

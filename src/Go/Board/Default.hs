@@ -1,4 +1,4 @@
-{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE KindSignatures, TypeFamilies #-}
 
 module Go.Board.Default ( Board (..)
                         , Coord (..)
@@ -68,7 +68,10 @@ instance KnownNat i => GameCoord (Coord i) where
                                 ]
           (cx,cy) = getCoord c
 
-instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
+instance (KnownNat i, KnownNat n) => Game (Board i n) where
+  type AssociatedCoord (Board i n) = Coord i
+  type AssociatedPlayerCount (Board i n) = n
+
   empty = Board . V.replicate . V.replicate $ Free
 
   getStone (Board grid) (Coord x y) = let row = V.index grid y
@@ -79,4 +82,4 @@ instance (KnownNat i, KnownNat n) => Game (Board i n) (Coord i) n where
           newRow = row V.// [(x , stone)]
           row = V.index grid y
 
-instance (KnownNat i, KnownNat n) => JSONGame (Board i n) (Coord i) n
+instance (KnownNat i, KnownNat n) => JSONGame (Board i n)
