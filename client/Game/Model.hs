@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, TypeApplications, UndecidableInstances #-}
+{-# LANGUAGE RecordWildCards, UndecidableInstances #-}
 
 module Game.Model ( GameModel (..)
                   , updateGameModel

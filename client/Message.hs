@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeApplications #-}
-
 module Message ( handleWS
                ) where
 
