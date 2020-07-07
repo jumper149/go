@@ -37,7 +37,7 @@ class MonadBaseControl b m => MonadBaseControlIdentity b m | m -> b where
 
 type RunIdentityInBase m b = forall a. m a -> b a
 
-type RunIdentityInBaseDefault t n b = forall a. Monad n => t n a -> b a
+type RunIdentityInBaseDefault t m b = forall a. Monad m => t m a -> b a
 
 defaultLiftBaseWithIdentity :: (MonadBaseControlIdentity b m, MonadTransControlIdentity t)
                             => ((RunIdentityInBaseDefault t m b) -> b a)
