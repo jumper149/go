@@ -24,7 +24,7 @@ server port path = do putStrLn $ "Port is: " <> show port
 
                       (unit,_,_) <- runNewServerStateT $ do
                         hoistedServer <- hoistServerTrans api $ handler path
-                        liftBase $ run port $ serve api hoistedServer :: ServerStateT IO ()
+                        liftBase $ run port $ serve api hoistedServer
                       return unit
 
 hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
