@@ -39,9 +39,7 @@ instance MonadTransControl GameSetT where
   restoreT = defaultRestoreT2 GameSetT
 
 instance MonadTransControlIdentity GameSetT where
-  liftWithIdentity inner = GameSetT $ liftWithIdentity $ \ runReaderT ->
-                             liftWithIdentity $ \ runServerStateT ->
-                               inner $ runServerStateT . runReaderT . unwrapGameSetT
+  liftWithIdentity = defaultLiftWithIdentity
 
 instance MonadTransFunctor GameSetT where
   mapT f = GameSetT . mapT (mapT f) . unwrapGameSetT
@@ -55,7 +53,7 @@ instance MonadBaseControl base m => MonadBaseControl base (GameSetT m) where
   restoreM = defaultRestoreM
 
 instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (GameSetT m) where
-  liftBaseWithIdentity inner = GameSetT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapGameSetT
+  liftBaseWithIdentity = defaultLiftBaseWithIdentity
 
 instance MonadBase STM m => MonadGameSet (GameSetT m) where
   readPlayer = do c <- GameSetT $ reader clientId

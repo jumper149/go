@@ -26,7 +26,7 @@ instance MonadBaseControl base m => MonadBaseControl base (ClientsT m) where
   restoreM = defaultRestoreM
 
 instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (ClientsT m) where
-  liftBaseWithIdentity inner = ClientsT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapClientsT
+  liftBaseWithIdentity = defaultLiftBaseWithIdentity
 
 instance Monad m => MonadClients (ClientsT m) where
   clientsTVar = ClientsT $ ask

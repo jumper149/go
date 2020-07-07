@@ -33,9 +33,7 @@ instance MonadTransControl ServerStateT where
   restoreT = defaultRestoreT2 ServerStateT
 
 instance MonadTransControlIdentity ServerStateT where
-  liftWithIdentity inner = ServerStateT $ liftWithIdentity $ \ runReaderT ->
-                             liftWithIdentity $ \ runClientsT ->
-                               inner $ runClientsT . runReaderT . unwrapServerStateT
+  liftWithIdentity = defaultLiftWithIdentity
 
 instance MonadTransFunctor ServerStateT where
   mapT f = ServerStateT . mapT (mapT f) . unwrapServerStateT
@@ -49,7 +47,7 @@ instance MonadBaseControl base m => MonadBaseControl base (ServerStateT m) where
   restoreM = defaultRestoreM
 
 instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (ServerStateT m) where
-  liftBaseWithIdentity inner = ServerStateT $ liftBaseWithIdentity $ \ run -> inner $ run . unwrapServerStateT
+  liftBaseWithIdentity = defaultLiftBaseWithIdentity
 
 instance Monad m => MonadServerState (ServerStateT m) where
   gameSetsTVar = ServerStateT ask
