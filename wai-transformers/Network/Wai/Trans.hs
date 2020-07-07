@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts , Rank2Types #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 -- TODO: credit wai-transformers: https://github.com/athanclark/wai-transformers
 
