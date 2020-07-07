@@ -137,8 +137,6 @@ executable client
                        , ScopedTypeVariables
                        , StandaloneDeriving
                        , TypeFamilies
-
-                       , OverloadedStrings
     default-language:    Haskell2010
     ghcjs-options:       -Wall -dedupe
 
