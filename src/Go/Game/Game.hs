@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-
 module Go.Game.Game ( Game (..)
                     , AssociatedPlayer
                     , AssociatedStone

@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies #-}
-
 module Go.Board.Loop ( Board (..)
                      , Coord (..)
                      , packCoord

@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module ServerState ( ServerStateT
                    , runServerStateT

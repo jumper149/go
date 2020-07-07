@@ -1,5 +1,3 @@
-{-# LANGUAGE KindSignatures, TypeFamilies #-}
-
 module Go.Board.Default ( Board (..)
                         , Coord (..)
                         , packCoord

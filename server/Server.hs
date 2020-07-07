@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, Rank2Types #-}
+{-# LANGUAGE Rank2Types #-}
 
 module Server ( server
               ) where

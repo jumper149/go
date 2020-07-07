@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, TypeOperators #-}
+{-# LANGUAGE TypeOperators #-}
 
 module API ( API
            , api
