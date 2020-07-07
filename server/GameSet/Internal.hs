@@ -1,4 +1,7 @@
+{-# LANGUAGE RecordWildCards #-}
+
 module GameSet.Internal ( GameSets
+                        , newGameSetFor
                         , addGameSetTo
                         , getGameSetFrom
                         , GameSet (gameConfig, gameIdentification, gamePlayers, gameState) -- TODO: limit access
@@ -38,11 +41,17 @@ data GameSet = GameSet { gameConfig :: Config
 newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
-getGameSetFrom :: GameId -> GameSets -> GameSet
-getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets
+newGameSetFor :: Config -> GameSets -> Either BadConfigServer GameSet
+newGameSetFor gameConfig (GameSets gss) = do let gameIdentification = fromMaybe (GameId 0) $ succ . fst <$> M.lookupMax gss
+                                                 gamePlayers = mempty
+                                             gameState <- embedBadConfig $ configure gameConfig initStateRep
+                                             return GameSet {..}
 
 addGameSetTo :: GameSet -> GameSets -> GameSets
 addGameSetTo gs = GameSets . M.insert (gameIdentification gs) gs . unwrapGameSets
+
+getGameSetFrom :: GameId -> GameSets -> GameSet
+getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets
 
 actGameSet :: ClientId
            -> ActionRep
