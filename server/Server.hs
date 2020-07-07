@@ -8,6 +8,7 @@ import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
 import Data.Default.Class
 import Data.Proxy
+import qualified Data.Text as T (unpack)
 import GHC.Conc
 import Network.Wai.Handler.Warp (Port, run)
 import Servant
@@ -21,6 +22,7 @@ import Go.Run.JSON
 server :: Port -> FilePath -> IO ()
 server port path = do putStrLn $ "Port is: " <> show port
                       putStrLn . ("Public files are: " <>) . unwords =<< listDirectory path
+                      putStrLn . T.unpack $ "API structure is:\n" <> layout api
 
                       (unit,_,_) <- runNewServerStateT $ do
                         hoistedServer <- hoistServerTrans api $ handler path
