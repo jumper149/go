@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies, UndecidableInstances #-}
 
 module ServerState ( ServerStateT
                    , runServerStateT

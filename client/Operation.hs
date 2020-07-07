@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Operation ( Operation (..)
                  , LobbyOp (..)

@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module GameSet.Class ( MonadGameSet (..)
                      , GameSet
                      , gameState

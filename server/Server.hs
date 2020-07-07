@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, Rank2Types #-}
+{-# LANGUAGE OverloadedStrings, Rank2Types #-}
 
 module Server ( server
               ) where

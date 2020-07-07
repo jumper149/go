@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards #-}
+{-# LANGUAGE RecordWildCards #-}
 
 module Go.Game.State ( GameState (..)
                      , AssociatedGameState

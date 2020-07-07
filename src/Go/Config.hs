@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Go.Config ( MonadConfig (..)
                  , Config (..)
                  , BoardName (..)

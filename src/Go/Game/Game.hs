@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Go.Game.Game ( Game (..)
                     , AssociatedPlayer

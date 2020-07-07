@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, OverloadedStrings, TypeOperators #-}
+{-# LANGUAGE OverloadedStrings, TypeOperators #-}
 
 module API ( API
            , api

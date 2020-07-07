@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Model ( Model
              , updateModel

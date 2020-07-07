@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Go.Game.Rules ( MonadRules (..)
                      , RulesT

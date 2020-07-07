@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Clients.Class ( MonadClients (..)
                      , Clients
                      , Client (connection, identification)

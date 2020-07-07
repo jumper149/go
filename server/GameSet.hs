@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, TypeFamilies, UndecidableInstances, RecordWildCards #-}
+{-# LANGUAGE TypeFamilies, UndecidableInstances, RecordWildCards #-}
 
 module GameSet ( GameSetT
                , runGameSetT

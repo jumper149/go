@@ -36,10 +36,12 @@ library
                        , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric
+                       , FlexibleContexts
                        , FlexibleInstances
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+                       , StandaloneDeriving
     default-language:    Haskell2010
     ghc-options:         -Wall
 
@@ -88,10 +90,12 @@ executable server
                        , websockets
     default-extensions:  DataKinds
                        , DeriveGeneric
+                       , FlexibleContexts
                        , FlexibleInstances
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+                       , StandaloneDeriving
     default-language:    Haskell2010
     ghcjs-options:       -Wall
 
@@ -118,10 +122,12 @@ executable client
                        , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric
+                       , FlexibleContexts
                        , FlexibleInstances
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+                       , StandaloneDeriving
 
                        , OverloadedStrings
     default-language:    Haskell2010
@@ -142,10 +148,12 @@ test-suite test
                        , QuickCheck
     default-extensions:  DataKinds
                        , DeriveGeneric
+                       , FlexibleContexts
                        , FlexibleInstances
                        , GeneralizedNewtypeDeriving
                        , MultiParamTypeClasses
                        , ScopedTypeVariables
+                       , StandaloneDeriving
     default-language:    Haskell2010
     ghc-options:         -Wall
 

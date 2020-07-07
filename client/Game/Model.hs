@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleContexts, RecordWildCards, StandaloneDeriving, TypeApplications, UndecidableInstances #-}
+{-# LANGUAGE RecordWildCards, TypeApplications, UndecidableInstances #-}
 
 module Game.Model ( GameModel (..)
                   , updateGameModel

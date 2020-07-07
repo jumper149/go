@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts, KindSignatures, StandaloneDeriving, UndecidableInstances #-}
-
 module Go.Run.JSON ( JSONGame
                    ) where
 
