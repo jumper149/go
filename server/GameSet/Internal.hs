@@ -1,10 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module GameSet.Internal ( GameSets
-                        , newGameSetFor
-                        , addGameSetTo
-                        , getGameSetFrom
-                        , GameSet (gameConfig, gameIdentification, gamePlayers, gameState) -- TODO: limit access
+module GameSet.Internal ( GameSet (..)
                         , GameId
                         , Players
                         , actGameSet
@@ -12,10 +8,11 @@ module GameSet.Internal ( GameSets
                         , removePlayerFrom
                         , playerListFrom
                         , BadConfigServer (..)
+                        , embedBadConfig
+                        , errorGameSetNotFound -- TODO: remove when not needed anymore
                         ) where
 
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
 import GHC.Generics
 import Servant (FromHttpApiData, ToHttpApiData) -- TODO: maybe write these instances manually?
 
@@ -37,21 +34,6 @@ data GameSet = GameSet { gameConfig :: Config
                        , gameState :: GameStateRep
                        }
   deriving (Eq, Generic, Ord, Read, Show)
-
-newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
-  deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
-
-newGameSetFor :: Config -> GameSets -> Either BadConfigServer GameSet
-newGameSetFor gameConfig (GameSets gss) = do let gameIdentification = fromMaybe (GameId 0) $ succ . fst <$> M.lookupMax gss
-                                                 gamePlayers = mempty
-                                             gameState <- embedBadConfig $ configure gameConfig initStateRep
-                                             return GameSet {..}
-
-addGameSetTo :: GameSet -> GameSets -> GameSets
-addGameSetTo gs = GameSets . M.insert (gameIdentification gs) gs . unwrapGameSets
-
-getGameSetFrom :: GameId -> GameSets -> GameSet
-getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets
 
 actGameSet :: ClientId
            -> ActionRep

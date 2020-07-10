@@ -67,6 +67,7 @@ executable server
                          Server
                          ServerState
                          ServerState.Class
+                         ServerState.Internal
                          ServerState.Message
                          WebSocket
     build-depends:       base

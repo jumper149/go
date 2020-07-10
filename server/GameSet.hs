@@ -13,11 +13,11 @@ import GHC.Conc
 import GHC.Generics
 
 import Clients
-import Clients.Class
 import GameSet.Class
 import GameSet.Internal
 import ServerState
 import ServerState.Class
+import ServerState.Internal
 
 import Go.Game.Game
 import Go.Game.State
