@@ -11,7 +11,7 @@ import Go.Player
 
 data ServerMessageRep = ServerMessageGameStateRep GameStateRep
                       | ServerMessagePlayerRep (Maybe PlayerRep)
-                      | ServerMessageLobby [Integer]
+                      | ServerMessageRepLobby [String]
                       | ServerMessageRepFail String
   deriving (Eq, Generic, Ord, Read, Show)
 
@@ -20,7 +20,7 @@ instance ToJSON ServerMessageRep
 
 data ClientMessageRep = ClientMessageActionRep ActionRep
                       | ClientMessagePlayerRep (Maybe PlayerRep)
-                      | ClientMessageCreateGame Config
+                      | ClientMessageRepCreateGame Config
                       | ClientMessageRepFail String
   deriving (Eq, Generic, Ord, Read, Show)
 

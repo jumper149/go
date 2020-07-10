@@ -20,6 +20,5 @@ data Operation = NoOp
                | WriteErrorLog String
   deriving (Eq, Generic, Ord, Read, Show)
 
-data LobbyOp = AskAvailableGames
-             | JoinGame String
+data LobbyOp = UpdateGames [String]
   deriving (Eq, Ord, Generic, Read, Show)

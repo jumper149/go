@@ -21,11 +21,11 @@ import Representation.Model
 import Representation.Operation
 
 data Model = GameM GameModelRep
-           | LobbyM String
+           | LobbyM [String]
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Model where
-  def = LobbyM ""
+  def = LobbyM mempty
 
 updateModel :: Operation -> Model -> Effect Operation Model
 updateModel operation model = case operation of
@@ -54,9 +54,9 @@ updateModel operation model = case operation of
                                                                       (GameModelD_9_2  m , G.GameStateD_9_2  gs) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetState gs) m
                                                                       (GameModelD_13_2 m , G.GameStateD_13_2 gs) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetState gs) m
 
-                                LobbyOp op -> case op of
-                                             AskAvailableGames -> model <# undefined
-                                             JoinGame _ -> model <# undefined
+                                LobbyOp op -> case model of
+                                                LobbyM m -> case op of -- TODO: outsource into new module
+                                                              UpdateGames gs -> noEff $ LobbyM gs
                                 WriteErrorLog msg -> undefined -- TODO --noEff $ model { errorLog = errorLog model <> msg }
 
 viewModel :: Model -> View Operation
@@ -71,8 +71,8 @@ viewModel (LobbyM availableGames) =
 viewErrorLog :: String -> View a
 viewErrorLog errLog = p_ [] [ text $ ms errLog ]
 
-viewGames :: b -> View a
-viewGames _ = p_ [] [ text $ ms ("asdasd" :: String) ]
+viewGames :: [String] -> View a
+viewGames gs = p_ [] [ text $ ms $ unlines gs ]
 
 mapEffect :: (a1 -> a2)
           -> (m1 -> m2)

@@ -12,4 +12,5 @@ handleWS (WebSocketMessage msg) = case msg of
                                     G.ServerMessageRepFail m -> WriteErrorLog (m <> "\n")
                                     G.ServerMessageGameStateRep gs -> GameSetStateRep gs
                                     G.ServerMessagePlayerRep mbP -> GameSetPlayerRep mbP
+                                    G.ServerMessageRepLobby gs -> LobbyOp $ UpdateGames gs
 handleWS _ = NoOp

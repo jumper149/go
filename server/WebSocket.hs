@@ -76,8 +76,8 @@ initLobby :: MonadBase IO m
           -> ServerStateT m ()
 initLobby c = (uncurry serverSendMessage =<<) . transact $ do
                 rs <- recipients <$> getClient c <*> pure mempty
-                gss <- fmap (toEnum . fromEnum) <$> gameSetList -- TODO: don't use Enum
-                let msg = Right $ ServerMessageLobby gss
+                gss <- map show <$> gameSetList
+                let msg = Right $ ServerMessageRepLobby gss
                 return (rs , msg)
 
 loopLobby :: MonadBase IO m
@@ -87,9 +87,9 @@ loopLobby k = do c <- transact $ getClient k
                  msg <- serverReceiveMessage c
                  liftBase . C8.putStrLn $ encode msg -- TODO: remove?
                  case msg of
-                   ClientMessageCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
+                   ClientMessageRepCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
                                                        gss <- addGameSet config
-                                                       let msg = ServerMessageLobby . fmap (toEnum . fromEnum) <$> gss
+                                                       let msg = ServerMessageRepLobby . map show <$> gss
                                                            rs = recipients c mempty -- TODO: client connection isnt refreshed but taken from beginning of this loop
                                                        return (rs , msg)
                    _ -> liftBase $ putStrLn "not a lobby message, but in lobby" -- TODO: server side error log would be better
