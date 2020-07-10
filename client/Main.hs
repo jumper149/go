@@ -17,7 +17,7 @@ main = startApp App {..}
         update = updateModel
         view   = viewModel
         events = defaultEvents
-        subs   = let url = URL "ws://local.felixspringer.xyz:8022/1/ws"
+        subs   = let url = URL "ws://local.felixspringer.xyz:8022/ws"
                      protocols = Protocols []
                      handler = handleWS
                  in [ websocketSub url protocols handler ]
