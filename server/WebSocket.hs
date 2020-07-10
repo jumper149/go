@@ -23,20 +23,22 @@ import WebSocket.Message
 import Go.Message
 
 websocketMiddleware :: MonadBaseControlIdentity IO m
-                    => GameId
+                    => Maybe GameId
                     -> MiddlewareT (ServerStateT m)
-websocketMiddleware gameId = websocketsOrT defaultConnectionOptions $ serverApp gameId
+websocketMiddleware mbGameId = websocketsOrT defaultConnectionOptions $ serverApp mbGameId
 
 -- TODO: maybe ping every 30 seconds to keep alive?
 serverApp :: MonadBaseControl IO m
-          => GameId
+          => Maybe GameId
           -> ServerAppT (ServerStateT m)
-serverApp gameId pendingConnection = liftedBracket connect disconnect hold
+serverApp mbGameId pendingConnection = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ addClient conn
-          hold clientId = runGameSetT clientId gameId $ do
-                            initGame
-                            loopGame
+          hold clientId = case mbGameId of
+                            Just gameId -> runGameSetT clientId gameId $ do
+                                             initGame
+                                             loopGame
+                            Nothing -> undefined
           disconnect clientId = transact $ removeClient clientId
 
 initGame :: MonadBase IO m
