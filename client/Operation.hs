@@ -1,15 +1,14 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 module Operation ( Operation (..)
-                 , LobbyOp (..)
                  ) where
 
 import GHC.Generics
 
 import qualified Go.Game as G
-import qualified Go.GameId as G
 import qualified Go.Player as G
 
+import Lobby.Operation
 import Representation.Operation
 
 data Operation = NoOp
@@ -17,9 +16,6 @@ data Operation = NoOp
                | GameOp GameOperationRep
                | GameSetPlayerRep (Maybe G.PlayerRep)
                | GameSetStateRep G.GameStateRep
-               | LobbyOp LobbyOp
+               | LobbyOp LobbyOperation
                | WriteErrorLog String
   deriving (Eq, Generic, Ord, Read, Show)
-
-data LobbyOp = UpdateGames [G.GameId]
-  deriving (Eq, Ord, Generic, Read, Show)

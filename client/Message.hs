@@ -5,6 +5,7 @@ import Miso.WebSocket
 
 import qualified Go.Message as G
 
+import Lobby.Operation
 import Operation
 
 handleWS :: WebSocket G.ServerMessageRep -> Operation
