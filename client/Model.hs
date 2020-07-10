@@ -11,7 +11,11 @@ import Miso.Effect
 import Miso.Html
 import Miso.String (ms)
 
+import qualified Go.Player as G
+import qualified Go.Game as G
+
 import Game.Model
+import Game.Operation
 import Operation
 import Representation.Model
 import Representation.Operation
@@ -33,8 +37,23 @@ updateModel operation model = case operation of
                                                               (GameModelD_13_2 m , GameOperationD_13_2 op) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel op m
                                                               _ -> undefined
                                                 _ -> undefined -- TODO: just return safely?
-                                GameSetPlayerRep _ -> undefined
-                                GameSetStateRep _ -> undefined
+                                GameSetPlayerRep mbP' -> case mbP' of
+                                                           Nothing -> case model of -- TODO: no typechecking here, have maybe inside of Rep-type?
+                                                                        GameM m' -> case m' of
+                                                                                      GameModelD_9_2  m -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetPlayer Nothing) m
+                                                                                      GameModelD_13_2 m -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetPlayer Nothing) m
+                                                                        _ -> noEff model
+                                                           Just p' -> case model of
+                                                                       GameM m' -> case (m',p') of
+                                                                                     (GameModelD_9_2  m , G.PlayerD_9_2  p) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetPlayer (Just p)) m
+                                                                                     (GameModelD_13_2 m , G.PlayerD_13_2 p) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetPlayer (Just p)) m
+                                                                                     _ -> undefined
+
+                                GameSetStateRep gs' -> case model of
+                                                        GameM m' -> case (m',gs') of
+                                                                      (GameModelD_9_2  m , G.GameStateD_9_2  gs) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetState gs) m
+                                                                      (GameModelD_13_2 m , G.GameStateD_13_2 gs) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetState gs) m
+
                                 LobbyOp op -> case op of
                                              AskAvailableGames -> model <# undefined
                                              JoinGame _ -> model <# undefined
