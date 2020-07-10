@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeOperators #-}
 
 module API ( API
+           , EndpointPublic
            , api
            , handler
            ) where
@@ -19,9 +20,11 @@ import Html
 import ServerState
 import WebSocket
 
+type EndpointPublic = "public" :> Raw
+
 type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
       :<|> "ws"     :> Capture "gameId" GameId :> RawM
-      :<|> "public" :> Raw
+      :<|> EndpointPublic
 
 api :: Proxy API
 api = Proxy
@@ -29,8 +32,10 @@ api = Proxy
 handler :: FilePath -> ServerT API (ServerStateT Handler)
 handler path = gameH :<|> wssH :<|> publicH
   where gameH :: Monad m => GameId -> m GameHtml
-        gameH _ = return GameHtml { jsAppPath = "../public/all.js" } -- TODO: Use path instead of hardcoded
-        -- TODO: use argument to check if game exists
+        gameH _ = return GameHtml { jsAppPath = "/" <> urlPiece <> "/" <> appFile }
+          where urlPiece = toUrlPiece $ safeLink api (Proxy :: Proxy EndpointPublic)
+                appFile = "all.js"
+          -- TODO: use argument to check if game exists
 
         wssH :: MonadBaseControl IO m => GameId -> ServerStateT m Application
         wssH gameId = liftTrans $ runMiddlewareT (websocketMiddleware gameId) <*> pure backupApp
