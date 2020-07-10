@@ -68,8 +68,8 @@ executable server
                          ServerState
                          ServerState.Class
                          ServerState.Internal
-                         ServerState.Message
                          WebSocket
+                         WebSocket.Message
     build-depends:       base
                        , go
                        , wai-transformers

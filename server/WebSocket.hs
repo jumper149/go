@@ -18,7 +18,7 @@ import GameSet
 import GameSet.Class
 import Message
 import ServerState
-import ServerState.Message
+import WebSocket.Message
 
 import Go.Message
 

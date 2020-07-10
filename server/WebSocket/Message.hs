@@ -1,8 +1,8 @@
-module ServerState.Message ( serverReceiveMessage
-                           , Recipients
-                           , recipients
-                           , serverSendMessage
-                           ) where
+module WebSocket.Message ( serverReceiveMessage
+                         , Recipients
+                         , recipients
+                         , serverSendMessage
+                         ) where
 
 import Control.Monad.Base
 import Data.Foldable (traverse_)
