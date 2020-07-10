@@ -24,23 +24,17 @@ import WebSocket.Message
 import Go.Message
 
 websocketMiddleware :: MonadBaseControlIdentity IO m
-                    => Maybe GameId
-                    -> MiddlewareT (ServerStateT m)
-websocketMiddleware mbGameId = websocketsOrT defaultConnectionOptions $ serverApp mbGameId
+                    => MiddlewareT (ServerStateT m)
+websocketMiddleware = websocketsOrT defaultConnectionOptions serverApp
 
 -- TODO: maybe ping every 30 seconds to keep alive?
 serverApp :: MonadBaseControl IO m
-          => Maybe GameId
-          -> ServerAppT (ServerStateT m)
-serverApp mbGameId pendingConnection = liftedBracket connect disconnect hold
+          => ServerAppT (ServerStateT m)
+serverApp pendingConnection = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ addClient conn
-          hold clientId = case mbGameId of
-                            Just gameId -> runGameSetT clientId gameId $ do
-                                             initGame
-                                             loopGame
-                            Nothing -> do initLobby clientId
-                                          loopLobby clientId
+          hold clientId = do initLobby clientId
+                             loopLobby clientId
           disconnect clientId = transact $ removeClient clientId
 
 initGame :: MonadBase IO m
@@ -76,7 +70,7 @@ initLobby :: MonadBase IO m
           -> ServerStateT m ()
 initLobby c = (uncurry serverSendMessage =<<) . transact $ do
                 rs <- recipients <$> getClient c <*> pure mempty
-                gss <- map show <$> gameSetList
+                gss <- gameSetList
                 let msg = Right $ ServerMessageRepLobby gss
                 return (rs , msg)
 
@@ -89,9 +83,12 @@ loopLobby k = do c <- transact $ getClient k
                  case msg of
                    ClientMessageRepCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
                                                        gss <- addGameSet config
-                                                       let msg = ServerMessageRepLobby . map show <$> gss
+                                                       let msg = ServerMessageRepLobby <$> gss
                                                            rs = recipients c mempty -- TODO: client connection isnt refreshed but taken from beginning of this loop
                                                        return (rs , msg)
+                   ClientMessageRepPromote gameId -> runGameSetT k gameId $ do
+                                                       initGame
+                                                       loopGame
                    _ -> liftBase $ putStrLn "not a lobby message, but in lobby" -- TODO: server side error log would be better
                  loopLobby k
 

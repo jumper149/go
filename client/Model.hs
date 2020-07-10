@@ -13,6 +13,7 @@ import Miso.String (ms)
 
 import qualified Go.Player as G
 import qualified Go.Game as G
+import qualified Go.GameId as G
 
 import Game.Model
 import Game.Operation
@@ -21,7 +22,7 @@ import Representation.Model
 import Representation.Operation
 
 data Model = GameM GameModelRep
-           | LobbyM [String]
+           | LobbyM [G.GameId]
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default Model where
@@ -65,7 +66,7 @@ viewModel (GameM model) = case model of
                             GameModelD_13_2 m -> fmap (GameOp . GameOperationD_13_2) $ viewGameModel m
 viewModel (LobbyM availableGames) =
   div_ [
-       ] [ viewGames availableGames
+       ] [ viewGames $ show <$> availableGames
          ]
 
 viewErrorLog :: String -> View a

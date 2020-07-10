@@ -23,6 +23,7 @@ library
                          Go.Game.Player
                          Go.Game.Rules
                          Go.Game.State
+                         Go.GameId
                          Go.Message
                          Go.Player
                          Go.Representation
@@ -33,6 +34,7 @@ library
                        , data-default-class
                        , finite-typelits
                        , mtl
+                       , servant
                        , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric

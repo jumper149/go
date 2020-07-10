@@ -7,6 +7,7 @@ module Operation ( Operation (..)
 import GHC.Generics
 
 import qualified Go.Game as G
+import qualified Go.GameId as G
 import qualified Go.Player as G
 
 import Representation.Operation
@@ -20,5 +21,5 @@ data Operation = NoOp
                | WriteErrorLog String
   deriving (Eq, Generic, Ord, Read, Show)
 
-data LobbyOp = UpdateGames [String]
+data LobbyOp = UpdateGames [G.GameId]
   deriving (Eq, Ord, Generic, Read, Show)

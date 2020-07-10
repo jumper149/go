@@ -20,10 +20,8 @@ import Clients.Class (ClientId)
 
 import Go.Config
 import Go.Game
+import Go.GameId
 import Go.Player
-
-newtype GameId = GameId { unwrapGameId :: Integer }
-  deriving (Enum, Eq, Generic, Ord, Read, Show, FromHttpApiData, ToHttpApiData)
 
 newtype Players = Players { unwrapPlayers :: M.Map ClientId (Maybe PlayerRep) }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
