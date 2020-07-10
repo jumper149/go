@@ -8,25 +8,37 @@ import GHC.Generics
 import Miso.Effect
 import Miso.Html
 import Miso.String (ms)
+import Miso.Subscription.WebSocket
 
+import qualified Go.Config as G
 import qualified Go.GameId as G
+import qualified Go.Message as G
 
 import Lobby.Operation
+import Lobby.Svg
 
-data LobbyModel = LobbyModel { availableGames :: [G.GameId] }
+data LobbyModel = LobbyModel { availableGames :: [G.GameId]
+                             , config :: G.Config
+                             }
   deriving (Eq, Generic, Ord, Read, Show)
 
 instance Default LobbyModel where
-  def = LobbyModel mempty
+    def = LobbyModel { availableGames = mempty
+                     , config = def
+                     }
 
 updateLobbyModel :: LobbyOperation -> LobbyModel -> Effect LobbyOperation LobbyModel
 updateLobbyModel operation model = case operation of
+                                     LobbyNoOp -> noEff model
                                      UpdateGames gs -> noEff model { availableGames = gs }
+                                     SubmitConfig -> model <# do send $ G.ClientMessageRepCreateGame $ config model
+                                                                 return LobbyNoOp
 
 viewLobbyModel :: LobbyModel -> View LobbyOperation
 viewLobbyModel LobbyModel { availableGames = gs } =
   div_ [
        ] [ viewGames $ show <$> gs
+         , viewCreateButton
          ]
 
 viewGames :: [String] -> View a

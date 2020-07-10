@@ -5,5 +5,7 @@ import GHC.Generics
 
 import qualified Go.GameId as G
 
-data LobbyOperation = UpdateGames [G.GameId]
+data LobbyOperation = LobbyNoOp
+                    | UpdateGames [G.GameId]
+                    | SubmitConfig
   deriving (Eq, Ord, Generic, Read, Show)
