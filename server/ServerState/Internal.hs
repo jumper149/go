@@ -4,6 +4,7 @@ module ServerState.Internal ( GameSets
                             , newGameSetFor
                             , addGameSetTo
                             , getGameSetFrom
+                            , gameSetListFrom
                             ) where
 
 import qualified Data.Map as M
@@ -34,3 +35,6 @@ addGameSetTo gs = GameSets . M.insert (gameIdentification gs) gs . unwrapGameSet
 
 getGameSetFrom :: GameId -> GameSets -> GameSet
 getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets -- TODO: maybe use error data type
+
+gameSetListFrom :: GameSets -> [(GameId,GameSet)]
+gameSetListFrom = M.toList . unwrapGameSets

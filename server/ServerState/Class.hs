@@ -5,6 +5,7 @@ module ServerState.Class ( module Clients.Class
                          , writeGameSets
                          , addGameSet
                          , getGameSet
+                         , gameSetList
                          ) where
 
 import Control.Monad.Base
@@ -32,14 +33,18 @@ writeGameSets gs = liftBase . flip writeTVar gs =<< gameSetsTVar
 
 addGameSet :: (MonadBase STM m, MonadServerState m)
            => Config
-           -> m (Either BadConfigServer ())
+           -> m (Either BadConfigServer [GameId])
 addGameSet c = do gss <- readGameSets
                   case newGameSetFor c gss of
                     Left ex -> return $ Left ex
                     Right gs -> do writeGameSets $ addGameSetTo gs gss
-                                   return $ Right ()
+                                   Right <$> gameSetList
 
 getGameSet :: (MonadBase STM m, MonadServerState m)
            => GameId
            -> m GameSet
 getGameSet k = getGameSetFrom k <$> readGameSets
+
+gameSetList :: (MonadBase STM m, MonadServerState m)
+            => m [GameId]
+gameSetList = fmap fst . gameSetListFrom <$> readGameSets

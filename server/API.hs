@@ -1,7 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 
 module API ( API
-           , EndpointPublic
            , api
            , handler
            ) where
@@ -20,33 +19,36 @@ import Html
 import ServerState
 import WebSocket
 
-type EndpointWSLobby = "ws" :> RawM
-type EndpointPublic = "public" :> Raw
 
-type API = "game"   :> Capture "gameId" GameId :> Get '[HTML] GameHtml
-      :<|> "ws"     :> Capture "gameId" GameId :> RawM
-      :<|> EndpointWSLobby
+type API = Capture "gameId" GameId :> GameAPI
+      :<|> EndpointHTML
+      :<|> EndpointWS
       :<|> EndpointPublic
+
+type GameAPI = EndpointHTML
+          :<|> EndpointWS
+
+type EndpointHTML = Get '[HTML] GameHtml
+type EndpointWS = "ws" :> RawM
+type EndpointPublic = "public" :> Raw
 
 api :: Proxy API
 api = Proxy
 
 handler :: FilePath -> ServerT API (ServerStateT Handler)
-handler path = gameH :<|> wsGameH :<|> wsLobbyH :<|> publicH
-  where gameH :: Monad m => GameId -> m GameHtml
-        gameH _ = return GameHtml { jsAppPath = "/" <> urlPiece <> "/" <> appFile }
-          where urlPiece = toUrlPiece $ safeLink api (Proxy :: Proxy EndpointPublic)
-                appFile = "all.js"
-          -- TODO: use argument to check if game exists
+handler path = handlerGame :<|> htmlH :<|> wsH Nothing :<|> publicH path
+  where publicH :: FilePath -> ServerT Raw m
+        publicH = serveDirectoryWebApp
 
-        wsGameH :: MonadBaseControl IO m => GameId -> ServerStateT m Application
-        wsGameH gameId = liftTrans $ runMiddlewareT (websocketMiddleware $ Just gameId) <*> pure backupApp
+handlerGame :: GameId -> ServerT GameAPI (ServerStateT Handler)
+handlerGame gameId = htmlH :<|> wsH (Just gameId)
 
-        wsLobbyH :: MonadBaseControl IO m => ServerStateT m Application
-        wsLobbyH = liftTrans $ runMiddlewareT (websocketMiddleware Nothing) <*> pure backupApp
+wsH :: MonadBaseControl IO m => Maybe GameId -> ServerStateT m Application
+wsH mbGameId = liftTrans $ runMiddlewareT (websocketMiddleware mbGameId) <*> pure backupApp
+  where backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
-        publicH :: ServerT Raw m
-        publicH = serveDirectoryWebApp path
-
-backupApp :: Application
-backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
+htmlH :: Monad m => m GameHtml
+htmlH = return GameHtml { jsAppPath = "/" <> urlPiece <> "/" <> appFile }
+  where urlPiece = toUrlPiece $ safeLink api (Proxy :: Proxy EndpointPublic)
+        appFile = "all.js"
+  -- TODO: use argument to check if game exists

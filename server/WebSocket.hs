@@ -18,6 +18,7 @@ import GameSet
 import GameSet.Class
 import Message
 import ServerState
+import ServerState.Class
 import WebSocket.Message
 
 import Go.Message
@@ -38,7 +39,8 @@ serverApp mbGameId pendingConnection = liftedBracket connect disconnect hold
                             Just gameId -> runGameSetT clientId gameId $ do
                                              initGame
                                              loopGame
-                            Nothing -> undefined
+                            Nothing -> do initLobby clientId
+                                          loopLobby clientId
           disconnect clientId = transact $ removeClient clientId
 
 initGame :: MonadBase IO m
@@ -56,7 +58,6 @@ loopGame :: MonadBase IO m
 loopGame = do msg <- serverReceiveMessage =<< transact readPlayer
               liftBase . C8.putStrLn $ encode msg -- TODO: remove?
               case msg of
-                ClientMessageRepFail _ -> liftBase $ putStrLn "failed to do action" -- TODO: server side error log would be better
                 ClientMessageActionRep action -> (uncurry serverSendMessage =<<) . transact $ do
                                                    rs <- recipients <$> readPlayer <*> readPlayers
                                                    gs <- actGame action
@@ -67,7 +68,32 @@ loopGame = do msg <- serverReceiveMessage =<< transact readPlayer
                                                 p <- updatePlayer mbP -- TODO: p should be equal to mbP, keep it like this?
                                                 let answer = ServerMessagePlayerRep <$> p
                                                 return (rs , answer)
+                _ -> liftBase $ putStrLn "not a game message, but already in game" -- TODO: server side error log would be better
               loopGame
+
+initLobby :: MonadBase IO m
+          => ClientId
+          -> ServerStateT m ()
+initLobby c = (uncurry serverSendMessage =<<) . transact $ do
+                rs <- recipients <$> getClient c <*> pure mempty
+                gss <- fmap (toEnum . fromEnum) <$> gameSetList -- TODO: don't use Enum
+                let msg = Right $ ServerMessageLobby gss
+                return (rs , msg)
+
+loopLobby :: MonadBase IO m
+          => ClientId
+          -> ServerStateT m ()
+loopLobby k = do c <- transact $ getClient k
+                 msg <- serverReceiveMessage c
+                 liftBase . C8.putStrLn $ encode msg -- TODO: remove?
+                 case msg of
+                   ClientMessageCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
+                                                       gss <- addGameSet config
+                                                       let msg = ServerMessageLobby . fmap (toEnum . fromEnum) <$> gss
+                                                           rs = recipients c mempty -- TODO: client connection isnt refreshed but taken from beginning of this loop
+                                                       return (rs , msg)
+                   _ -> liftBase $ putStrLn "not a lobby message, but in lobby" -- TODO: server side error log would be better
+                 loopLobby k
 
 liftedBracket :: MonadBaseControl IO m
               => m a
