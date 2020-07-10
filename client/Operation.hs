@@ -5,22 +5,20 @@ module Operation ( Operation (..)
                  ) where
 
 import GHC.Generics
-import GHC.TypeLits
 
-import qualified Go.Game.Game as G
+import qualified Go.Game as G
+import qualified Go.Player as G
 
-import Game.Operation
+import Representation.Operation
 
-data Operation b = NoOp
-                 | QueueOp [Operation b]
-                 | GameOp (GameOperation b)
-                 | LobbyOp LobbyOp
-                 | WriteErrorLog String
-  deriving Generic
-deriving instance (Eq b, Eq (G.AssociatedCoord b)) => Eq (Operation b)
-deriving instance (Ord b, Ord (G.AssociatedCoord b)) => Ord (Operation b)
-deriving instance (KnownNat (G.AssociatedPlayerCount b), Read b, Read (G.AssociatedCoord b)) => Read (Operation b)
-deriving instance (Show b, Show (G.AssociatedCoord b)) => Show (Operation b)
+data Operation = NoOp
+               | QueueOp [Operation]
+               | GameOp GameOperationRep
+               | GameSetPlayerRep (Maybe G.PlayerRep)
+               | GameSetStateRep G.GameStateRep
+               | LobbyOp LobbyOp
+               | WriteErrorLog String
+  deriving (Eq, Generic, Ord, Read, Show)
 
 data LobbyOp = AskAvailableGames
              | JoinGame String

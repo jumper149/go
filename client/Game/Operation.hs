@@ -9,7 +9,8 @@ import GHC.TypeLits
 import qualified Go.Game.Game as G
 import qualified Go.Game.State as G
 
-data GameOperation b = UpdateAction (Maybe (G.AssociatedAction b))
+data GameOperation b = GameNoOp
+                     | UpdateAction (Maybe (G.AssociatedAction b))
                      | SubmitAction
                      | SetState (G.AssociatedGameState b)
                      | SubmitPlayer (Maybe (G.AssociatedPlayer b))

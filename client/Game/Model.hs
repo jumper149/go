@@ -21,7 +21,6 @@ import qualified Go.Run.JSON as G
 import Game.Operation
 import Game.Run
 import Game.Svg
-import Operation
 
 data GameModel b = GameModel { gameState :: G.AssociatedGameState b
                              , gameAction :: Maybe (G.AssociatedAction b)
@@ -44,17 +43,18 @@ instance G.Game b => Default (GameModel b) where
 updateGameModel :: forall b. (G.JSONGame b, G.RepresentableGame b)
                 => GameOperation b
                 -> GameModel b
-                -> Effect (Operation b) (GameModel b)
+                -> Effect (GameOperation b) (GameModel b)
 updateGameModel operation GameModel {..} =
   case operation of
+    GameNoOp -> noEff GameModel {..}
     UpdateAction gameAction -> noEff GameModel {..}
     SubmitAction -> case gameAction of
                       Nothing -> noEff GameModel {..} -- TODO: weird exception catch? Prevented by clever button.
                       Just a -> GameModel {..} <# do send $ G.ClientMessageActionRep $ (G.toActionRep @b) a
-                                                     return NoOp
+                                                     return GameNoOp
     SetState gameState -> noEff $ GameModel { gameAction = Nothing, ..}
     SubmitPlayer mbP -> GameModel {..} <# do send $ G.ClientMessagePlayerRep $ (G.toPlayerRep @b) <$> mbP
-                                             return NoOp
+                                             return GameNoOp
     SetPlayer chosenPlayer -> noEff $ GameModel {..}
 
 viewGameModel :: MisoGame b

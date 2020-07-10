@@ -123,6 +123,8 @@ executable client
                          Message
                          Model
                          Operation
+                         Representation.Model
+                         Representation.Operation
     build-depends:       base
                        , go
                        , miso
