@@ -10,24 +10,17 @@ import Control.Monad.Trans.Control.Identity
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
 import Network.Wai.Trans (runMiddlewareT)
-import Servant
-import Servant.HTML.Lucid (HTML)
 import Servant.RawM (RawM)
+import Servant
+
+import Go.Server.API
+import Go.Server.Html
 
 import GameSet.Class
-import Html
 import ServerState
 import WebSocket
 
-
-type API = Capture "gameId" GameId :> EndpointHTML
-      :<|> EndpointHTML
-      :<|> EndpointWS
-      :<|> EndpointPublic
-
-type EndpointHTML = Get '[HTML] GameHtml
-type EndpointWS = "ws" :> RawM
-type EndpointPublic = "public" :> Raw
+type API = API' RawM
 
 api :: Proxy API
 api = Proxy
