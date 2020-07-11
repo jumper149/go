@@ -42,7 +42,7 @@ addGameSet c = do gss <- readGameSets
 
 getGameSet :: (MonadBase STM m, MonadServerState m)
            => GameId
-           -> m GameSet
+           -> m (Maybe GameSet)
 getGameSet k = getGameSetFrom k <$> readGameSets
 
 gameSetList :: (MonadBase STM m, MonadServerState m)

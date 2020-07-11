@@ -9,6 +9,7 @@ import Control.Monad.Trans
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
 import Control.Monad.Trans.Reader
+import Data.Maybe (fromMaybe)
 import GHC.Conc
 import GHC.Generics
 
@@ -61,7 +62,8 @@ instance MonadBase STM m => MonadGameSet (GameSetT m) where
   readPlayers = do cs <- playerListFrom <$> readGameSet
                    GameSetT . lift $ traverse (getClient . fst) cs -- TODO
   readGameSet = do gs <- GameSetT $ reader gameId
-                   GameSetT $ getGameSetFrom gs <$> lift readGameSets -- TODO: remove lifts, by implementing MonadServerState instance for ReaderT
+                   GameSetT $ errorIfMissing . getGameSetFrom gs <$> lift readGameSets -- TODO: remove lifts, by implementing MonadServerState instance for ReaderT
+    where errorIfMissing = fromMaybe (error "missing game")
   writeGameSet gs = do gss <- GameSetT $ addGameSetTo gs <$> lift readGameSets -- TODO
                        GameSetT . lift $ writeGameSets gss -- TODO
 

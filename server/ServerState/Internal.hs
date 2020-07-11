@@ -33,8 +33,8 @@ newGameSetFor gameConfig (GameSets gss) = do let gameIdentification = fromMaybe 
 addGameSetTo :: GameSet -> GameSets -> GameSets
 addGameSetTo gs = GameSets . M.insert (gameIdentification gs) gs . unwrapGameSets
 
-getGameSetFrom :: GameId -> GameSets -> GameSet
-getGameSetFrom k = fromMaybe (errorGameSetNotFound k) . M.lookup k . unwrapGameSets -- TODO: maybe use error data type
+getGameSetFrom :: GameId -> GameSets -> Maybe GameSet
+getGameSetFrom k = M.lookup k . unwrapGameSets
 
 gameSetListFrom :: GameSets -> [(GameId,GameSet)]
 gameSetListFrom = M.toList . unwrapGameSets

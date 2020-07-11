@@ -5,6 +5,7 @@ module API ( API
            , handler
            ) where
 
+import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
 import Network.HTTP.Types.Status (status400)
@@ -18,6 +19,7 @@ import Go.Server.Html
 
 import GameSet.Class
 import ServerState
+import ServerState.Class
 import WebSocket
 
 type API = API' RawM
@@ -26,13 +28,18 @@ api :: Proxy API
 api = Proxy
 
 handler :: FilePath -> ServerT API (ServerStateT Handler)
-handler path = const htmlH :<|> htmlH :<|> wsH :<|> publicH path
+handler path = htmlGameH :<|> htmlH :<|> wsH :<|> publicH path
+
+htmlGameH :: MonadBase IO m => GameId -> ServerStateT m GameHtml
+htmlGameH gameId = do mbGame <- transact $ getGameSet gameId
+                      case mbGame of
+                        Nothing -> undefined -- TODO: implement a nice exception screen for AwaitingGame
+                        Just _ -> htmlH
 
 htmlH :: Monad m => m GameHtml
 htmlH = return GameHtml { jsAppPath = "/" <> urlPiece <> "/" <> appFile }
   where urlPiece = toUrlPiece $ safeLink api (Proxy :: Proxy EndpointPublic)
         appFile = "all.js"
-  -- TODO: use argument to check if game exists
 
 wsH :: MonadBaseControl IO m => ServerStateT m Application
 wsH = liftTrans $ runMiddlewareT websocketMiddleware <*> pure backupApp
