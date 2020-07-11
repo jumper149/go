@@ -5,6 +5,7 @@ module Main ( main
 
 import Data.Default.Class
 import Miso
+import Miso.String (ms)
 
 import Message
 import Model
@@ -20,7 +21,13 @@ main = do currentURI <- getCurrentURI
               update = updateModel
               view   = viewModel
               events = defaultEvents
-              subs   = let url = URL "ws://local.felixspringer.xyz:8022/ws"
+              subs   = let uri = URI { uriScheme = "ws:"
+                                     , uriAuthority = uriAuthority currentURI
+                                     , uriPath = "/ws"
+                                     , uriQuery = mempty
+                                     , uriFragment = mempty
+                                     }
+                           url = URL . ms $ show uri
                            protocols = Protocols []
                            handler = handleWS
                        in [ websocketSub url protocols handler ]

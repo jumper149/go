@@ -124,6 +124,7 @@ executable client
                          Game.Player
                          Game.Run
                          Game.Svg
+                         Lobby.Html
                          Lobby.Model
                          Lobby.Operation
                          Lobby.Svg

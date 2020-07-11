@@ -3,7 +3,7 @@ module Lobby.Operation ( LobbyOperation (..)
 
 import GHC.Generics
 
-import qualified Go.GameId as G
+import qualified Go.Server.GameId as G
 
 data LobbyOperation = LobbyNoOp
                     | UpdateGames [G.GameId]

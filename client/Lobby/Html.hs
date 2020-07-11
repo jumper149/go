@@ -1,12 +1,13 @@
 module Lobby.Html ( viewGames
                   ) where
 
-import qualified Miso.Html as Html
+import Miso.Html
 import Miso.String (ms)
 
-import qualified Go.GameId as G
+import qualified Go.Server.GameId as G
 
-viewGames :: [G.GameId] -> Html.View a
-viewGames gs = Html.div_ [
-                         ] $ fmap f gs
-  where f g = Html.p_ [] [ Html.text $ ms $ show g ]
+viewGames :: [G.GameId] -> View a
+viewGames gs = div_ [] $ map viewGame gs
+
+viewGame :: G.GameId -> View a
+viewGame g = a_ [] [ text $ ms $ show g ]

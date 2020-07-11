@@ -10,8 +10,8 @@ import Miso.Html
 import Miso.Subscription.WebSocket
 
 import qualified Go.Config as G
-import qualified Go.GameId as G
 import qualified Go.Message as G
+import qualified Go.Server.GameId as G
 
 import Lobby.Operation
 import Lobby.Svg
