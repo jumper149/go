@@ -1,11 +1,12 @@
 {-# LANGUAGE TypeOperators #-}
 
 module Go.Server.API ( API'
-                     , APIWrongWS
-                     , apiWrongWS
                      , EndpointHTML
                      , EndpointWS'
                      , EndpointPublic
+                     , APIWrongWS
+                     , apiWrongWS
+                     , EndpointWSWrongWS
                      ) where
 
 import Data.Proxy
@@ -22,9 +23,10 @@ type API' rawm = Capture "gameId" GameId :> EndpointHTML
             :<|> EndpointPublic
 
 type APIWrongWS = API' Raw
+type EndpointWSWrongWS = EndpointWS' Raw
 
-apiWrongWs :: Proxy APIWrongWS
-apiWrongWs = Proxy
+apiWrongWS :: Proxy APIWrongWS
+apiWrongWS = Proxy
 
 type EndpointHTML = Get '[HTML] GameHtml
 type EndpointWS' rawm = "ws" :> rawm

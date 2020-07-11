@@ -118,7 +118,8 @@ executable client
     buildable: False
   else
     hs-source-dirs:      client
-    other-modules:       Game.Board.Default
+    other-modules:       AwaitingGame.Html
+                         Game.Board.Default
                          Game.Model
                          Game.Operation
                          Game.Player
@@ -138,6 +139,8 @@ executable client
                        , miso
                        , containers
                        , data-default-class
+                       , servant
+                       , text
                        , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric

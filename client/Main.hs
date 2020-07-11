@@ -4,8 +4,13 @@ module Main ( main
             ) where
 
 import Data.Default.Class
+import Data.Proxy
+import qualified Data.Text as T
 import Miso
 import Miso.String (ms)
+import Servant.API
+
+import Go.Server.API
 
 import Message
 import Model
@@ -13,17 +18,17 @@ import Operation
 
 main :: JSM ()
 main = do currentURI <- getCurrentURI
-          let initialAction  = case uriPath currentURI of
-                                 "/0" -> AwaitGame $ toEnum 0
-                                 "/1" -> AwaitGame $ toEnum 1
-                                 _ -> NoOp
+          let initialAction  = let eithGameId = parseUrlPiece . T.pack . stripLeadingSlash $ uriPath currentURI
+                               in case eithGameId of
+                                    Right gameId -> SetAwaitGame gameId
+                                    Left _ -> NoOp
               model  = LobbyM def
               update = updateModel
               view   = viewModel
               events = defaultEvents
               subs   = let uri = URI { uriScheme = "ws:"
                                      , uriAuthority = uriAuthority currentURI
-                                     , uriPath = "/ws"
+                                     , uriPath = T.unpack $ ("/" <>) $ toUrlPiece $ safeLink apiWrongWS (Proxy :: Proxy EndpointWSWrongWS)
                                      , uriQuery = mempty
                                      , uriFragment = mempty
                                      }
@@ -34,3 +39,7 @@ main = do currentURI <- getCurrentURI
               mountPoint = Nothing
               logLevel = Off
           startApp App {..}
+
+stripLeadingSlash :: String -> String
+stripLeadingSlash ('/':str) = str
+stripLeadingSlash str = str

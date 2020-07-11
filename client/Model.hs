@@ -9,7 +9,6 @@ import Data.Default.Class
 import GHC.Generics
 import Miso.Effect
 import Miso.Html
-import Miso.String (ms)
 import Miso.Subscription.WebSocket
 
 import qualified Go.Player as G
@@ -17,6 +16,7 @@ import qualified Go.Game as G
 import qualified Go.Message as G
 import qualified Go.Server.GameId as G
 
+import AwaitingGame.Html
 import Game.Model
 import Game.Operation
 import Lobby.Model
@@ -63,9 +63,8 @@ updateModel operation model = case operation of
                                 LobbyOp op -> case model of
                                                  LobbyM m -> mapEffect LobbyOp LobbyM $ updateLobbyModel op m
                                                  _ -> noEff model --TODO?
-                                AwaitGame gameId -> AwaitingGame gameId <# do send $ G.ClientMessageRepPromote gameId
-                                                                              return NoOp
-                                ResendAwaitGame -> case model of
+                                SetAwaitGame gameId -> noEff $ AwaitingGame gameId
+                                SubmitAwaitGame -> case model of
                                                      AwaitingGame gameId -> model <# do send $ G.ClientMessageRepPromote gameId
                                                                                         return NoOp
                                                      _ -> noEff model
@@ -76,12 +75,7 @@ viewModel (GameM model) = case model of
                             GameModelD_9_2  m -> fmap (GameOp . GameOperationD_9_2 ) $ viewGameModel m
                             GameModelD_13_2 m -> fmap (GameOp . GameOperationD_13_2) $ viewGameModel m
 viewModel (LobbyM model) = fmap LobbyOp $ viewLobbyModel model
-viewModel (AwaitingGame _) = viewErrorLog "waiting for game from websocket..."
-
-viewErrorLog :: String -> View Operation
-viewErrorLog errLog = p_ [] [ text $ ms errLog
-                            , button_ [ onClick ResendAwaitGame ] []
-                            ]
+viewModel (AwaitingGame gameId) = viewAwaitingGame gameId
 
 mapEffect :: (a1 -> a2)
           -> (m1 -> m2)
