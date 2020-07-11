@@ -7,6 +7,7 @@ module Go.Server.API ( API'
                      , EndpointPublic
                      ) where
 
+import Data.Proxy
 import Servant.API
 import Servant.HTML.Lucid (HTML)
 
@@ -20,6 +21,9 @@ type API' rawm = Capture "gameId" GameId :> EndpointHTML
             :<|> EndpointPublic
 
 type APIWrongWS = API' Raw
+
+apiWrongWs :: Proxy APIWrongWS
+apiWrongWs = Proxy
 
 type EndpointHTML = Get '[HTML] GameHtml
 type EndpointWS' rawm = "ws" :> rawm
