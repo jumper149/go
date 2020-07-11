@@ -40,7 +40,7 @@ instance Default Config where
   def = Config { board = Default
                , players = 2
                , ruleset = def
-               , size = 19
+               , size = 9
                }
 
 newtype ConfigT m a = ConfigT { unwrapConfigT :: ExceptT BadConfig (ReaderT Config m) a }

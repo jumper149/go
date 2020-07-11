@@ -6,6 +6,7 @@ module Operation ( Operation (..)
 import GHC.Generics
 
 import qualified Go.Game as G
+import qualified Go.GameId as G
 import qualified Go.Player as G
 
 import Lobby.Operation
@@ -17,6 +18,6 @@ data Operation = NoOp
                | GameSetPlayerRep (Maybe G.PlayerRep)
                | GameSetStateRep G.GameStateRep
                | LobbyOp LobbyOperation
-               | AwaitGame
+               | AwaitGame G.GameId
                | WriteErrorLog String
   deriving (Eq, Generic, Ord, Read, Show)

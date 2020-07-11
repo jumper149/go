@@ -10,9 +10,11 @@ import GHC.Generics
 import Miso.Effect
 import Miso.Html
 import Miso.String (ms)
+import Miso.Subscription.WebSocket
 
 import qualified Go.Player as G
 import qualified Go.Game as G
+import qualified Go.Message as G
 
 import Game.Model
 import Game.Operation
@@ -60,7 +62,8 @@ updateModel operation model = case operation of
                                 LobbyOp op -> case model of
                                                  LobbyM m -> mapEffect LobbyOp LobbyM $ updateLobbyModel op m
                                                  _ -> undefined
-                                AwaitGame -> noEff AwaitingGame
+                                AwaitGame gameId -> AwaitingGame <# do send $ G.ClientMessageRepPromote gameId
+                                                                       return NoOp
                                 WriteErrorLog _ -> undefined
 
 viewModel :: Model -> View Operation
