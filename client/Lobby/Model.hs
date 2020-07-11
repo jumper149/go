@@ -7,7 +7,6 @@ import Data.Default.Class
 import GHC.Generics
 import Miso.Effect
 import Miso.Html
-import Miso.String (ms)
 import Miso.Subscription.WebSocket
 
 import qualified Go.Config as G
@@ -37,9 +36,6 @@ updateLobbyModel operation model = case operation of
 viewLobbyModel :: LobbyModel -> View LobbyOperation
 viewLobbyModel LobbyModel { availableGames = gs } =
   div_ [
-       ] [ viewGames $ show <$> gs
-         , viewCreateButton
+       ] [ viewCreateButton
+         , viewGames gs
          ]
-
-viewGames :: [String] -> View a
-viewGames gs = p_ [] [ text $ ms $ unlines gs ]

@@ -14,6 +14,7 @@ import Miso.Subscription.WebSocket
 
 import qualified Go.Player as G
 import qualified Go.Game as G
+import qualified Go.GameId as G
 import qualified Go.Message as G
 
 import Game.Model
@@ -25,7 +26,7 @@ import Representation.Operation
 
 data Model = GameM GameModelRep
            | LobbyM LobbyModel
-           | AwaitingGame
+           | AwaitingGame G.GameId
   deriving (Eq, Generic, Ord, Read, Show)
 
 updateModel :: Operation -> Model -> Effect Operation Model
@@ -36,8 +37,8 @@ updateModel operation model = case operation of
                                                 GameM m' -> case (m',op') of
                                                               (GameModelD_9_2  m , GameOperationD_9_2  op) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel op m
                                                               (GameModelD_13_2 m , GameOperationD_13_2 op) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel op m
-                                                              _ -> undefined
-                                                _ -> undefined -- TODO: just return safely?
+                                                              _ -> noEff model --TODO?
+                                                _ -> noEff model --TODO?
                                 GameSetPlayerRep mbP' -> case mbP' of
                                                            Nothing -> case model of -- TODO: no typechecking here, have maybe inside of Rep-type?
                                                                         GameM m' -> case m' of
@@ -48,33 +49,39 @@ updateModel operation model = case operation of
                                                                        GameM m' -> case (m',p') of
                                                                                      (GameModelD_9_2  m , G.PlayerD_9_2  p) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetPlayer (Just p)) m
                                                                                      (GameModelD_13_2 m , G.PlayerD_13_2 p) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetPlayer (Just p)) m
-                                                                                     _ -> undefined
-                                                                       _ -> undefined
+                                                                                     _ -> noEff model --TODO?
+                                                                       _ -> noEff model --TODO?
                                 GameSetStateRep gs' -> case model of
                                                         GameM m' -> case (m',gs') of
                                                                       (GameModelD_9_2  m , G.GameStateD_9_2  gs) -> mapEffect (GameOp . GameOperationD_9_2 ) (GameM . GameModelD_9_2 ) $ updateGameModel (SetState gs) m
                                                                       (GameModelD_13_2 m , G.GameStateD_13_2 gs) -> mapEffect (GameOp . GameOperationD_13_2) (GameM . GameModelD_13_2) $ updateGameModel (SetState gs) m
-                                                                      _ -> undefined
-                                                        AwaitingGame -> case gs' of
-                                                                          G.GameStateD_9_2  gs -> noEff . GameM $ GameModelD_9_2  def { gameState = gs }
-                                                                          G.GameStateD_13_2 gs -> noEff . GameM $ GameModelD_13_2 def { gameState = gs }
-                                                        _ -> undefined
+                                                                      _ -> noEff model --TODO?
+                                                        AwaitingGame _ -> case gs' of
+                                                                            G.GameStateD_9_2  gs -> noEff . GameM $ GameModelD_9_2  def { gameState = gs }
+                                                                            G.GameStateD_13_2 gs -> noEff . GameM $ GameModelD_13_2 def { gameState = gs }
+                                                        _ -> noEff model --TODO?
                                 LobbyOp op -> case model of
                                                  LobbyM m -> mapEffect LobbyOp LobbyM $ updateLobbyModel op m
-                                                 _ -> undefined
-                                AwaitGame gameId -> AwaitingGame <# do send $ G.ClientMessageRepPromote gameId
-                                                                       return NoOp
-                                WriteErrorLog _ -> undefined
+                                                 _ -> noEff model --TODO?
+                                AwaitGame gameId -> AwaitingGame gameId <# do send $ G.ClientMessageRepPromote gameId
+                                                                              return NoOp
+                                ResendAwaitGame -> case model of
+                                                     AwaitingGame gameId -> model <# do send $ G.ClientMessageRepPromote gameId
+                                                                                        return NoOp
+                                                     _ -> noEff model
+                                WriteErrorLog _ -> noEff model --TODO?
 
 viewModel :: Model -> View Operation
 viewModel (GameM model) = case model of
                             GameModelD_9_2  m -> fmap (GameOp . GameOperationD_9_2 ) $ viewGameModel m
                             GameModelD_13_2 m -> fmap (GameOp . GameOperationD_13_2) $ viewGameModel m
 viewModel (LobbyM model) = fmap LobbyOp $ viewLobbyModel model
-viewModel AwaitingGame = viewErrorLog "waiting for game from websocket..."
+viewModel (AwaitingGame _) = viewErrorLog "waiting for game from websocket..."
 
-viewErrorLog :: String -> View a
-viewErrorLog errLog = p_ [] [ text $ ms errLog ]
+viewErrorLog :: String -> View Operation
+viewErrorLog errLog = p_ [] [ text $ ms errLog
+                            , button_ [ onClick ResendAwaitGame ] []
+                            ]
 
 mapEffect :: (a1 -> a2)
           -> (m1 -> m2)

@@ -19,5 +19,6 @@ data Operation = NoOp
                | GameSetStateRep G.GameStateRep
                | LobbyOp LobbyOperation
                | AwaitGame G.GameId
+               | ResendAwaitGame
                | WriteErrorLog String
   deriving (Eq, Generic, Ord, Read, Show)

@@ -12,9 +12,10 @@ import Operation
 
 main :: JSM ()
 main = do currentURI <- getCurrentURI
-          let initialAction = if uriPath currentURI == ""
-                                 then NoOp
-                                 else AwaitGame
+          let initialAction  = case uriPath currentURI of
+                                 "/0" -> AwaitGame $ toEnum 0
+                                 "/1" -> AwaitGame $ toEnum 1
+                                 _ -> NoOp
               model  = LobbyM def
               update = updateModel
               view   = viewModel
