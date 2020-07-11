@@ -15,6 +15,7 @@ import qualified Go.Message as G
 
 import Lobby.Operation
 import Lobby.Svg
+import Lobby.Html
 
 data LobbyModel = LobbyModel { availableGames :: [G.GameId]
                              , config :: G.Config
