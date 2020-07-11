@@ -2,6 +2,7 @@
 
 module Go.Server.API ( API'
                      , APIWrongWS
+                     , apiWrongWS
                      , EndpointHTML
                      , EndpointWS'
                      , EndpointPublic
