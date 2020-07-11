@@ -23,18 +23,23 @@ library
                          Go.Game.Player
                          Go.Game.Rules
                          Go.Game.State
-                         Go.GameId
                          Go.Message
                          Go.Player
                          Go.Representation
                          Go.Run.JSON
+                         Go.Server.API
+                         Go.Server.GameId
+                         Go.Server.Html
     build-depends:       base
                        , aeson
                        , containers
                        , data-default-class
                        , finite-typelits
+                       , lucid
                        , mtl
                        , servant
+                       , servant-lucid
+                       , text
                        , vector-sized
     default-extensions:  DataKinds
                        , DeriveGeneric
@@ -64,7 +69,6 @@ executable server
                          GameSet
                          GameSet.Class
                          GameSet.Internal
-                         Html
                          Message
                          Server
                          ServerState
@@ -81,10 +85,8 @@ executable server
                        , data-default-class
                        , directory
                        , http-types
-                       , lucid
                        , monad-control
                        , mtl
-                       , servant-lucid
                        , servant-rawm
                        , servant-server
                        , text

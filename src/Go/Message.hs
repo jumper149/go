@@ -7,7 +7,7 @@ import GHC.Generics
 
 import Go.Config
 import Go.Game
-import Go.GameId
+import Go.Server.GameId
 import Go.Player
 
 data ServerMessageRep = ServerMessageGameStateRep GameStateRep
