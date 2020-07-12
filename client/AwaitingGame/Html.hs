@@ -4,7 +4,7 @@ module AwaitingGame.Html ( viewAwaitingGame
 import Miso.Html
 import Miso.String (ms)
 
-import qualified Go.Server.GameId as G
+import qualified Go.Run.GameId as G
 
 import Operation
 

@@ -10,7 +10,7 @@ import Miso
 import Miso.String (ms)
 import Servant.API
 
-import Go.Server.API
+import Go.Run.API
 
 import Message
 import Model

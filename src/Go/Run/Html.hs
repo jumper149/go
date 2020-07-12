@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Go.Server.Html ( GameHtml (..)
-                      ) where
+module Go.Run.Html ( GameHtml (..)
+                   ) where
 
 import GHC.Generics
 import qualified Lucid as L

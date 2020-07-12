@@ -1,4 +1,5 @@
-module Go.Server.GameId where
+module Go.Run.GameId ( GameId
+                     ) where
 
 import GHC.Generics
 

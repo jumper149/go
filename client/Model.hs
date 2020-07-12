@@ -14,7 +14,7 @@ import Miso.Subscription.WebSocket
 import qualified Go.Player as G
 import qualified Go.Game as G
 import qualified Go.Message as G
-import qualified Go.Server.GameId as G
+import qualified Go.Run.GameId as G
 
 import AwaitingGame.Html
 import Game.Model

@@ -7,7 +7,7 @@ import GHC.Generics
 
 import qualified Go.Config as G
 import qualified Go.Game.Rules as G
-import qualified Go.Server.GameId as G
+import qualified Go.Run.GameId as G
 
 data LobbyOperation = LobbyNoOp
                     | UpdateGames [G.GameId]

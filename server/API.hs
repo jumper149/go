@@ -15,8 +15,8 @@ import Network.Wai.Trans (runMiddlewareT)
 import Servant.RawM (RawM)
 import Servant
 
-import Go.Server.API
-import Go.Server.Html
+import Go.Run.API
+import Go.Run.Html
 
 import GameSet.Class
 import ServerState

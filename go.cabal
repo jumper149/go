@@ -26,10 +26,10 @@ library
                          Go.Message
                          Go.Player
                          Go.Representation
+                         Go.Run.API
+                         Go.Run.GameId
+                         Go.Run.Html
                          Go.Run.JSON
-                         Go.Server.API
-                         Go.Server.GameId
-                         Go.Server.Html
     other-modules:       Data.Aeson.OrphanInstances
     build-depends:       base
                        , aeson

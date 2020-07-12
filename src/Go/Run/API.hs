@@ -1,21 +1,21 @@
 {-# LANGUAGE TypeOperators #-}
 
-module Go.Server.API ( API'
-                     , EndpointGame
-                     , EndpointHTML
-                     , EndpointWS'
-                     , EndpointPublic
-                     , APIWrongWS
-                     , apiWrongWS
-                     , EndpointWSWrongWS
-                     ) where
+module Go.Run.API ( API'
+                  , EndpointGame
+                  , EndpointHTML
+                  , EndpointWS'
+                  , EndpointPublic
+                  , APIWrongWS
+                  , apiWrongWS
+                  , EndpointWSWrongWS
+                  ) where
 
 import Data.Proxy
 import Servant.API
 import Servant.HTML.Lucid (HTML)
 
-import Go.Server.GameId
-import Go.Server.Html
+import Go.Run.GameId
+import Go.Run.Html
 
 -- TODO: use servant-rawm-1.0.0.0 when it works with ghcjs
 type API' rawm = EndpointGame

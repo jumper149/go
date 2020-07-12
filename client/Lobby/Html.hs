@@ -12,8 +12,8 @@ import Servant.API
 
 import qualified Go.Config as G
 import qualified Go.Game.Rules as G
-import qualified Go.Server.API as G
-import qualified Go.Server.GameId as G
+import qualified Go.Run.API as G
+import qualified Go.Run.GameId as G
 
 import Lobby.Operation
 
