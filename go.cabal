@@ -133,6 +133,7 @@ executable client
                          Message
                          Model
                          Operation
+                         Representation
                          Representation.Model
                          Representation.Operation
     build-depends:       base

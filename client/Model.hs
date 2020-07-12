@@ -20,6 +20,7 @@ import Game.Model
 import Game.Operation
 import Lobby.Model
 import Operation
+import Representation
 import Representation.Model
 import Representation.Operation
 
@@ -70,9 +71,7 @@ updateModel operation model = case operation of
                                 WriteErrorLog _ -> noEff model --TODO?
 
 viewModel :: Model -> View Operation
-viewModel (GameM model) = case model of
-                            GameModelD_9_2  m -> fmap (GameOp . GameOperationD_9_2 ) $ viewGameModel m
-                            GameModelD_13_2 m -> fmap (GameOp . GameOperationD_13_2) $ viewGameModel m
+viewModel (GameM model) = fmap GameOp $ viewGameModelRep model
 viewModel (LobbyM model) = fmap LobbyOp $ viewLobbyModel model
 viewModel (AwaitingGame gameId) = viewAwaitingGame gameId
 
