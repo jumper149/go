@@ -1,6 +1,6 @@
-module Message ( WSServerMessage (..)
-               , WSClientMessage (..)
-               ) where
+module WebSocket.Message.Internal ( WSServerMessage (..)
+                                  , WSClientMessage (..)
+                                  ) where
 
 import Data.Aeson
 import Data.Maybe (fromMaybe)

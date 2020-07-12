@@ -71,13 +71,13 @@ executable server
                          GameSet
                          GameSet.Class
                          GameSet.Internal
-                         Message
                          Server
                          ServerState
                          ServerState.Class
                          ServerState.Internal
                          WebSocket
                          WebSocket.Message
+                         WebSocket.Message.Internal
     build-depends:       base
                        , go
                        , wai-transformers

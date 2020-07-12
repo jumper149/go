@@ -15,8 +15,6 @@ import Data.Maybe (fromMaybe)
 import GHC.Generics
 import Network.WebSockets (Connection)
 
-import Message
-
 -- | An identifier for 'Client'.
 newtype ClientId = ClientId { unwrapClientId :: Integer }
   deriving (Enum, Eq, Generic, Ord, Read, Show)

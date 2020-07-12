@@ -11,10 +11,10 @@ import GHC.Generics
 import Network.WebSockets
 
 import Clients.Class
-import Message
 import GameSet.Class
 import ServerState.Class
 import ServerState
+import WebSocket.Message.Internal
 
 import Go.Message
 

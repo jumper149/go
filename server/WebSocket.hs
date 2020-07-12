@@ -17,7 +17,6 @@ import Network.Wai.Trans (MiddlewareT)
 import Clients.Class
 import GameSet
 import GameSet.Class
-import Message
 import ServerState
 import ServerState.Class
 import WebSocket.Message
