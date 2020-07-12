@@ -14,9 +14,9 @@ import Miso.Subscription.WebSocket
 
 import qualified Go.Game.Game as G
 import qualified Go.Game.State as G
-import qualified Go.Message as G
 import qualified Go.Representation as G
 import qualified Go.Run.JSON as G
+import qualified Go.Run.Message as G
 
 import Game.Operation
 import Game.Run

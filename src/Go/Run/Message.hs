@@ -1,6 +1,6 @@
-module Go.Message ( ServerMessage (..)
-                  , ClientMessage (..)
-                  ) where
+module Go.Run.Message ( ServerMessage (..)
+                      , ClientMessage (..)
+                      ) where
 
 import Data.Aeson
 import GHC.Generics

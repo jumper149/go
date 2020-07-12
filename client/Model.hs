@@ -11,9 +11,9 @@ import Miso.Effect
 import Miso.Html
 import Miso.Subscription.WebSocket
 
-import qualified Go.Message as G
 import qualified Go.Representation as G
 import qualified Go.Run.GameId as G
+import qualified Go.Run.Message as G
 
 import AwaitingGame.Html
 import Game.Model

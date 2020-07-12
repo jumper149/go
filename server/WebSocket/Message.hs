@@ -16,7 +16,7 @@ import ServerState.Class
 import ServerState
 import WebSocket.Message.Internal
 
-import Go.Message
+import Go.Run.Message
 
 data Recipients = Recipients { mainRecipient :: Client
                              , allRecipients :: [Client] -- including the main recipient!

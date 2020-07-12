@@ -11,8 +11,8 @@ import Miso.Subscription.WebSocket
 
 import qualified Go.Config as G
 import qualified Go.Game.Rules as G
-import qualified Go.Message as G
 import qualified Go.Run.GameId as G
+import qualified Go.Run.Message as G
 
 import Lobby.Operation
 import Lobby.Html

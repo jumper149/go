@@ -3,7 +3,7 @@ module Message ( handleWS
 
 import Miso.WebSocket
 
-import qualified Go.Message as G
+import qualified Go.Run.Message as G
 
 import Lobby.Operation
 import Operation

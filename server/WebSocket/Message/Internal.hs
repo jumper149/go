@@ -7,7 +7,7 @@ import Data.Maybe (fromMaybe)
 import GHC.Generics
 import Network.WebSockets
 
-import Go.Message
+import Go.Run.Message
 
 newtype WSServerMessage = WSServerMessage { unwrapWSServerMessage :: ServerMessage }
   deriving (Eq, Generic, Ord, Read, Show)

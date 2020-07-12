@@ -21,7 +21,6 @@ library
                          Go.Game.Player
                          Go.Game.Rules
                          Go.Game.State
-                         Go.Message
                          Go.Representation
                          Go.Representation.Board
                          Go.Representation.Game
@@ -30,6 +29,7 @@ library
                          Go.Run.GameId
                          Go.Run.Html
                          Go.Run.JSON
+                         Go.Run.Message
     other-modules:       Data.Aeson.OrphanInstances
     build-depends:       base
                        , aeson

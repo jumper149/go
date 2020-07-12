@@ -21,7 +21,7 @@ import ServerState
 import ServerState.Class
 import WebSocket.Message
 
-import Go.Message
+import Go.Run.Message
 
 websocketMiddleware :: MonadBaseControlIdentity IO m
                     => MiddlewareT (ServerStateT m)
