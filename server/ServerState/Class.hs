@@ -6,6 +6,7 @@ module ServerState.Class ( module Clients.Class
                          , addGameSet
                          , getGameSet
                          , gameSetList
+                         , tryConfig
                          ) where
 
 import Control.Monad.Base
@@ -48,3 +49,8 @@ getGameSet k = getGameSetFrom k <$> readGameSets
 gameSetList :: (MonadBase STM m, MonadServerState m)
             => m [GameId]
 gameSetList = fmap fst . gameSetListFrom <$> readGameSets
+
+tryConfig :: Config -> Either BadConfigServer Config
+tryConfig c =  case newGameSetFor c mempty of
+                 Left ex -> Left ex
+                 Right _ -> Right c

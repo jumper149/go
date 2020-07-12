@@ -14,4 +14,5 @@ handleWS (WebSocketMessage msg) = case msg of
                                     G.ServerMessageGameStateRep gs -> GameSetStateRep gs
                                     G.ServerMessagePlayerRep mbP -> GameSetPlayerRep mbP
                                     G.ServerMessageRepLobby gs -> LobbyOp $ UpdateGames gs
+                                    G.ServerMessageRepApproveConfig c -> LobbyOp $ ApproveConfig c
 handleWS _ = NoOp

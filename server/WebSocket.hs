@@ -86,6 +86,7 @@ loopLobby k = do c <- transact $ getClient k
                                                        let msg = ServerMessageRepLobby <$> gss
                                                            rs = recipients c mempty -- TODO: client connection isnt refreshed but taken from beginning of this loop
                                                        return (rs , msg)
+                   ClientMessageRepTryConfig config -> serverSendMessage (recipients c mempty) $ ServerMessageRepApproveConfig <$> tryConfig config
                    ClientMessageRepPromote gameId -> runGameSetT k gameId $ do
                                                        initGame
                                                        loopGame

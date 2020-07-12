@@ -5,10 +5,11 @@ module Go.Board.Default ( Board (..)
                         ) where
 
 import Control.Applicative (liftA2)
-import Data.Aeson (FromJSON (..), ToJSON (..))
+import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson.OrphanInstances ()
 import Data.Bifunctor
 import Data.Finite
-import Data.Maybe (mapMaybe, fromJust)
+import Data.Maybe (mapMaybe)
 import Data.Proxy
 import qualified Data.Vector.Sized as V
 import GHC.Generics
@@ -32,10 +33,6 @@ instance KnownNat i => Enum (Coord i) where
   fromEnum (Coord x y) = fromEnum $ getFinite y * s + getFinite x
     where s = natVal (Proxy :: Proxy i)
 
-instance KnownNat n => FromJSON (Finite n) where
-  parseJSON = fmap finite . parseJSON
-instance KnownNat n => ToJSON (Finite n) where
-  toJSON = toJSON . getFinite
 instance KnownNat i => FromJSON (Coord i)
 instance KnownNat i => ToJSON (Coord i)
 
@@ -49,11 +46,6 @@ getCoord (Coord x y) = (getFinite x , getFinite y)
 newtype Board (i :: Nat) n = Board (V.Vector i (V.Vector i (Stone (PlayerN n))))
   deriving (Eq, Generic, Ord, Read, Show)
 
--- TODO: orphan instances
-instance (KnownNat n, FromJSON a) => FromJSON (V.Vector n a) where
-  parseJSON = fmap (fromJust . V.toSized) . parseJSON
-instance (KnownNat n, ToJSON a) => ToJSON (V.Vector n a) where
-  toJSON = toJSON . V.fromSized
 instance (KnownNat i, KnownNat n) => FromJSON (Board i n) where
 instance (KnownNat i, KnownNat n) => ToJSON (Board i n) where
 

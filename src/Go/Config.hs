@@ -1,6 +1,8 @@
 module Go.Config ( MonadConfig (..)
                  , Config (..)
                  , BoardName (..)
+                 , PlayerCount (..)
+                 , BoardSize (..)
                  , BadConfig (..)
                  , ConfigT
                  , runConfigT
@@ -12,11 +14,19 @@ import Control.Monad.Except
 import Control.Monad.Identity
 import Control.Monad.Reader
 import Data.Aeson (FromJSON, ToJSON)
+import Data.Aeson.OrphanInstances ()
 import Data.Default.Class
+import Data.Finite
 import GHC.Generics
 
 import Go.Game.Act
 import Go.Game.Rules
+
+newtype PlayerCount = PlayerCount (Finite 16)
+  deriving (Bounded, Enum, Eq, FromJSON, Generic, Num, Ord, Read, Show, ToJSON)
+
+newtype BoardSize = BoardSize (Finite 19)
+  deriving (Bounded, Enum, Eq, FromJSON, Generic, Num, Ord, Read, Show, ToJSON)
 
 data BoardName = Default
                | Loop
@@ -27,9 +37,9 @@ instance ToJSON BoardName
 
 -- | The configuration of a game.
 data Config = Config { board :: BoardName
-                     , players :: Integer
+                     , players :: PlayerCount
                      , ruleset :: Rules
-                     , size  :: Integer
+                     , size  :: BoardSize
                      }
   deriving (Eq, Generic, Ord, Read, Show)
 

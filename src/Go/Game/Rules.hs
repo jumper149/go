@@ -27,6 +27,20 @@ data KoRule = Ko Permission
             | SuperKo
   deriving (Eq, Generic, Ord, Read, Show)
 
+instance Bounded KoRule where
+  minBound = Ko Allowed
+  maxBound = SuperKo
+instance Enum KoRule where
+  fromEnum k = case k of
+                 Ko Allowed -> 0
+                 Ko Forbidden -> 1
+                 SuperKo -> 2
+  toEnum i = case i of
+               0 -> Ko Allowed
+               1 -> Ko Forbidden
+               2 -> SuperKo
+               _ -> error "cant create KoRule from Int"
+
 instance FromJSON KoRule
 instance ToJSON KoRule
 

@@ -30,6 +30,7 @@ library
                          Go.Server.API
                          Go.Server.GameId
                          Go.Server.Html
+    other-modules:       Data.Aeson.OrphanInstances
     build-depends:       base
                        , aeson
                        , containers
@@ -128,7 +129,6 @@ executable client
                          Lobby.Html
                          Lobby.Model
                          Lobby.Operation
-                         Lobby.Svg
                          Message
                          Model
                          Operation
@@ -137,6 +137,7 @@ executable client
     build-depends:       base
                        , go
                        , miso
+                       , aeson
                        , containers
                        , data-default-class
                        , servant
