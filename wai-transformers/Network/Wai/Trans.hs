@@ -14,26 +14,26 @@ type MiddlewareT m = ApplicationT m -> ApplicationT m
 liftApplication :: MonadBaseControlIdentity IO m
                 => Application
                 -> ApplicationT m
-liftApplication app request respond = liftBaseWithIdentity $ \ run ->
-  app request $ \ response -> run $ respond response -- TODO simpler
+liftApplication app request respond = liftBaseWithIdentity $ \ runInBase ->
+  app request $ runInBase . respond
 
 liftMiddleware :: MonadBaseControlIdentity IO m
                => Middleware
                -> MiddlewareT m
-liftMiddleware mid app request respond = do
-  app' <- runApplicationT app
-  liftBaseWithIdentity $ \ run -> mid app' request $ run . respond
+liftMiddleware mid appT request respond = do
+  app <- runApplicationT appT
+  liftBaseWithIdentity $ \ runInBase -> mid app request $ runInBase . respond
 
 runApplicationT :: MonadBaseControlIdentity IO m
                 => ApplicationT m
                 -> m Application
-runApplicationT app = liftBaseWithIdentity $ \ run ->
-  return $ \ request respond -> run $ app request $ liftBase . respond
+runApplicationT appT = liftBaseWithIdentity $ \ runInBase ->
+  return $ \ request respond -> runInBase $ appT request $ liftBase . respond
 
 runMiddlewareT :: MonadBaseControlIdentity IO m
                => MiddlewareT m
                -> m Middleware
-runMiddlewareT mid = liftBaseWithIdentity $ \ run ->
+runMiddlewareT midT = liftBaseWithIdentity $ \ runInBase ->
   return $ \ app request respond -> do
-    app' <- run $ runApplicationT $ mid $ liftApplication app
+    app' <- runInBase . runApplicationT . midT $ liftApplication app
     app' request respond

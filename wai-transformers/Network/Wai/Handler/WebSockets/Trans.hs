@@ -16,13 +16,13 @@ type ServerAppT m = PendingConnection -> m ()
 liftServerApp :: MonadBase IO m
               => ServerApp
               -> ServerAppT m
-liftServerApp server = liftBase . server
+liftServerApp serverApp = liftBase . serverApp
 
 runServerAppT :: MonadBaseControlIdentity IO m
               => ServerAppT m
               -> m ServerApp
-runServerAppT server = liftBaseWithIdentity $ \ run ->
-  return $ \ pending -> run $ server pending
+runServerAppT serverAppT = liftBaseWithIdentity $ \ runInBase ->
+  return $ runInBase . serverAppT
 
 type ClientAppT m a = Connection -> m a
 
@@ -34,14 +34,14 @@ liftClientApp clientApp = liftBase . clientApp
 runClientAppT :: MonadBaseControlIdentity IO m
               => ClientAppT m a
               -> m (ClientApp a)
-runClientAppT clientApp = liftBaseWithIdentity $ \ run ->
-  return $ run . clientApp
+runClientAppT clientAppT = liftBaseWithIdentity $ \ runInBase ->
+  return $ runInBase . clientAppT
 
 websocketsOrT :: MonadBaseControlIdentity IO m
               => ConnectionOptions
               -> ServerAppT m
               -> MiddlewareT m
-websocketsOrT options server app request respond = do
-  server' <- runServerAppT server
-  app' <- runApplicationT app
-  liftApplication (websocketsOr options server' app') request respond
+websocketsOrT options serverAppT appT request respond = do
+  serverApp <- runServerAppT serverAppT
+  app <- runApplicationT appT
+  (liftApplication $ websocketsOr options serverApp app) request respond
