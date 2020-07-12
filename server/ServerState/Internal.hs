@@ -19,7 +19,7 @@ import GameSet.Internal ( GameSet (..)
                         )
 
 import Go.Config
-import Go.Game
+import Go.Representation.Game
 
 newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)

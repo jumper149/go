@@ -1,6 +1,6 @@
-module Go.Player ( PlayerRep (..)
-                 , matchingPlayerRep
-                 ) where
+module Go.Representation.Player ( PlayerRep (..)
+                                , matchingPlayerRep
+                                ) where
 
 import GHC.Generics
 import Data.Aeson (FromJSON, ToJSON)

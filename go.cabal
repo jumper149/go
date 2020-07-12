@@ -12,11 +12,9 @@ cabal-version:       >=1.10
 
 library
     hs-source-dirs:      src
-    exposed-modules:     Go.Board
-                         Go.Board.Default
+    exposed-modules:     Go.Board.Default
                          Go.Board.Loop
                          Go.Config
-                         Go.Game
                          Go.Game.Act
                          Go.Game.End
                          Go.Game.Game
@@ -24,8 +22,10 @@ library
                          Go.Game.Rules
                          Go.Game.State
                          Go.Message
-                         Go.Player
                          Go.Representation
+                         Go.Representation.Board
+                         Go.Representation.Game
+                         Go.Representation.Player
                          Go.Run.API
                          Go.Run.GameId
                          Go.Run.Html

@@ -7,9 +7,9 @@ import qualified Go.Board.Default as D
 
 import Go.Game.Game
 import Go.Game.State
-import Go.Board
-import Go.Game
-import Go.Player
+import Go.Representation.Board
+import Go.Representation.Game
+import Go.Representation.Player
 
 class Game b => RepresentableGame b where
   fromBoardRep :: BoardRep -> Maybe b

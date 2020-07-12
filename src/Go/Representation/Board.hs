@@ -1,5 +1,5 @@
-module Go.Board ( BoardRep (..)
-                ) where
+module Go.Representation.Board ( BoardRep (..)
+                               ) where
 
 import GHC.Generics
 

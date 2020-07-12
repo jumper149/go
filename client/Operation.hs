@@ -5,8 +5,8 @@ module Operation ( Operation (..)
 
 import GHC.Generics
 
-import qualified Go.Game as G
-import qualified Go.Player as G
+import qualified Go.Representation.Game as G
+import qualified Go.Representation.Player as G
 import qualified Go.Run.GameId as G
 
 import Lobby.Operation

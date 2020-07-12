@@ -6,8 +6,8 @@ import Data.Aeson
 import GHC.Generics
 
 import Go.Config
-import Go.Game
-import Go.Player
+import Go.Representation.Game
+import Go.Representation.Player
 import Go.Run.GameId
 
 data ServerMessageRep = ServerMessageGameStateRep GameStateRep

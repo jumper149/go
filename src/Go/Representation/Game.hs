@@ -1,11 +1,11 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Go.Game ( GameStateRep (..)
-               , ActionRep (..)
-               , actRep
-               , initStateRep
-               , getCurrentPlayerRep
-               ) where
+module Go.Representation.Game ( GameStateRep (..)
+                              , ActionRep (..)
+                              , actRep
+                              , initStateRep
+                              , getCurrentPlayerRep
+                              ) where
 
 import Control.Monad.Except
 import Data.Aeson (FromJSON, ToJSON)
@@ -15,7 +15,7 @@ import qualified Go.Board.Default as D
 import Go.Config
 import Go.Game.Act
 import Go.Game.State
-import Go.Player
+import Go.Representation.Player
 
 data ActionRep = ActionD_9_2 (AssociatedAction (D.Board 9 2))
                | ActionD_13_2 (AssociatedAction (D.Board 13 2))

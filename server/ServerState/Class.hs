@@ -16,7 +16,7 @@ import GameSet.Class
 import ServerState.Internal
 
 import Go.Config
-import Go.Game
+import Go.Representation.Game
 
 class MonadClients m => MonadServerState m where
 
