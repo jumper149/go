@@ -27,14 +27,14 @@ websocketMiddleware :: MonadBaseControlIdentity IO m
                     => MiddlewareT (ServerStateT m)
 websocketMiddleware = websocketsOrT defaultConnectionOptions serverApp
 
--- TODO: maybe ping every 30 seconds to keep alive?
 serverApp :: MonadBaseControl IO m
           => ServerAppT (ServerStateT m)
 serverApp pendingConnection = liftedBracket connect disconnect hold
     where connect = do conn <- liftBase $ acceptRequest pendingConnection
                        transact $ addClient conn
-          hold clientId = do initLobby clientId
-                             loopLobby clientId
+          hold clientId = do conn <- transact $ connection <$> getClient clientId
+                             liftedWithPingThread conn $ do initLobby clientId
+                                                            loopLobby clientId
           disconnect clientId = transact $ removeClient clientId
 
 initGame :: MonadBase IO m
@@ -92,6 +92,14 @@ loopLobby k = do c <- transact $ getClient k
                                                        loopGame
                    _ -> liftBase $ putStrLn "not a lobby message, but in lobby" -- TODO: server side error log would be better
                  loopLobby k
+
+-- TODO: use withPingThread, with websockets-0.12.7.1
+liftedWithPingThread :: MonadBaseControl IO m
+                     => Connection
+                     -> m a
+                     -> m a
+liftedWithPingThread c todo = do liftBase $ forkPingThread c 30
+                                 todo
 
 liftedBracket :: MonadBaseControl IO m
               => m a
