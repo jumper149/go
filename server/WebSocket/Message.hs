@@ -33,16 +33,16 @@ recipients c cs = if idC `elem` idCs
 -- | Read a message from the websocket.
 serverReceiveMessage :: MonadBase IO m
                      => Client
-                     -> m ClientMessageRep
-serverReceiveMessage c = unwrapWSClientMessageRep <$> liftBase (receiveData $ connection c)
+                     -> m ClientMessage
+serverReceiveMessage c = unwrapWSClientMessage <$> liftBase (receiveData $ connection c)
 
 -- | Send a message to all clients in 'Clients' via the websocket.
 serverSendMessage :: MonadBase IO m
                   => Recipients
-                  -> Either BadConfigServer ServerMessageRep
+                  -> Either BadConfigServer ServerMessage
                   -> m ()
 serverSendMessage rs msg = case msg of
-                             Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessageRep rMsg) conns
-                             Left ex -> liftBase . sendTextData conn . WSServerMessageRep . ServerMessageRepFail $ show ex -- TODO: don't show, but have instance for message
+                             Right rMsg -> traverse_ (\ c -> liftBase . sendTextData c $ WSServerMessage rMsg) conns
+                             Left ex -> liftBase . sendTextData conn . WSServerMessage . ServerMessageFail $ show ex -- TODO: don't show, but have instance for message
   where conn = connection $ mainRecipient rs
         conns = connection <$> allRecipients rs

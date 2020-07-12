@@ -65,7 +65,7 @@ updateModel operation model = case operation of
                                                  _ -> noEff model --TODO?
                                 SetAwaitGame gameId -> noEff $ AwaitingGame gameId
                                 SubmitAwaitGame -> case model of
-                                                     AwaitingGame gameId -> model <# do send $ G.ClientMessageRepPromote gameId
+                                                     AwaitingGame gameId -> model <# do send $ G.ClientMessagePromote gameId
                                                                                         return NoOp
                                                      _ -> noEff model
                                 WriteErrorLog _ -> noEff model --TODO?

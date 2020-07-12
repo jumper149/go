@@ -33,7 +33,7 @@ updateLobbyModel :: LobbyOperation -> LobbyModel -> Effect LobbyOperation LobbyM
 updateLobbyModel operation model = case operation of
                                      LobbyNoOp -> noEff model
                                      UpdateGames gs -> noEff model { availableGames = gs }
-                                     SubmitConfig -> model <# do send $ G.ClientMessageRepCreateGame $ config model
+                                     SubmitConfig -> model <# do send $ G.ClientMessageCreateGame $ config model
                                                                  return LobbyNoOp
                                      SetConfig sc -> let m = case sc of
                                                                SetConfigBoard b -> model { config = (config model) { G.board = b } }
@@ -44,7 +44,7 @@ updateLobbyModel operation model = case operation of
                                                                                      SetConfigRuleKo k -> model { config = (config model) { G.ruleset = (G.ruleset $ config model) { G.ko = k } } }
                                                                                      SetConfigRuleSuicide s -> model { config = (config model) { G.ruleset = (G.ruleset $ config model) { G.suicide = s } } }
                                                      in updateLobbyModel (TryConfig $ config m) m
-                                     TryConfig c -> model { submittable = False } <# do send $ G.ClientMessageRepTryConfig c
+                                     TryConfig c -> model { submittable = False } <# do send $ G.ClientMessageTryConfig c
                                                                                         return LobbyNoOp
                                      ApproveConfig c -> noEff model { submittable = c == config model }
 

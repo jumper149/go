@@ -72,7 +72,7 @@ initLobby :: MonadBase IO m
 initLobby c = (uncurry serverSendMessage =<<) . transact $ do
                 rs <- recipients <$> getClient c <*> pure mempty
                 gss <- gameSetList
-                let msg = Right $ ServerMessageRepLobby gss
+                let msg = Right $ ServerMessageLobby gss
                 return (rs , msg)
 
 loopLobby :: MonadBase IO m
@@ -82,13 +82,13 @@ loopLobby k = do c <- transact $ getClient k
                  msg <- serverReceiveMessage c
                  liftBase . C8.putStrLn $ encode msg -- TODO: remove?
                  case msg of
-                   ClientMessageRepCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
+                   ClientMessageCreateGame config -> (uncurry serverSendMessage =<<) . transact $ do
                                                        gss <- addGameSet config
-                                                       let msg = ServerMessageRepLobby <$> gss
+                                                       let msg = ServerMessageLobby <$> gss
                                                            rs = recipients c mempty -- TODO: client connection isnt refreshed but taken from beginning of this loop
                                                        return (rs , msg)
-                   ClientMessageRepTryConfig config -> serverSendMessage (recipients c mempty) $ ServerMessageRepApproveConfig <$> tryConfig config
-                   ClientMessageRepPromote gameId -> runGameSetT k gameId $ do
+                   ClientMessageTryConfig config -> serverSendMessage (recipients c mempty) $ ServerMessageApproveConfig <$> tryConfig config
+                   ClientMessagePromote gameId -> runGameSetT k gameId $ do
                                                        initGame
                                                        loopGame
                    _ -> liftBase $ putStrLn "not a lobby message, but in lobby" -- TODO: server side error log would be better

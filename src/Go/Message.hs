@@ -1,5 +1,5 @@
-module Go.Message ( ServerMessageRep (..)
-                  , ClientMessageRep (..)
+module Go.Message ( ServerMessage (..)
+                  , ClientMessage (..)
                   ) where
 
 import Data.Aeson
@@ -10,23 +10,23 @@ import Go.Representation.Game
 import Go.Representation.Player
 import Go.Run.GameId
 
-data ServerMessageRep = ServerMessageGameStateRep GameStateRep
-                      | ServerMessagePlayerRep (Maybe PlayerRep)
-                      | ServerMessageRepLobby [GameId]
-                      | ServerMessageRepApproveConfig Config
-                      | ServerMessageRepFail String
+data ServerMessage = ServerMessageGameStateRep GameStateRep
+                   | ServerMessagePlayerRep (Maybe PlayerRep)
+                   | ServerMessageLobby [GameId]
+                   | ServerMessageApproveConfig Config
+                   | ServerMessageFail String
   deriving (Eq, Generic, Ord, Read, Show)
 
-instance FromJSON ServerMessageRep
-instance ToJSON ServerMessageRep
+instance FromJSON ServerMessage
+instance ToJSON ServerMessage
 
-data ClientMessageRep = ClientMessageActionRep ActionRep
-                      | ClientMessagePlayerRep (Maybe PlayerRep)
-                      | ClientMessageRepCreateGame Config
-                      | ClientMessageRepTryConfig Config
-                      | ClientMessageRepPromote GameId
-                      | ClientMessageRepFail String
+data ClientMessage = ClientMessageActionRep ActionRep
+                   | ClientMessagePlayerRep (Maybe PlayerRep)
+                   | ClientMessageCreateGame Config
+                   | ClientMessageTryConfig Config
+                   | ClientMessagePromote GameId
+                   | ClientMessageFail String
   deriving (Eq, Generic, Ord, Read, Show)
 
-instance FromJSON ClientMessageRep
-instance ToJSON ClientMessageRep
+instance FromJSON ClientMessage
+instance ToJSON ClientMessage

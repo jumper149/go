@@ -1,5 +1,5 @@
-module Message ( WSServerMessageRep (..)
-               , WSClientMessageRep (..)
+module Message ( WSServerMessage (..)
+               , WSClientMessage (..)
                ) where
 
 import Data.Aeson
@@ -9,20 +9,20 @@ import Network.WebSockets
 
 import Go.Message
 
-newtype WSServerMessageRep = WSServerMessageRep { unwrapWSServerMessageRep :: ServerMessageRep }
+newtype WSServerMessage = WSServerMessage { unwrapWSServerMessage :: ServerMessage }
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: instance only covers text, not binary!
-instance WebSocketsData WSServerMessageRep where
+instance WebSocketsData WSServerMessage where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSServerMessageRep . fromMaybe (ServerMessageRepFail mempty) . decode
-  toLazyByteString = encode . unwrapWSServerMessageRep
+  fromLazyByteString = WSServerMessage . fromMaybe (ServerMessageFail mempty) . decode
+  toLazyByteString = encode . unwrapWSServerMessage
 
-newtype WSClientMessageRep = WSClientMessageRep { unwrapWSClientMessageRep :: ClientMessageRep }
+newtype WSClientMessage = WSClientMessage { unwrapWSClientMessage :: ClientMessage }
   deriving (Eq, Generic, Ord, Read, Show)
 
 -- TODO: instance only covers text, not binary!
-instance WebSocketsData WSClientMessageRep where
+instance WebSocketsData WSClientMessage where
   fromDataMessage (Text bs _) = fromLazyByteString bs
-  fromLazyByteString = WSClientMessageRep . fromMaybe (ClientMessageRepFail mempty) . decode
-  toLazyByteString = encode . unwrapWSClientMessageRep
+  fromLazyByteString = WSClientMessage . fromMaybe (ClientMessageFail mempty) . decode
+  toLazyByteString = encode . unwrapWSClientMessage
