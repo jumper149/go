@@ -49,8 +49,8 @@ configSelection :: forall a. (Bounded a, Enum a, Eq a, FromJSON a, ToJSON a)
                 -> a
                 -> View LobbyOperation
 configSelection descr p f a = p_ [] [ text . ms $ (descr <> ": ")
-                                  , fmap (SetConfig . f) $ selection p a
-                                  ]
+                                    , fmap (SetConfig . f) $ selection p a
+                                    ]
 
 selection :: forall a. (Bounded a, Enum a, Eq a, FromJSON a, ToJSON a)
           => (a -> String)
