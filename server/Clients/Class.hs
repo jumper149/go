@@ -2,7 +2,6 @@ module Clients.Class ( MonadClients (..)
                      , Clients
                      , Client (connection, identification)
                      , ClientId
-                     , transact
                      , readClients
                      , writeClients
                      , addClient

@@ -63,7 +63,8 @@ executable server
     buildable: False
   else
     hs-source-dirs:      server
-    other-modules:       API
+    other-modules:       GHC.Conc.Trans
+                         API
                          Clients
                          Clients.Class
                          Clients.Internal

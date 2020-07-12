@@ -3,7 +3,6 @@ module GameSet.Class ( MonadGameSet (..)
                      , gameState
                      , GameId
                      , BadConfigServer (..)
-                     , transact
                      , actGame -- TODO: rename?
                      , updatePlayer
                      ) where

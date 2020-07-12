@@ -8,6 +8,7 @@ module API ( API
 import Control.Monad.Base
 import Control.Monad.Trans.Control
 import Control.Monad.Trans.Control.Identity
+import GHC.Conc.Trans
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
 import Network.Wai.Trans (runMiddlewareT)

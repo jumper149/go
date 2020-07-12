@@ -1,6 +1,5 @@
 module ServerState.Class ( module Clients.Class
                          , MonadServerState (..)
-                         , transact -- TODO: remove from here
                          , readGameSets
                          , writeGameSets
                          , addGameSet

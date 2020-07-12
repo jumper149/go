@@ -9,6 +9,7 @@ import Data.Aeson
 import qualified Data.ByteString.Lazy.Char8 as C8 (putStrLn)
 import Data.Foldable (traverse_)
 import GHC.Conc
+import GHC.Conc.Trans
 import Network.WebSockets
 import Network.Wai.Handler.WebSockets.Trans
 import Network.Wai.Trans (MiddlewareT)
