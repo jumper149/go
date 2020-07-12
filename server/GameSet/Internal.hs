@@ -19,8 +19,7 @@ import Servant (FromHttpApiData, ToHttpApiData) -- TODO: maybe write these insta
 import Clients.Class (ClientId)
 
 import Go.Config
-import Go.Representation.Game
-import Go.Representation.Player
+import Go.Representation
 import Go.Run.GameId
 
 newtype Players = Players { unwrapPlayers :: M.Map ClientId (Maybe PlayerRep) }

@@ -1,6 +1,17 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
 
 module Go.Representation ( RepresentableGame (..)
+
+                         , BoardRep (..)
+
+                         , GameStateRep (..)
+                         , ActionRep (..)
+                         , actRep
+                         , initStateRep
+                         , getCurrentPlayerRep
+
+                         , PlayerRep (..)
+                         , matchingPlayerRep
                          ) where
 
 import qualified Go.Board.Default as D

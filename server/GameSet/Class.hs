@@ -14,8 +14,7 @@ import GHC.Conc
 import Clients.Class
 import GameSet.Internal
 
-import Go.Representation.Game
-import Go.Representation.Player
+import Go.Representation
 
 class MonadBase STM m => MonadGameSet m where
 
