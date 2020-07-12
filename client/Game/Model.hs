@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards, UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Game.Model ( GameModel (..)
                   , updateGameModel
@@ -44,28 +44,28 @@ updateGameModel :: forall b. (G.JSONGame b, G.RepresentableGame b)
                 => GameOperation b
                 -> GameModel b
                 -> Effect (GameOperation b) (GameModel b)
-updateGameModel operation GameModel {..} =
+updateGameModel operation model =
   case operation of
-    GameNoOp -> noEff GameModel {..}
-    UpdateAction gameAction -> noEff GameModel {..}
-    SubmitAction -> case gameAction of
-                      Nothing -> noEff GameModel {..} -- TODO: weird exception catch? Prevented by clever button.
-                      Just a -> GameModel {..} <# do send $ G.ClientMessageActionRep $ (G.toActionRep @b) a
-                                                     return GameNoOp
-    SetState gameState -> noEff $ GameModel { gameAction = Nothing, ..}
-    SubmitPlayer mbP -> GameModel {..} <# do send $ G.ClientMessagePlayerRep $ (G.toPlayerRep @b) <$> mbP
-                                             return GameNoOp
-    SetPlayer chosenPlayer -> noEff $ GameModel {..}
+    GameNoOp -> noEff model
+    UpdateAction a -> noEff model { gameAction = a }
+    SubmitAction -> case gameAction model of
+                      Nothing -> noEff model -- TODO: weird exception catch? Prevented by clever button.
+                      Just a -> model <# do send $ G.ClientMessageActionRep $ (G.toActionRep @b) a
+                                            return GameNoOp
+    SetState gs -> noEff $ model { gameAction = Nothing, gameState = gs }
+    SubmitPlayer mbP -> model <# do send $ G.ClientMessagePlayerRep $ (G.toPlayerRep @b) <$> mbP
+                                    return GameNoOp
+    SetPlayer p -> noEff $ model { chosenPlayer = p }
 
 viewGameModel :: MisoGame b
               => GameModel b
               -> View (GameOperation b)
-viewGameModel GameModel {..} =
+viewGameModel GameModel { gameState = gs, gameAction = a, chosenPlayer = p } =
   div_ [
-       ] [ viewBoard (G.currentBoard gameState) coord
-         , viewPassButton gameAction
-         , viewPlayerChoice chosenPlayer
+       ] [ viewBoard (G.currentBoard gs) coord
+         , viewPassButton a
+         , viewPlayerChoice p
          ]
-  where coord = case gameAction of
+  where coord = case a of
                   Just (G.Place c) -> Just c
                   _ -> Nothing
