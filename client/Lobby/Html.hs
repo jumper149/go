@@ -85,15 +85,17 @@ selection p a = select_ [ onInput recoverOption ] $ fmap option [ minBound .. ma
 
 viewFooter :: View a
 viewFooter = div_ [ class_ "footer"
-                  ] [ p_ [] [ strong_ [] [ text $ "go" ]
-                            , text " by "
-                            , a_ [ href_ "https://github.com/jumper149"
-                                 ] [ text "jumper149" ]
-                            , text ". BSD-3 licensed."
-                            ]
-                    , p_ [] [ text "You can find the source code "
-                            , a_ [ href_ "https://github.com/jumper149/go"
-                                 ] [ text "here" ]
-                            , "."
-                            ]
+                  ] [ div_ [ class_ "footer-content"
+                           ] [ p_ [] [ strong_ [] [ text $ "go" ]
+                                     , text " by "
+                                     , a_ [ href_ "https://github.com/jumper149"
+                                          ] [ text "jumper149" ]
+                                     , text ". BSD-3 licensed."
+                                     ]
+                             , p_ [] [ text "You can find the source code "
+                                     , a_ [ href_ "https://github.com/jumper149/go"
+                                          ] [ text "here" ]
+                                     , "."
+                                     ]
+                             ]
                     ]

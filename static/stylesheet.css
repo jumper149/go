@@ -153,8 +153,7 @@ body {
 
 .footer {
     width: 100%;
-    height: 50px;
-    padding: 25px;
+    height: 100px;
 
     position: absolute;
     bottom:0;
@@ -167,6 +166,10 @@ body {
 
 .footer p {
     padding: 3px;
+}
+
+.footer .footer-content {
+    padding: 25px;
 }
 
 .footer a {

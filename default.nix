@@ -11,6 +11,7 @@ let
                            mkdir -p $out/{bin,public}
                            cp ${server}/bin/* $out/bin
                            ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/public/all.js
+                           cp ${client.src}/static/stylesheet.css $out/public/stylesheet.css
                          '';
   env = pkgs.mkShell {
           inputsFrom = [ server.env client.env ];
