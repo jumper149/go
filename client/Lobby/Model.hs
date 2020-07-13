@@ -50,8 +50,11 @@ updateLobbyModel operation model = case operation of
 
 viewLobbyModel :: LobbyModel -> View LobbyOperation
 viewLobbyModel LobbyModel { availableGames = gs, submittable = s } =
-  div_ [
-       ] [ viewCreateButton s
-         , editConfig
-         , viewGames gs
+  div_ [ class_ "with-footer"
+       ] [ div_ [ class_ "non-footer"
+                ] [ viewHeader
+                  , viewConfig s
+                  , viewGames gs
+                  ]
+         , viewFooter
          ]

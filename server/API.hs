@@ -38,9 +38,13 @@ htmlGameH gameId = do mbGame <- transact $ getGameSet gameId
                         Just _ -> htmlH
 
 htmlH :: Monad m => m GameHtml
-htmlH = return GameHtml { jsAppPath = "/" <> urlPiece <> "/" <> appFile }
+htmlH = return GameHtml { cssPath = publicPath <> "/" <> cssFile
+                        , jsAppPath = publicPath <> "/" <> appFile
+                        }
   where urlPiece = toUrlPiece $ safeLink api (Proxy :: Proxy EndpointPublic)
+        publicPath = "/" <> urlPiece
         appFile = "all.js"
+        cssFile = "stylesheet.css"
 
 wsH :: MonadBaseControl IO m => ServerStateT m Application
 wsH = liftTrans $ runMiddlewareT websocketMiddleware <*> pure backupApp
