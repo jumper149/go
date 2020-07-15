@@ -61,11 +61,9 @@ viewGameModel :: MisoGame b
               => GameModel b
               -> View (GameOperation b)
 viewGameModel GameModel { gameState = gs, gameAction = a, chosenPlayer = p } =
-  div_ [
-       ] [ viewBoard (G.currentBoard gs) coord
-         , viewPassButton a
-         , viewPlayerChoice p
-         ]
+  svgGame $ viewBoard (G.currentBoard gs) coord
+         <> viewPassButton a
+         <> viewPlayerChoice p
   where coord = case a of
                   Just (G.Place c) -> Just c
                   _ -> Nothing
