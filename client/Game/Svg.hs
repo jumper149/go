@@ -49,16 +49,11 @@ viewPassButton mbA = [ rect_ ([ fill_ $ case mbA of
                         , height_ "900"
                         ]
 
-viewPlayerChoice :: G.Game b => Maybe (G.AssociatedPlayer b) -> [Html.View (GameOperation b)]
-viewPlayerChoice mbP = [ rect_ [ fillOpacity_ "0"
-                               , x_ "10"
-                               , y_ "10"
-                               , width_ "80"
-                               , height_ "15"
-                               , onClick $ SubmitPlayer Nothing
-                               ] []
-                       ] <> map viewPlayer [ minBound .. maxBound ]
-                         <> hintPlayer mbP
+viewPlayerChoice :: G.Game b => Maybe (G.AssociatedPlayer b) -> G.AssociatedPlayer b -> [Html.View (GameOperation b)]
+viewPlayerChoice mbP currentP = map viewPlayer [ minBound .. maxBound ]
+                             <> hintCurrentPlayer currentP
+                             <> hintPlayer mbP
+                             <> map clickPlayer [ minBound .. maxBound ]
 
 viewPlayer :: forall b. G.Game b => G.AssociatedPlayer b -> Html.View (GameOperation b)
 viewPlayer p = rect_ [ fill_ . ms $ colorize p
@@ -66,19 +61,46 @@ viewPlayer p = rect_ [ fill_ . ms $ colorize p
                      , y_ $ ms y
                      , width_ "200"
                      , height_ $ ms height
-                     , onClick $ SubmitPlayer $ Just p
                      ] []
   where height = 400 / count
         offSetY = 50
         y = offSetY + height * (toEnum . fromEnum $ p :: Double)
         count = fromIntegral $ natVal (Proxy :: Proxy (G.AssociatedPlayerCount b)) :: Double
 
-hintPlayer :: forall b. G.Game b => Maybe (G.AssociatedPlayer b) -> [Html.View (GameOperation b)]
-hintPlayer Nothing = []
-hintPlayer (Just p) = [ circle_ [ fill_ "red"
+clickPlayer :: forall b. G.Game b => G.AssociatedPlayer b -> Html.View (GameOperation b)
+clickPlayer p = rect_ [ fillOpacity_ "0"
+                      , x_ "-250"
+                      , y_ $ ms y
+                      , width_ "200"
+                      , height_ $ ms height
+                      , onClick $ SubmitPlayer $ Just p
+                      ] []
+  where height = 400 / count
+        offSetY = 50
+        y = offSetY + height * (toEnum . fromEnum $ p :: Double)
+        count = fromIntegral $ natVal (Proxy :: Proxy (G.AssociatedPlayerCount b)) :: Double
+
+hintCurrentPlayer :: forall b. G.Game b => G.AssociatedPlayer b -> [Html.View (GameOperation b)]
+hintCurrentPlayer p = [ circle_ [ fillOpacity_ "0"
+                                , stroke_ "grey"
+                                , strokeWidth_ "5"
                                 , cx_ "-150"
                                 , cy_ $ ms y'
-                                , r_ "100"
+                                , r_ "75"
+                                ] []
+                      ]
+  where height = 400 / count
+        offSetY = 50
+        y = offSetY + height * (toEnum . fromEnum $ p :: Double)
+        count = fromIntegral $ natVal (Proxy :: Proxy (G.AssociatedPlayerCount b)) :: Double
+        y' = y + height / 2
+
+hintPlayer :: forall b. G.Game b => Maybe (G.AssociatedPlayer b) -> [Html.View (GameOperation b)]
+hintPlayer Nothing = []
+hintPlayer (Just p) = [ circle_ [ fill_ "grey"
+                                , cx_ "-150"
+                                , cy_ $ ms y'
+                                , r_ "50"
                                 ] []
                       ]
   where height = 400 / count

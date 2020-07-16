@@ -63,7 +63,7 @@ viewGameModel :: MisoGame b
 viewGameModel GameModel { gameState = gs, gameAction = a, chosenPlayer = p } =
   svgGame $ viewBoard (G.currentBoard gs) coord
          <> viewPassButton a
-         <> viewPlayerChoice p
+         <> viewPlayerChoice p (G.currentPlayer gs)
   where coord = case a of
                   Just (G.Place c) -> Just c
                   _ -> Nothing
