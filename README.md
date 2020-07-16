@@ -1,5 +1,7 @@
 # go
 
+A webserver for a multiplayer game.
+
 ## Usage
 
 ![playing go](https://github.com/jumper149/data/blob/master/go/go.gif?raw=true)
