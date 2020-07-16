@@ -4,6 +4,9 @@
 
 ![playing go](https://github.com/jumper149/data/blob/master/go/go.gif?raw=true)
 
+To play with your friends just set up a game and then share the link after connecting to it.
+Each player can then choose a color in-game and play.
+
 ## Install
 
 Install go with NixOS configuration.
