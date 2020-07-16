@@ -12,6 +12,7 @@ import Miso.Svg
 import qualified Go.Game.Game as G
 import qualified Go.Game.State as G
 
+import Color
 import Game.Operation
 import Game.Player
 
@@ -23,15 +24,15 @@ svgGame = svg_ [ viewBox_ "-300 0 1600 1000"
 
 viewPassButton :: Maybe (G.AssociatedAction b) -> [Html.View (GameOperation b)]
 viewPassButton mbA = [ rect_ ([ fill_ $ case mbA of
-                                          Just G.Pass -> "red"
-                                          _ -> "yellow"
-                              , fillOpacity_ "0.5"
+                                          Just G.Pass -> ms $ Red Dark
+                                          _ -> ms $ Green Dark
+                              , fillOpacity_ "0.7"
                               ] <> rectSizeAttrs) []
                      , text_ [ x_ "1150"
                              , y_ "900"
                              , textAnchor_ "middle"
                              , dominantBaseline_ "middle"
-                             , fill_ "black"
+                             , fill_ . ms $ Black Dark
                              , fontSize_ "50pt"
                              ] [ Html.text $ case mbA of
                                                Nothing -> ""

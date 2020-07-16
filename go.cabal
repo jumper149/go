@@ -121,6 +121,7 @@ executable client
   else
     hs-source-dirs:      client
     other-modules:       AwaitingGame.Html
+                         Color
                          Game.Board.Default
                          Game.Model
                          Game.Operation

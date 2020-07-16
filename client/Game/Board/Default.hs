@@ -16,6 +16,7 @@ import qualified Go.Game.Game as G
 import qualified Go.Game.Player as G
 import qualified Go.Game.State as G
 
+import Color
 import Game.Operation
 import Game.Player
 
@@ -39,7 +40,7 @@ viewGrid s = case xCoords of
                [] -> []
                _ -> fmap (\ y -> gridLine (head xCoords - strokeWidth/2) (last xCoords + strokeWidth/2) y y) xCoords -- pattern matching to make head and tail safe
                  <> fmap (\ x -> gridLine x x (head xCoords - strokeWidth/2) (last xCoords + strokeWidth/2)) xCoords
-  where gridLine x1 x2 y1 y2 = line_ [ stroke_ "black"
+  where gridLine x1 x2 y1 y2 = line_ [ stroke_ . ms $ Black Dark
                                      , strokeWidth_ $ ms strokeWidth
                                      , x1_ $ ms x1
                                      , x2_ $ ms x2
@@ -78,8 +79,8 @@ viewStone s c stone = case stone of
         n = fromIntegral s - 1
 
 hintStone :: KnownNat i => Int -> D.Coord i -> Html.View action
-hintStone s c = circle_ [ fill_ "yellow"
-                        , fillOpacity_ "0.5"
+hintStone s c = circle_ [ fill_ . ms $ Green Light
+                        , fillOpacity_ "0.7"
                         , cx_ $ ms $ fromEnum x + 1
                         , cy_ $ ms $ fromEnum y + 1
                         , r_ . ms $ xLength/(2*n)

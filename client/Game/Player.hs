@@ -2,29 +2,28 @@ module Game.Player ( Color (..)
                    , colorize
                    ) where
 
-import Data.Char (toLower)
 import qualified Data.Map as M
 import Data.Maybe (fromJust)
-import GHC.Generics
 import GHC.TypeLits
-import Miso.String (ToMisoString (..))
 
 import Go.Game.Player
 
--- TODO: Make 'maxBound' infinite.
--- | Some colors.
-data Color = Black
-           | White
-           | Red
-           | Green
-           | Blue
-  deriving (Bounded, Enum, Eq, Generic, Ord, Read, Show)
-
-instance ToMisoString Color where
-    toMisoString = toMisoString . fmap toLower . show
+import Color
 
 -- | Give a color to a player.
 colorize :: forall n. KnownNat n => PlayerN n -> Color
 colorize p = fromJust . M.lookup p . M.fromList $ zip players cycledColors
-  where cycledColors = cycle [ minBound .. (maxBound :: Color) ]
+  where cycledColors = cycle [ Black Dark
+                             , White Light
+                             , Red Dark
+                             , Blue Dark
+                             , Yellow Dark
+                             , Magenta Dark
+                             , Cyan Dark
+                             , Red Light
+                             , Blue Light
+                             , Yellow Light
+                             , Magenta Light
+                             , Cyan Light
+                             ]
         players = [ minBound .. (maxBound :: PlayerN n) ]

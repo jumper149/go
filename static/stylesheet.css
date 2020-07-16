@@ -212,6 +212,7 @@ body {
     text-align: center;
     font-size: 20px;
 }
+
 .awaiting-bar button:hover {
     cursor: pointer;
 }
@@ -219,7 +220,7 @@ body {
 /*************************************************************************************************/
 
 .game-app {
-    background-color: gray;
+    background-color: var(--color7);
     max-width: 100%;
     max-height: 100vh;
 }
