@@ -2,26 +2,7 @@
 
 ## Usage
 
-```
-$ cabal run term --board=Default
- 12345
-a
-b
-c
-d
-e
-Black
-
-...
-
- 12345
-a WW
-b WBWW
-c WBBW
-dBB  B
-e
-White
-```
+![playing go](https://github.com/jumper149/data/blob/master/go/go.gif?raw=true)
 
 ## Install
 
