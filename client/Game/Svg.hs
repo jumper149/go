@@ -3,7 +3,6 @@ module Game.Svg ( svgGame
                 , viewPlayerChoice
                 ) where
 
-import qualified Data.Map as M
 import Data.Proxy
 import GHC.TypeLits
 import qualified Miso.Html as Html
@@ -28,16 +27,17 @@ viewPassButton mbA = [ rect_ ([ fill_ $ case mbA of
                                           _ -> "yellow"
                               , fillOpacity_ "0.5"
                               ] <> rectSizeAttrs) []
---                     , text_ [ x_ "50"
---                             , y_ "25"
---                             , textAnchor_ "middle"
---                             , dominantBaseline_ "middle"
---                             , fill_ "black"
---                             ] [ Html.text $ case mbA of
---                                               Nothing -> ""
---                                               Just G.Pass -> "Pass"
---                                               Just (G.Place _) -> "Place"
---                               ]
+                     , text_ [ x_ "1150"
+                             , y_ "900"
+                             , textAnchor_ "middle"
+                             , dominantBaseline_ "middle"
+                             , fill_ "black"
+                             , fontSize_ "50pt"
+                             ] [ Html.text $ case mbA of
+                                               Nothing -> ""
+                                               Just G.Pass -> "Pass"
+                                               Just (G.Place _) -> "Place"
+                               ]
                      , rect_ ([ fillOpacity_ "0"
                               , onMouseOver $ UpdateAction $ Just G.Pass
                               , onClick $ SubmitAction
