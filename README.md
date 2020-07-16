@@ -14,7 +14,7 @@ Add the options to your configuration by importing `service.nix` and enable the 
   imports = let go = fetchGit {
                        url = "https://github.com/jumper149/go.git";
                        ref = "master";
-                       rev = "bf22700d915055ef77a3ffa40e960139d6e6f38f";
+                       rev = "aa7e55aa10e2bcec7301ce9b2e10b7461167a8f5";
                      };
             in [
                  #...
