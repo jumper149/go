@@ -5,6 +5,7 @@ module Server ( server
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Functor
 import Control.Monad.Trans.Control.Identity
 import Data.Default.Class
 import Data.Proxy
@@ -36,6 +37,6 @@ hoistServerTrans :: forall api t. (HasServer api '[], MonadTransFunctor t)
 hoistServerTrans a st = liftWithIdentity $ \ runId ->
                           return $ hoistServer' $ \ th ->
                             (=<<) restoreM $ liftBaseWith $ \ runInBase ->
-                              runId . mapT runInBase $ th
+                              runId . liftMap runInBase $ th
   where hoistServer' :: (forall a. t Handler a -> Handler a) -> ServerT api Handler
         hoistServer' hoist = hoistServer a hoist st

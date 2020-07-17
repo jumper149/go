@@ -13,7 +13,6 @@ module Clients.Class ( MonadClients (..)
 import Control.Monad.Base
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Identity
 import Control.Monad.Trans.Reader
 import GHC.Conc
 import GHC.Generics
@@ -62,8 +61,3 @@ removeClient key = do clients <- readClients
 clientList :: (MonadBase STM m, MonadClients m)
            => m [(ClientId, Client)]
 clientList = clientListFrom <$> readClients
-
-transact :: (MonadBase IO m, MonadTransFunctor t)
-         => t STM a
-         -> t m a
-transact = mapT $ liftBase . atomically

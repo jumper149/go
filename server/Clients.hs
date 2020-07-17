@@ -7,6 +7,7 @@ module Clients ( ClientsT
 import Control.Monad.Base
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Functor
 import Control.Monad.Trans.Control.Identity
 import Control.Monad.Trans.Reader
 import GHC.Conc

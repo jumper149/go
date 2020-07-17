@@ -8,6 +8,7 @@ module ServerState ( ServerStateT
 import Control.Monad.Base
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Functor
 import Control.Monad.Trans.Control.Identity
 import Control.Monad.Trans.Reader
 import GHC.Conc
@@ -35,7 +36,7 @@ instance MonadTransControlIdentity ServerStateT where
   liftWithIdentity = defaultLiftWithIdentity
 
 instance MonadTransFunctor ServerStateT where
-  mapT f = ServerStateT . mapT (mapT f) . unwrapServerStateT
+  liftMap f = ServerStateT . liftMap (liftMap f) . unwrapServerStateT
 
 instance MonadBase base m => MonadBase base (ServerStateT m) where
   liftBase = liftBaseDefault

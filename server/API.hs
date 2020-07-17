@@ -7,7 +7,7 @@ module API ( API
 
 import Control.Monad.Base
 import Control.Monad.Trans.Control
-import Control.Monad.Trans.Control.Identity
+import Control.Monad.Trans.Control.Functor
 import GHC.Conc.Trans
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
@@ -47,7 +47,7 @@ htmlH = return GameHtml { cssPath = publicPath <> "/" <> cssFile
         cssFile = "stylesheet.css"
 
 wsH :: MonadBaseControl IO m => ServerStateT m Application
-wsH = liftTrans $ runMiddlewareT websocketMiddleware <*> pure backupApp
+wsH = hoistTrans $ runMiddlewareT websocketMiddleware <*> pure backupApp
   where backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
 
 publicH :: FilePath -> ServerT Raw m

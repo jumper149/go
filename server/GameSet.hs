@@ -7,6 +7,7 @@ module GameSet ( GameSetT
 import Control.Monad.Base
 import Control.Monad.Trans
 import Control.Monad.Trans.Control
+import Control.Monad.Trans.Control.Functor
 import Control.Monad.Trans.Control.Identity
 import Control.Monad.Trans.Reader
 import Data.Maybe (fromMaybe)
@@ -43,7 +44,7 @@ instance MonadTransControlIdentity GameSetT where
   liftWithIdentity = defaultLiftWithIdentity
 
 instance MonadTransFunctor GameSetT where
-  mapT f = GameSetT . mapT (mapT f) . unwrapGameSetT
+  liftMap f = GameSetT . liftMap (liftMap f) . unwrapGameSetT
 
 instance MonadBase base m => MonadBase base (GameSetT m) where
   liftBase = liftBaseDefault
