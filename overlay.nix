@@ -20,6 +20,7 @@ self: super:
       rev = "v0.1.0.1";
       sha256 = "1z17mi88kxhggacn59g9ffb3s4qsx58fyg0y79n4ynr4j5cxzy2z";
     };
+    # TODO: avoid using override here, because this destroys all overwrites done by miso beforehand
     haskell-ghc-packages = super.haskell.packages.${ghcVersion}.override {
       overrides = self: super: {
         monad-control-identity = super.callCabal2nix "monad-control-identity" "${monad-control-identity-src}" {};
