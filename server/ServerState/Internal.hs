@@ -8,7 +8,6 @@ module ServerState.Internal ( GameSets
                             ) where
 
 import qualified Data.Map as M
-import Data.Maybe (fromMaybe)
 import GHC.Generics
 
 import Clients.Class (ClientId)
