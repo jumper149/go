@@ -34,7 +34,7 @@ newtype Clients = Clients { unwrapClients :: M.Map ClientId Client }
 newClientFor :: Connection -> Clients -> Client
 newClientFor conn (Clients cs) = Client {..}
   where connection = conn
-        identification = fromMaybe (ClientId 0) $ succ . fst <$> M.lookupMax cs
+        identification = maybe (ClientId 0) (succ . fst) $ M.lookupMax cs
         maybeGameId = Nothing
 
 -- | Inserts a 'Client' into 'Clients'. Assumes, that the identification is not already used in

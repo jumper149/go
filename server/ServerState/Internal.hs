@@ -25,7 +25,7 @@ newtype GameSets = GameSets { unwrapGameSets :: M.Map GameId GameSet }
   deriving (Eq, Generic, Monoid, Ord, Read, Semigroup, Show)
 
 newGameSetFor :: Config -> GameSets -> Either BadConfigServer GameSet
-newGameSetFor gameConfig (GameSets gss) = do let gameIdentification = fromMaybe (toEnum 0) $ succ . fst <$> M.lookupMax gss
+newGameSetFor gameConfig (GameSets gss) = do let gameIdentification = maybe (toEnum 0) (succ . fst) $ M.lookupMax gss
                                                  gamePlayers = mempty
                                              gameState <- embedBadConfig $ configure gameConfig initStateRep
                                              return GameSet {..}

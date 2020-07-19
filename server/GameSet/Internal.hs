@@ -1,5 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
-
 module GameSet.Internal ( GameSet (..)
                         , GameId
                         , Players

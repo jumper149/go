@@ -30,7 +30,7 @@ instance MonadBaseControlIdentity base m => MonadBaseControlIdentity base (Clien
   liftBaseWithIdentity = defaultLiftBaseWithIdentity
 
 instance Monad m => MonadClients (ClientsT m) where
-  clientsTVar = ClientsT $ ask
+  clientsTVar = ClientsT ask
 
 runClientsT :: TVar Clients
             -> ClientsT m a
