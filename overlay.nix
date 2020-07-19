@@ -1,7 +1,5 @@
-self: super:
+{ghcVersion, ghcjsVersion}: self: super:
   let
-    ghcVersion = "ghc865";
-    ghcjsVersion = "ghcjs86";
     monad-control-identity-src = super.fetchFromGitHub {
       owner = "jumper149";
       repo = "monad-control-identity";
