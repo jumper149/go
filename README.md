@@ -45,6 +45,6 @@ nix-build
 
 Build with cabal in nix-shell:
 ```
-nix-shell --run "cabal build"         # build server
-nix-shell --run "cabal build --ghcjs" # build client
+nix-shell --run "cabal v2-build"         # build server
+nix-shell --run "cabal v2-build --ghcjs" # build client
 ```
