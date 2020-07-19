@@ -66,8 +66,8 @@ viewStone s c stone = case stone of
                                         , width_ . ms $ xLength/n
                                         , height_ . ms $ xLength/n
                                         , fillOpacity_ "0"
-                                        , onMouseOver $ UpdateAction $ G.Place <$> Just c
-                                        , onClick $ SubmitAction
+                                        , onMouseOver . UpdateAction $ G.Place <$> Just c
+                                        , onClick SubmitAction
                                         ] []
                         G.Stone p -> circle_ [ fill_ (ms $ colorize p)
                                              , cx_ $ ms x

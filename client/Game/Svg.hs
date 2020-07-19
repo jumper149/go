@@ -40,8 +40,8 @@ viewPassButton mbA = [ rect_ ([ fill_ $ case mbA of
                                                Just (G.Place _) -> "Place"
                                ]
                      , rect_ ([ fillOpacity_ "0"
-                              , onMouseOver $ UpdateAction $ Just G.Pass
-                              , onClick $ SubmitAction
+                              , onMouseOver . UpdateAction $ Just G.Pass
+                              , onClick SubmitAction
                               ] <> rectSizeAttrs) []
                      ]
   where rectSizeAttrs = [ x_ "1050"

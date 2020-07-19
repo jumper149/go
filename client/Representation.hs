@@ -9,5 +9,5 @@ import Representation.Operation
 
 viewGameModelRep :: GameModelRep -> View GameOperationRep
 viewGameModelRep model = case model of
-                           GameModelD_9_2  m -> fmap GameOperationD_9_2  $ viewGameModel m
-                           GameModelD_13_2 m -> fmap GameOperationD_13_2 $ viewGameModel m
+                           GameModelD_9_2  m -> GameOperationD_9_2  <$> viewGameModel m
+                           GameModelD_13_2 m -> GameOperationD_13_2 <$> viewGameModel m

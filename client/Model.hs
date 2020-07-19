@@ -71,8 +71,8 @@ updateModel operation model = case operation of
                                 WriteErrorLog _ -> noEff model --TODO?
 
 viewModel :: Model -> View Operation
-viewModel (GameM model) = fmap GameOp $ viewGameModelRep model
-viewModel (LobbyM model) = fmap LobbyOp $ viewLobbyModel model
+viewModel (GameM model) = GameOp <$> viewGameModelRep model
+viewModel (LobbyM model) = LobbyOp <$> viewLobbyModel model
 viewModel (AwaitingGame gameId) = viewAwaitingGame gameId
 
 mapEffect :: (a1 -> a2)
