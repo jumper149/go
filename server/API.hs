@@ -12,7 +12,7 @@ import GHC.Conc.Trans
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
 import Network.Wai.Trans (runMiddlewareT)
-import Servant.RawM (RawM)
+import Servant.RawM.Server (RawM)
 import Servant
 
 import Go.Run.API

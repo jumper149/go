@@ -8,6 +8,12 @@ self: super:
       rev = "dd4fabcadd66790d10f0b339e933db2fd55d32bd";
       sha256 = "19ccwcdsxwaccahmq6xwfxn8xx2nkgjzp9mcn96c356ayk4lxdrb";
     };
+    servant-rawm-src = super.fetchFromGitHub {
+      owner = "jumper149";
+      repo = "servant-rawm";
+      rev = "70e1439cb1ac32bfe6e84aaf609e159156b1b3dc";
+      sha256 = "06jypzp98k44174b0cmp72in435akdf7ixl6ll68pm0qj73h3d8g";
+    };
     wai-control-src = super.fetchFromGitHub {
       owner = "jumper149";
       repo = "wai-control";
@@ -17,12 +23,15 @@ self: super:
     haskell-ghc-packages = super.haskell.packages.${ghcVersion}.override {
       overrides = self: super: {
         monad-control-identity = super.callCabal2nix "monad-control-identity" "${monad-control-identity-src}" {};
+        servant-rawm = super.callCabal2nix "servant-rawm" "${servant-rawm-src}/servant-rawm" {};
+        servant-rawm-server = super.callCabal2nix "servant-rawm-server" "${servant-rawm-src}/servant-rawm-server" {};
         wai-control = super.callCabal2nix "wai-control" "${wai-control-src}" {};
       };
     };
     haskell-ghcjs-packages = super.haskell.packages.${ghcjsVersion}.extend (
       self: super: {
         monad-control-identity = super.callCabal2nix "monad-control-identity" "${monad-control-identity-src}" {};
+        servant-rawm = super.callCabal2nix "servant-rawm" "${servant-rawm-src}/servant-rawm" {};
       }
     );
   in {

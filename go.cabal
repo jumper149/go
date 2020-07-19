@@ -90,6 +90,7 @@ executable server
                        , monad-control-identity
                        , mtl
                        , servant-rawm
+                       , servant-rawm-server
                        , servant-server
                        , text
                        , transformers
