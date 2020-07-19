@@ -21,7 +21,12 @@ let
       wai-control = self.callCabal2nix "wai-control" "${wai-control-src}" {};
     };
   };
-  ghcjs86 = pkgs.haskell.packages.ghcjs86;
+  ghcjs86 = pkgs.haskell.packages.ghcjs86.override {
+    overrides = self: super: {
+      mkDerivation = args: super.mkDerivation (args // { doCheck = false; });
+      doctest = null;
+    };
+  };
   server = ghc865.callCabal2nix "go" ./. {};
   client = ghcjs86.callCabal2nix "go" ./. {};
   inherit (pkgs) closurecompiler;

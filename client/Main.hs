@@ -37,7 +37,6 @@ main = do currentURI <- getCurrentURI
                            handler = handleWS
                        in [ websocketSub url protocols handler ]
               mountPoint = Nothing
-              logLevel = Off
           startApp App {..}
 
 stripLeadingSlash :: String -> String
