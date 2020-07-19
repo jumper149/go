@@ -33,7 +33,7 @@ viewGame g = a_ [ href_ $ ms url
                 ] [ div_ [ class_ "game"
                          ] [ text name ]
                   ]
-  where url = ("/" <>) . toUrlPiece $ safeLink G.apiWrongWS (Proxy :: Proxy G.EndpointGame) g
+  where url = ("/" <>) . toUrlPiece $ safeLink G.api (Proxy :: Proxy G.EndpointGame) g
         name = ms . ("#" <>) . show $ fromEnum g
 
 viewConfig :: Bool -- ^ enable submit-button

@@ -40,6 +40,7 @@ library
                        , mtl
                        , servant
                        , servant-lucid
+                       , servant-rawm
                        , text
                        , vector-sized
     default-extensions:  DataKinds
@@ -90,6 +91,7 @@ executable server
                        , monad-control-identity
                        , mtl
                        , servant-rawm
+                       , servant-rawm-server
                        , servant-server
                        , text
                        , transformers
