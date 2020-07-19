@@ -79,8 +79,8 @@ selection p a = select_ [ onInput recoverOption ] $ fmap option [ minBound .. ma
         addDefaultAttr b attrs = if b == a
                                     then (selected_ True) : attrs
                                     else attrs
-        recoverOption mstr = case decode $ fromMisoString mstr of
-                               Just b -> b
+        recoverOption mstr = case decode <$> fromMisoStringEither mstr of
+                               Right (Just b) -> b
                                _ -> a
 
 viewFooter :: View a

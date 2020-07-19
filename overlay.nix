@@ -5,8 +5,8 @@ self: super:
     monad-control-identity-src = super.fetchFromGitHub {
       owner = "jumper149";
       repo = "monad-control-identity";
-      rev = "v0.1.0.2";
-      sha256 = "0mz312hv9kvc9wiq4ifj061p7nwvlf0hmrc9j252wzbxrh0vb34h";
+      rev = "dd4fabcadd66790d10f0b339e933db2fd55d32bd";
+      sha256 = "19ccwcdsxwaccahmq6xwfxn8xx2nkgjzp9mcn96c356ayk4lxdrb";
     };
     wai-control-src = super.fetchFromGitHub {
       owner = "jumper149";
@@ -20,15 +20,16 @@ self: super:
         wai-control = super.callCabal2nix "wai-control" "${wai-control-src}" {};
       };
     };
-    haskell-ghcjs-packages = super.haskell.packages.${ghcjsVersion}.override {
-      overrides = self: super: {
-      };
-    };
+    haskell-ghcjs-packages = super.haskell.packages.${ghcjsVersion}.extend (
+      self: super: {
+        monad-control-identity = super.callCabal2nix "monad-control-identity" "${monad-control-identity-src}" {};
+      }
+    );
   in {
     haskell = super.haskell // {
       packages = super.haskell.packages // {
         ${ghcVersion} = haskell-ghc-packages;
-        #${ghcjsVersion} = haskell-ghcjs-packages;
+        ${ghcjsVersion} = haskell-ghcjs-packages;
       };
     };
   }
