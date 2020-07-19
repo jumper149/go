@@ -28,7 +28,7 @@ main = do currentURI <- getCurrentURI
               events = defaultEvents
               subs   = let uri = URI { uriScheme = "ws:"
                                      , uriAuthority = uriAuthority currentURI
-                                     , uriPath = T.unpack $ ("/" <>) $ toUrlPiece $ safeLink apiWrongWS (Proxy :: Proxy EndpointWSWrongWS)
+                                     , uriPath = T.unpack $ ("/" <>) $ toUrlPiece $ safeLink api (Proxy :: Proxy EndpointWS)
                                      , uriQuery = mempty
                                      , uriFragment = mempty
                                      }

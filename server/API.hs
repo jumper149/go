@@ -12,7 +12,7 @@ import GHC.Conc.Trans
 import Network.HTTP.Types.Status (status400)
 import Network.Wai (responseLBS)
 import Network.Wai.Trans (runMiddlewareT)
-import Servant.RawM.Server (RawM)
+import Servant.RawM.Server ()
 import Servant
 
 import Go.Run.API
@@ -22,11 +22,6 @@ import GameSet.Class
 import ServerState
 import ServerState.Class
 import WebSocket
-
-type API = API' RawM
-
-api :: Proxy API
-api = Proxy
 
 handler :: FilePath -> ServerT API (ServerStateT Handler)
 handler path = htmlGameH :<|> htmlH :<|> wsH :<|> publicH path
