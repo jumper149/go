@@ -12,11 +12,12 @@ let
   server = pkgs.haskell.packages.${ghcVersion}.callCabal2nix "go" ./. {};
   client = pkgs.haskell.packages.${ghcjsVersion}.callCabal2nix "go" ./. {};
 
-  inherit (pkgs) closurecompiler;
+  inherit (pkgs) closurecompiler imagemagick;
   build = pkgs.runCommand "go" {} ''
     mkdir -p $out/{bin,public}
     cp ${server}/bin/* $out/bin
     ${closurecompiler}/bin/closure-compiler ${client}/bin/client.jsexe/all.js > $out/public/all.js
+    ${imagemagick}/bin/convert ${client.src}/static/favicon.xpm $out/public/favicon.png
     cp ${client.src}/static/stylesheet.css $out/public/stylesheet.css
   '';
 
