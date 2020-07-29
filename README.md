@@ -2,6 +2,9 @@
 
 A webserver for a multiplayer game.
 
+[![Travis CI](https://img.shields.io/travis/jumper149/go.svg?style=for-the-badge)](https://travis-ci.com/github/jumper149/go)
+[![License](https://img.shields.io/github/license/jumper149/go?style=for-the-badge)](./LICENSE)
+
 ## Usage
 
 ![playing go](https://github.com/jumper149/data/blob/master/go/go.gif?raw=true)
