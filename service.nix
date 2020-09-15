@@ -38,7 +38,7 @@ in
       systemd.services.go = {
         wantedBy = [ "multi-user.target" ];
         after = [ "network.target" ];
-        description = "A go server";
+        description = "Go Server";
         serviceConfig = {
           DynamicUser = true;
           ExecStart = "${go}/bin/server --directory ${go}/public --port ${toString cfg.port}";
